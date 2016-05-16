@@ -1,0 +1,21 @@
+Source: strusstream
+Section: libs
+Priority: optional
+Maintainer: Patrick Frey <patrickpfrey@yahoo.com>
+Build-Depends: debhelper (>= 4.1.16), cmake,
+ libboost-dev, libboost-thread-dev, libboost-system-dev,
+ libboost-date-time-dev, strusbase-dev, strusanalyzer-dev
+Standards-Version: 3.8.3
+Homepage: http://project-strus.net
+
+Package: strusstream
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Library offering stream processing of documents
+ Library implementing pattern matching in documents processed in a stream.
+
+Package: strusstream-dev
+Architecture: any
+Depends: strusstream, ${shlibs:Depends}, ${misc:Depends}
+Description: strusstream development files
+ Strusstream development files.

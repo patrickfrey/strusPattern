@@ -1,0 +1,33 @@
+/*
+ * Copyright (c) 2016 Patrick P. Frey
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+/// \brief Version of the strus stream library
+/// \file versionStream.hpp
+#ifndef _STRUS_VERSION_STREAM_HPP_INCLUDED
+#define _STRUS_VERSION_STREAM_HPP_INCLUDED
+
+/// \brief strus toplevel namespace
+namespace strus
+{
+
+/// \brief Version number of strus stream
+#define STRUS_STREAM_VERSION (\
+	@STRUS_MAJOR_VERSION@ * 1000000\
+	+ @STRUS_MINOR_VERSION@ * 10000\
+	+ @STRUS_PATCH_VERSION@\
+)
+
+/// \brief Major version number of strus stream
+#define STRUS_STREAM_VERSION_MAJOR @STRUS_MAJOR_VERSION@
+/// \brief Minor version number of strus stream
+#define STRUS_STREAM_VERSION_MINOR @STRUS_MINOR_VERSION@
+
+/// \brief The version of the strus stream library
+#define STRUS_STREAM_VERSION_STRING "@STRUS_VERSION@"
+
+}//namespace
+#endif
