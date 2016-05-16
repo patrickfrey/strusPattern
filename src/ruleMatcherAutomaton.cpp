@@ -9,11 +9,11 @@
 #include "ruleMatcherAutomaton.hpp"
 #include <limits>
 #include <cstdlib>
-#include <cstdexcept>
+#include <stdexcept>
 
 using namespace strus;
 
-WeightedEvent ActionSlot::fire( SigType sigtype, uint32_t sigval, float sigweight)
+WeightedEvent ActionSlot::fire( Trigger::SigType sigtype, uint32_t sigval, float sigweight)
 {
 	switch (sigtype)
 	{
@@ -29,7 +29,7 @@ WeightedEvent ActionSlot::fire( SigType sigtype, uint32_t sigval, float sigweigh
 			return WeightedEvent( 0, 0.0);
 		case Trigger::SigAny:
 		{
-			if (sigval & value == 0)
+			if ((sigval & value) == 0)
 			{
 				weight *= sigweight;
 				value |= sigval;
@@ -39,7 +39,7 @@ WeightedEvent ActionSlot::fire( SigType sigtype, uint32_t sigval, float sigweigh
 		}
 		case Trigger::SigDel:
 		{
-			if (0 != value & ~sigval)
+			if (0 != (value & ~sigval))
 			{
 				value &= sigval;
 				return WeightedEvent( event, weight);
@@ -47,7 +47,13 @@ WeightedEvent ActionSlot::fire( SigType sigtype, uint32_t sigval, float sigweigh
 			return WeightedEvent( 0, 0.0);
 		}
 	}
+	return WeightedEvent( 0, 0.0);
 }
+
+struct EventTriggerFreeListElem
+{
+	uint32_t next;
+};
 
 EventTriggerTable::EventTriggerTable()
 	:m_eventAr(0),m_triggerAr(0),m_allocsize(0),m_size(0),m_freelistidx(0){}
@@ -69,7 +75,7 @@ void EventTriggerTable::expand( uint32_t newallocsize)
 		throw std::logic_error( "illegal call of EventTriggerTable::expand");
 	}
 	uint32_t* war = (uint32_t*)std::realloc( m_eventAr, newallocsize * sizeof(uint32_t));
-	uint32_t* far = (Trigger*)std::realloc( m_triggerAr, newallocsize * sizeof(Trigger));
+	Trigger* far = (Trigger*)std::realloc( m_triggerAr, newallocsize * sizeof(Trigger));
 	if (!war || !far)
 	{
 		if (war) m_eventAr = war;
@@ -87,13 +93,13 @@ uint32_t EventTriggerTable::add( const EventTrigger& et)
 	if (m_freelistidx)
 	{
 		newidx = m_freelistidx-1;
-		m_freelistidx = m_triggerAr[ m_freelistidx-1].slot;
+		m_freelistidx = ((EventTriggerFreeListElem*)(void*)(&m_triggerAr[ m_freelistidx-1]))->next;
 	}
 	else
 	{
 		if (m_size == m_allocsize)
 		{
-			if (m_allocsize >= (1<<31))
+			if (m_allocsize >= (1U<<31))
 			{
 				throw std::bad_alloc();
 			}
@@ -113,20 +119,19 @@ void EventTriggerTable::remove( uint32_t idx)
 		throw std::runtime_error("bad rule index (remove rule)");
 	}
 	m_eventAr[ idx] = 0;
-	m_triggerAr[ idx].slot = m_freelistidx;
+	((EventTriggerFreeListElem*)(void*)(&m_triggerAr[ idx]))->next = m_freelistidx;
 	m_freelistidx = idx+1;
 }
 
 void EventTriggerTable::doTransition( WeightedEventList& followevents, ActionSlotTable& slottab, const WeightedEvent& event) const
 {
-	matches.reset();
 	if (!event.event) return;
 	uint32_t wi=0;
 	for (; wi<m_allocsize; ++wi)
 	{
 		if (m_eventAr[ wi] == event.event)
 		{
-			WeightedEvent follow = slottab.fire( m_triggerAr[ idx]);
+			WeightedEvent follow = slottab.fire( m_triggerAr[ wi]);
 			if (follow.event) followevents.add( follow);
 		}
 	}
@@ -151,7 +156,7 @@ uint32_t StateMachine::createRule()
 uint32_t StateMachine::createSlot( uint32_t rule, uint32_t initvalue, uint32_t event, float initweight)
 {
 	uint32_t aidx = m_actionSlotTable.add( ActionSlot( initvalue, event, initweight));
-	m_actionSlotList.add( m_ruleTable[ rule].actionSlotListIdx, aidx);
+	m_actionSlotList.push( m_ruleTable[ rule].actionSlotListIdx, aidx);
 	return aidx;
 }
 
@@ -159,7 +164,7 @@ void StateMachine::createTrigger( uint32_t rule, uint32_t event, uint32_t slot,
 					Trigger::SigType sigtype, uint32_t sigval, float weight)
 {
 	uint32_t ridx = m_eventTriggerTable.add( EventTrigger( event, Trigger( slot, sigtype, sigval, weight)));
-	m_eventTriggerList.add( m_ruleTable[ rule].eventTriggerListIdx, ridx);
+	m_eventTriggerList.push( m_ruleTable[ rule].eventTriggerListIdx, ridx);
 }
 
 void StateMachine::disposeRule( uint32_t rule)
@@ -170,8 +175,7 @@ void StateMachine::disposeRule( uint32_t rule)
 	{
 		m_eventTriggerTable.remove( eidx);
 	}
-	uint32_t ridx = m_ruleTable[ rule].actionSlotListIdx;
-	uint32_t eidx;
+	ridx = m_ruleTable[ rule].actionSlotListIdx;
 	while (m_eventTriggerList.next( ridx, eidx))
 	{
 		m_eventTriggerTable.remove( eidx);

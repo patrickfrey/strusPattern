@@ -11,6 +11,8 @@
 #include "strus/base/stdint.h"
 #include <limits>
 #include <stdexcept>
+#include <cstring>
+#include <cstdlib>
 #include <new>
 
 namespace strus
@@ -24,7 +26,7 @@ public:
 		:m_ar(0),m_allocsize(0),m_size(0)
 	{}
 
-	PodStructArrayBase( const PodStructTableBase& o)
+	PodStructArrayBase( const PodStructArrayBase& o)
 		:m_ar(0),m_allocsize(0),m_size(o.m_size)
 	{
 		if (o.m_allocsize)
@@ -38,7 +40,7 @@ public:
 	{
 		if (m_size == m_allocsize)
 		{
-			if (m_allocsize >= (std::numeric_limits(SIZETYPE)/2))
+			if (m_allocsize >= (std::numeric_limits<SIZETYPE>::max()/2))
 			{
 				throw std::bad_alloc();
 			}

@@ -19,6 +19,8 @@ namespace strus
 class Trigger
 {
 public:
+	enum SigType {SigAll=0x0,SigSeq=0x1,SigAny=0x2,SigDel=0x3};
+
 	Trigger( uint32_t slot_, SigType sigtype_, uint32_t sigval_, float weight_=1.0)
 		:m_slot(slot_),m_sigtype(sigtype_),m_sigval(sigval_),m_weight(weight_){}
 	Trigger( const Trigger& o)
@@ -26,7 +28,6 @@ public:
 	Trigger( const Trigger& o, uint32_t slot_)
 		:m_slot(slot_),m_sigtype(o.m_sigtype),m_sigval(o.m_sigval),m_weight(o.m_weight){}
 
-	enum SigType {SigAll=0x1,SigSeq=0x1,SigAny=0x2,SigDel=0x3};
 	uint32_t slot() const		{return m_slot;}
 	SigType sigtype() const		{return (SigType)m_sigtype;}
 	uint32_t sigval() const		{return (uint32_t)m_sigval;}
@@ -75,7 +76,7 @@ struct ActionSlot
 	ActionSlot( const ActionSlot& o)
 		:value(o.value),event(o.event),weight(o.weight){}
 
-	WeightedEvent fire( SigType sigtype, uint32_t sigval, float sigweight);
+	WeightedEvent fire( Trigger::SigType sigtype, uint32_t sigval, float sigweight);
 };
 
 struct ActionSlotTableFreeListElem {uint32_t _;uint32_t next;};
@@ -91,7 +92,7 @@ public:
 
 	WeightedEvent fire( const Trigger& trigger)
 	{
-		return (*this)[ trigger.slot()].fire( trigger.sigtype(), trigger.sigval(), trigger.sigweight());
+		return (*this)[ trigger.slot()].fire( trigger.sigtype(), trigger.sigval(), trigger.weight());
 	}
 };
 

@@ -36,24 +36,20 @@ public:
 	{
 		if (m_freelistidx)
 		{
-			newidx = m_freelistidx-1;
-			m_freelistidx = ((FREELISTTYPE*)(void*)m_ar[ m_freelistidx-1])->next;
-			m_ar[ newidx] = elem;
+			SIZETYPE newidx = m_freelistidx-1;
+			m_freelistidx = ((FREELISTTYPE*)(void*)(&(*this)[ m_freelistidx-1]))->next;
+			(*this)[ newidx] = elem;
 			return newidx;
 		}
 		else
 		{
-			return Parent::addElement( elem);
+			return Parent::add( elem);
 		}
 	}
 
 	void remove( SIZETYPE idx)
 	{
-		if (idx >= m_size)
-		{
-			throw std::runtime_error( "bad array index (PodStructTableBase::removeElement)");
-		}
-		((FREELISTTYPE*)(void*)m_ar[ idx])->next = m_freelistidx;
+		((FREELISTTYPE*)(void*)(&(*this)[ idx]))->next = m_freelistidx;
 		m_freelistidx = idx+1;
 	}
 

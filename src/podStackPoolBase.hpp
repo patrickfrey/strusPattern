@@ -24,35 +24,31 @@ struct PodStackElement
 	ELEMTYPE value;
 	SIZETYPE next;
 
-	Element( ELEMTYPE value_, SIZETYPE next_)
+	PodStackElement( ELEMTYPE value_, SIZETYPE next_)
 		:value(value_),next(next_){}
-	Element( const Element& o)
+	PodStackElement( const PodStackElement& o)
 		:value(o.value),next(o.next){}
 };
 
 template <typename ELEMTYPE, typename SIZETYPE>
 class PodStackPoolBase
-	:private PodStructTableBase<PodStackElement<ELEMTYPE,SIZETYPE>,SIZETYPE>
+	:private PodStructTableBase<PodStackElement<ELEMTYPE,SIZETYPE>,SIZETYPE,PodStackElement<ELEMTYPE,SIZETYPE> >
 {
 public:
-	typedef PodStructTableBase<PodStackElement<ELEMTYPE,SIZETYPE>,SIZETYPE> Parent;
+	typedef PodStructTableBase<PodStackElement<ELEMTYPE,SIZETYPE>,SIZETYPE,PodStackElement<ELEMTYPE,SIZETYPE> > Parent;
 
 	PodStackPoolBase(){}
 	PodStackPoolBase( const PodStackPoolBase& o) :Parent(o){}
 
 	void push( SIZETYPE& stk, const ELEMTYPE& elem)
 	{
-		PodStackElement<ELEMTYPE,SIZETYPE> elem( elem, stk);
-		stk = Parent::add( elem)+1;
+		PodStackElement<ELEMTYPE,SIZETYPE> listelem( elem, stk);
+		stk = Parent::add( listelem)+1;
 	}
 
 	void remove( SIZETYPE stk)
 	{
 		if (stk == 0) return;
-		if (stk > m_size)
-		{
-			throw std::runtime_error( "bad stack index (remove)");
-		}
 		SIZETYPE idx = stk;
 		while (idx)
 		{
@@ -65,12 +61,8 @@ public:
 	bool pop( SIZETYPE& stk, ELEMTYPE& elem)
 	{
 		if (stk == 0) return false;
-		if (stk > m_size)
-		{
-			throw std::runtime_error( "bad stack index (remove)");
-		}
 		elem = (*this)[ stk-1].value;
-		SIZETYPE nextidx = (*this)[ idx-1].next;
+		SIZETYPE nextidx = (*this)[ stk-1].next;
 		Parent::remove( stk-1);
 		stk = nextidx;
 		return true;
@@ -79,12 +71,9 @@ public:
 	bool next( SIZETYPE& stk, ELEMTYPE& elem) const
 	{
 		if (stk == 0) return false;
-		if (stk > m_size)
-		{
-			throw std::runtime_error( "bad stack index (nextElement)");
-		}
-		elem = m_ar[ stk-1].value;
-		stk = m_ar[ stk-1].next;
+		elem = (*this)[ stk-1].value;
+		stk = (*this)[ stk-1].next;
+		return true;
 	}
 };
 
