@@ -12,6 +12,7 @@
 #include "podStructArrayBase.hpp"
 #include "podStructTableBase.hpp"
 #include "podStackPoolBase.hpp"
+#include <vector>
 
 namespace strus
 {
@@ -35,8 +36,8 @@ public:
 
 private:
 	uint32_t m_slot;
-	unsigned int m_sigtype:3;
-	unsigned int m_sigval:29;
+	SigType m_sigtype;
+	uint32_t m_sigval;
 	float m_weight;
 };
 
@@ -76,7 +77,7 @@ struct ActionSlot
 	ActionSlot( const ActionSlot& o)
 		:value(o.value),event(o.event),weight(o.weight){}
 
-	WeightedEvent fire( Trigger::SigType sigtype, uint32_t sigval, float sigweight);
+	bool fire( Trigger::SigType sigtype, uint32_t sigval, float sigweight);
 };
 
 struct ActionSlotTableFreeListElem {uint32_t _;uint32_t next;};
@@ -90,7 +91,7 @@ public:
 	ActionSlotTable(){}
 	ActionSlotTable( const ActionSlotTable& o) :Parent(o){}
 
-	WeightedEvent fire( const Trigger& trigger)
+	bool fire( const Trigger& trigger)
 	{
 		return (*this)[ trigger.slot()].fire( trigger.sigtype(), trigger.sigval(), trigger.weight());
 	}
@@ -106,10 +107,9 @@ public:
 	uint32_t add( const EventTrigger& et);
 	void remove( uint32_t idx);
 
-	void doTransition( ActionSlotTable& slottab, const WeightedEvent& event) const;
+	void doTransition( std::vector<uint32_t>& firedSlots, ActionSlotTable& slottab, const WeightedEvent& event) const;
 
 private:
-	void doTransition( WeightedEventList& followevents, ActionSlotTable& slottab, const WeightedEvent& event) const;
 	void expand( uint32_t newallocsize);
 
 private:

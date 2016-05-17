@@ -13,7 +13,7 @@
 
 using namespace strus;
 
-WeightedEvent ActionSlot::fire( Trigger::SigType sigtype, uint32_t sigval, float sigweight)
+bool ActionSlot::fire( Trigger::SigType sigtype, uint32_t sigval, float sigweight)
 {
 	switch (sigtype)
 	{
@@ -21,33 +21,30 @@ WeightedEvent ActionSlot::fire( Trigger::SigType sigtype, uint32_t sigval, float
 			weight *= sigweight;
 			return WeightedEvent( event, weight);
 		case Trigger::SigSeq:
-			if (sigval == value++)
+			if (sigval == value)
 			{
 				weight *= sigweight;
-				return WeightedEvent( event, weight);
+				--value;
+				return value == 0;
 			}
-			return WeightedEvent( 0, 0.0);
+			return false;
 		case Trigger::SigAny:
 		{
 			if ((sigval & value) == 0)
 			{
 				weight *= sigweight;
 				value |= sigval;
-				return WeightedEvent( event, weight);
+				return (value+1 == 0);
 			}
-			return WeightedEvent( 0, 0.0);
+			return false;
 		}
 		case Trigger::SigDel:
 		{
-			if (0 != (value & ~sigval))
-			{
-				value &= sigval;
-				return WeightedEvent( event, weight);
-			}
-			return WeightedEvent( 0, 0.0);
+			value = 0;
+			return true;
 		}
 	}
-	return WeightedEvent( 0, 0.0);
+	return false;
 }
 
 struct EventTriggerFreeListElem
