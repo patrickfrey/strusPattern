@@ -87,7 +87,7 @@ void EventTriggerTable::remove( uint32_t idx)
 	m_freelistidx = idx;
 }
 
-void EventTriggerTable::getTriggers( PodStructArrayBase<Trigger*,std::size_t>& triggers, uint32_t event) const
+void EventTriggerTable::getTriggers( PodStructArrayBase<Trigger*,std::size_t,0>& triggers, uint32_t event) const
 {
 	if (!event) return;
 	uint32_t wi=0;
@@ -123,19 +123,19 @@ uint32_t StateMachine::createGroup( uint32_t rule, uint32_t positionRange)
 	return rt;
 }
 
-uint32_t StateMachine::createSlot( uint32_t rule, uint32_t group, uint32_t initsigval, uint32_t event, uint32_t program, float initweight, bool isComplete)
+uint32_t StateMachine::createSlot( uint32_t rule, uint32_t group, uint32_t initsigval, uint32_t initcount, uint32_t event, uint32_t program, bool isComplete)
 {
 	Group& grouprec = m_groupTable[ group];
-	uint32_t aidx = m_actionSlotTable.add( ActionSlot( initsigval, event, program, rule, initweight, isComplete));
+	uint32_t aidx = m_actionSlotTable.add( ActionSlot( initsigval, initcount, event, program, rule, group, isComplete));
 	m_actionSlotList.push( grouprec.actionSlotListIdx, aidx);
 	return aidx;
 }
 
 void StateMachine::createTrigger( uint32_t /*rule*/, uint32_t group, uint32_t event, uint32_t slot,
-					Trigger::SigType sigtype, uint32_t sigval, float weight)
+					Trigger::SigType sigtype, uint32_t sigval, uint32_t variable)
 {
 	Group& grouprec = m_groupTable[ group];
-	uint32_t ridx = m_eventTriggerTable.add( EventTrigger( event, Trigger( slot, sigtype, sigval, weight)));
+	uint32_t ridx = m_eventTriggerTable.add( EventTrigger( event, Trigger( slot, sigtype, sigval, variable)));
 	m_eventTriggerList.push( grouprec.eventTriggerListIdx, ridx);
 }
 
@@ -152,7 +152,7 @@ void StateMachine::disposeRule( uint32_t rule)
 	m_groupList.remove( rulerec.groupListIdx);
 	rulerec.groupListIdx = 0;
 
-	m_eventItemList.remove( rulerec.eventItemListIdx);
+	disposeEventDataReference( rulerec.eventDataReferenceIdx);
 	m_ruleTable.remove( rule);
 }
 
@@ -181,33 +181,62 @@ void StateMachine::deactivateGroup( uint32_t groupidx)
 	}
 }
 
-struct WeightedEvent
+void StateMachine::disposeEventDataReference( uint32_t eventdataref)
 {
-	EventData eventData;
-	float weight;
+	if (eventdataref)
+	{
+		EventDataReference& ref = m_eventDataReferenceTable[ eventdataref];
+		if (ref.referenceCount > 1)
+		{
+			--ref.referenceCount;
+		}
+		else if (ref.referenceCount == 1)
+		{
+			--ref.referenceCount;
+			m_eventItemList.remove( ref.eventItemListIdx);
+			m_eventDataReferenceTable.remove( eventdataref);
+		}
+		else
+		{
+			throw strus::runtime_error( _TXT("illegal free of event data reference"));
+		}
+	}
+}
 
-	WeightedEvent( const EventData& eventData_, float weight_)
-		:eventData(eventData_),weight(weight_){}
-	WeightedEvent( const WeightedEvent& o)
-		:eventData(o.eventData),weight(o.weight){}
-};
-typedef PodStructArrayBase<WeightedEvent,std::size_t> WeightedEventList;
+void StateMachine::referenceEventData( uint32_t eventdataref)
+{
+	if (eventdataref)
+	{
+		EventDataReference& ref = m_eventDataReferenceTable[ eventdataref];
+		++ref.referenceCount;
+	}
+}
+
+void StateMachine::appendEventData( uint32_t eventdataref, const EventItem& item)
+{
+	EventDataReference& ref = m_eventDataReferenceTable[ eventdataref];
+	referenceEventData( item.data.subdataref);
+	m_eventItemList.push( ref.eventItemListIdx, item);
+}
+
+
+typedef PodStructArrayBase<EventData,std::size_t,0> EventList;
 
 uint32_t ProgramTable::createProgram( uint32_t positionRange_)
 {
 	return 1+m_programTable.add( Program( positionRange_));
 }
 
-void ProgramTable::createSlot( uint32_t programidx, uint32_t initsigval, uint32_t event, uint32_t follow_program, float initweight, bool isComplete)
+void ProgramTable::createSlot( uint32_t programidx, uint32_t initsigval, uint32_t initcount, uint32_t event, uint32_t follow_program, bool isComplete)
 {
 	Program& program = m_programTable[ programidx-1];
-	m_actionSlotList.push( program.actionSlotListIdx, ActionSlotDef( initsigval, event, follow_program, initweight, isComplete));
+	m_actionSlotList.push( program.actionSlotListIdx, ActionSlotDef( initsigval, initcount, event, follow_program, isComplete));
 }
 
-void ProgramTable::createTrigger( uint32_t programidx, uint32_t event, uint32_t slot, Trigger::SigType sigtype, uint32_t sigval, float weight)
+void ProgramTable::createTrigger( uint32_t programidx, uint32_t event, uint32_t slot, Trigger::SigType sigtype, uint32_t sigval, uint32_t variable)
 {
 	Program& program = m_programTable[ programidx-1];
-	m_triggerList.push( program.triggerListIdx, TriggerDef( event, slot, sigtype, sigval, weight));
+	m_triggerList.push( program.triggerListIdx, TriggerDef( event, slot, sigtype, sigval, variable));
 }
 
 StateMachine::StateMachine( const ProgramTable* programTable_)
@@ -227,22 +256,26 @@ StateMachine::StateMachine( const StateMachine& o)
 	,m_eventTriggerList(o.m_eventTriggerList)
 	,m_groupList(o.m_groupList)
 	,m_eventItemList(o.m_eventItemList)
+	,m_eventDataReferenceTable(o.m_eventDataReferenceTable)
 	,m_ruleTable(o.m_ruleTable)
 	,m_results(o.m_results)
-	,m_curpos(o.m_curpos){}
+	,m_curpos(o.m_curpos)
+	,m_groupDisposeQueue(o.m_groupDisposeQueue)
+	,m_ruleDisposeQueue(o.m_ruleDisposeQueue){}
 
-void StateMachine::doTransition( uint32_t event, float weight, const EventData& data)
+
+void StateMachine::doTransition( uint32_t event, const EventData& data)
 {
-	WeightedEventList followList;
-	followList.add( WeightedEvent( data, weight));
+	EventList followList;
+	followList.add( data);
 	std::size_t ei = 0;
 	enum {NofTriggers=256};
 	for (; ei < followList.size(); ++ei)
 	{
 		Trigger* trigger_alloca[ NofTriggers];
-		PodStructArrayBase<Trigger*,std::size_t> triggers( trigger_alloca, NofTriggers);
-		const WeightedEvent& follow = followList[ ei];
-		m_eventTriggerTable.getTriggers( triggers, follow.eventData.eventid);
+		PodStructArrayBase<Trigger*,std::size_t,0> triggers( trigger_alloca, NofTriggers);
+		const EventData& follow = followList[ ei];
+		m_eventTriggerTable.getTriggers( triggers, follow.eventid);
 		std::size_t ti = 0, te = triggers.size();
 		for (; ti != te; ++ti)
 		{
@@ -253,12 +286,11 @@ void StateMachine::doTransition( uint32_t event, float weight, const EventData& 
 			switch (trigger.sigtype())
 			{
 				case Trigger::SigAll:
-					slot.weight *= trigger.weight();
 					match = true;
 					if (trigger.variable())
 					{
-						EventItem item( trigger.variable(), trigger.weight(), data);
-						m_eventItemList.push( rule.eventItemListIdx, item);
+						EventItem item( trigger.variable(), data);
+						appendEventData( rule.eventDataReferenceIdx, item);
 					}
 					if (slot.start_ordpos == 0 || slot.start_ordpos > data.ordpos)
 					{
@@ -267,15 +299,15 @@ void StateMachine::doTransition( uint32_t event, float weight, const EventData& 
 					}
 					break;
 				case Trigger::SigSeq:
-					if (trigger.sigval() == slot.value)
+					if (trigger.sigval() < slot.value)
 					{
-						slot.weight *= trigger.weight();
 						--slot.value;
-						match = (slot.value == 0);
+						--slot.count;
+						match = (slot.count == 0);
 						if (trigger.variable())
 						{
-							EventItem item( trigger.variable(), trigger.weight(), data);
-							m_eventItemList.push( rule.eventItemListIdx, item);
+							EventItem item( trigger.variable(), data);
+							appendEventData( rule.eventDataReferenceIdx, item);
 						}
 						if (slot.start_ordpos == 0 || slot.start_ordpos > data.ordpos)
 						{
@@ -288,13 +320,13 @@ void StateMachine::doTransition( uint32_t event, float weight, const EventData& 
 				{
 					if ((trigger.sigval() & slot.value) != 0)
 					{
-						slot.weight *= trigger.weight();
 						slot.value &= ~trigger.sigval();
-						match = (slot.value == 0);
+						--slot.count;
+						match = (slot.count == 0);
 						if (trigger.variable())
 						{
-							EventItem item( trigger.variable(), trigger.weight(), data);
-							m_eventItemList.push( rule.eventItemListIdx, item);
+							EventItem item( trigger.variable(), data);
+							appendEventData( rule.eventDataReferenceIdx, item);
 						}
 						if (slot.start_ordpos == 0 || slot.start_ordpos > data.ordpos)
 						{
@@ -308,10 +340,10 @@ void StateMachine::doTransition( uint32_t event, float weight, const EventData& 
 				{
 					if (rule.isComplete)
 					{
-						m_results.add( Result( slot.rule, rule.eventItemListIdx));
-						rule.eventItemListIdx = 0;
+						m_results.add( Result( slot.rule, rule.eventDataReferenceIdx));
+						referenceEventData( rule.eventDataReferenceIdx);
 					}
-					disposeRule( slot.rule);
+					deactivateGroup( slot.group);
 					continue;
 				}
 			}
@@ -325,16 +357,18 @@ void StateMachine::doTransition( uint32_t event, float weight, const EventData& 
 				if (slot.event)
 				{
 					std::size_t eventByteSize = data.bytepos + data.bytesize - slot.start_bytepos;
-					EventData followEventData( slot.start_bytepos, eventByteSize, slot.start_ordpos, slot.event);
-					followList.add( WeightedEvent( followEventData, slot.weight));
+					EventData followEventData( slot.start_bytepos, eventByteSize, slot.start_ordpos, slot.event, rule.eventDataReferenceIdx);
+					referenceEventData( rule.eventDataReferenceIdx);
+					followList.add( followEventData);
 				}
-				else
+				if (rule.isComplete)
 				{
-					m_results.add( Result( slot.rule, rule.eventItemListIdx));
-					rule.eventItemListIdx = 0;
+					m_results.add( Result( slot.rule, rule.eventDataReferenceIdx));
+					referenceEventData( rule.eventDataReferenceIdx);
 					disposeRule( slot.rule);
 				}
 			}
+			disposeEventDataReference( follow.subdataref);
 		}
 	}
 }
@@ -363,15 +397,16 @@ void StateMachine::installProgram( uint32_t ruleidx, uint32_t programidx)
 	uint32_t slotar_alloca[ NofSlots];
 	const Program& program = (*m_programTable)[ programidx];
 	uint32_t groupidx = createGroup( ruleidx, program.positionRange);
-	PodStructArrayBase<uint32_t,uint32_t> slotar( slotar_alloca, NofSlots);
+	PodStructArrayBase<uint32_t,uint32_t,0> slotar( slotar_alloca, NofSlots);
 	uint32_t actionSlotListIdx = program.actionSlotListIdx;
 	const ActionSlotDef* actionSlotDef;
 	while (0!=(actionSlotDef=m_programTable->actionSlotList().nextptr( actionSlotListIdx)))
 	{
 		slotar.add(
-			createSlot( ruleidx, groupidx, actionSlotDef->initsigval,
+			createSlot( ruleidx, groupidx,
+				actionSlotDef->initsigval, actionSlotDef->initcount, 
 				actionSlotDef->event, actionSlotDef->program,
-				actionSlotDef->initweight, actionSlotDef->isComplete));
+				actionSlotDef->isComplete));
 	}
 	uint32_t triggerListIdx = program.triggerListIdx;
 	const TriggerDef* triggerDef;
@@ -379,7 +414,7 @@ void StateMachine::installProgram( uint32_t ruleidx, uint32_t programidx)
 	{
 		uint32_t slotidx = slotar[ triggerDef->slot];
 		createTrigger( ruleidx, groupidx, triggerDef->event, slotidx,
-				triggerDef->sigtype, triggerDef->sigval, triggerDef->weight);
+				triggerDef->sigtype, triggerDef->sigval, triggerDef->variable);
 	}
 	
 }

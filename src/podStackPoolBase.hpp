@@ -32,12 +32,12 @@ struct PodStackElement
 		:value(o.value),next(o.next){}
 };
 
-template <typename ELEMTYPE, typename SIZETYPE>
+template <typename ELEMTYPE, typename SIZETYPE, unsigned int BASEADDR>
 class PodStackPoolBase
-	:private PodStructTableBase<PodStackElement<ELEMTYPE,SIZETYPE>,SIZETYPE,PodStackElement<ELEMTYPE,SIZETYPE> >
+	:private PodStructTableBase<PodStackElement<ELEMTYPE,SIZETYPE>,SIZETYPE,PodStackElement<ELEMTYPE,SIZETYPE>,BASEADDR>
 {
 public:
-	typedef PodStructTableBase<PodStackElement<ELEMTYPE,SIZETYPE>,SIZETYPE,PodStackElement<ELEMTYPE,SIZETYPE> > Parent;
+	typedef PodStructTableBase<PodStackElement<ELEMTYPE,SIZETYPE>,SIZETYPE,PodStackElement<ELEMTYPE,SIZETYPE>,BASEADDR> Parent;
 
 	PodStackPoolBase(){}
 	PodStackPoolBase( const PodStackPoolBase& o) :Parent(o){}

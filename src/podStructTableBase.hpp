@@ -19,12 +19,12 @@
 namespace strus
 {
 
-template <typename ELEMTYPE, typename SIZETYPE, class FREELISTTYPE>
+template <typename ELEMTYPE, typename SIZETYPE, class FREELISTTYPE, unsigned int BASEADDR>
 class PodStructTableBase
-	:public PodStructArrayBase<ELEMTYPE,SIZETYPE>
+	:public PodStructArrayBase<ELEMTYPE,SIZETYPE,BASEADDR>
 {
 public:
-	typedef PodStructArrayBase<ELEMTYPE,SIZETYPE> Parent;
+	typedef PodStructArrayBase<ELEMTYPE,SIZETYPE,BASEADDR> Parent;
 
 	PodStructTableBase()
 		:m_freelistidx(0)

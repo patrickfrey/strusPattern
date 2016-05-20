@@ -17,10 +17,12 @@
 #include <cstdlib>
 #include <new>
 
+#define STRUS_USE_BASEADDR
+
 namespace strus
 {
 
-template <typename ELEMTYPE, typename SIZETYPE>
+template <typename ELEMTYPE, typename SIZETYPE, unsigned int BASEADDR>
 class PodStructArrayBase
 {
 public:
@@ -56,16 +58,26 @@ public:
 		}
 		SIZETYPE newidx = m_size++;
 		m_ar[ newidx] = elem;
+#ifdef STRUS_USE_BASEADDR
+		return newidx + BASEADDR;
+#else
 		return newidx;
+#endif
 	}
 
 	const ELEMTYPE& operator[]( SIZETYPE idx) const
 	{
+#ifdef STRUS_USE_BASEADDR
+		idx -= BASEADDR;
+#endif
 		if (idx >= m_size) throw strus::runtime_error( _TXT("array bound read (PodStructArrayBase)"));
 		return m_ar[idx];
 	}
 	ELEMTYPE& operator[]( SIZETYPE idx)
 	{
+#ifdef STRUS_USE_BASEADDR
+		idx -= BASEADDR;
+#endif
 		if (idx >= m_size) throw strus::runtime_error( _TXT("array bound write (PodStructArrayBase)"));
 		return m_ar[idx];
 	}
