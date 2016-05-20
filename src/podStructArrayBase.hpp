@@ -9,6 +9,8 @@
 #ifndef _STRUS_STREAM_POD_STRUCT_ARRAY_BASE_HPP_INCLUDED
 #define _STRUS_STREAM_POD_STRUCT_ARRAY_BASE_HPP_INCLUDED
 #include "strus/base/stdint.h"
+#include "internationalization.hpp"
+#include "errorUtils.hpp"
 #include <limits>
 #include <stdexcept>
 #include <cstring>
@@ -22,17 +24,23 @@ template <typename ELEMTYPE, typename SIZETYPE>
 class PodStructArrayBase
 {
 public:
-	PodStructArrayBase()
-		:m_ar(0),m_allocsize(0),m_size(0)
+	PodStructArrayBase( ELEMTYPE* ar_, SIZETYPE allocsize_)
+		:m_ar(ar_),m_allocsize(allocsize_),m_size(0),m_allocated(false)
 	{}
+	PodStructArrayBase()
+		:m_ar(0),m_allocsize(0),m_size(0),m_allocated(false)
+	{}
+	~PodStructArrayBase()
+	{
+		if (m_allocated) std::free( m_ar);
+	}
 
 	PodStructArrayBase( const PodStructArrayBase& o)
-		:m_ar(0),m_allocsize(0),m_size(o.m_size)
+		:m_ar(0),m_allocsize(o.m_allocsize),m_size(o.m_size),m_allocated(false)
 	{
 		if (o.m_allocsize)
 		{
-			expand( o.m_allocsize);
-			std::memcpy( m_ar, o.m_ar, m_size * sizeof(*m_ar));
+			expand( m_allocsize);
 		}
 	}
 
@@ -53,12 +61,12 @@ public:
 
 	const ELEMTYPE& operator[]( SIZETYPE idx) const
 	{
-		if (idx >= m_size) throw std::runtime_error( "array bound read (PodStructArrayBase)");
+		if (idx >= m_size) throw strus::runtime_error( _TXT("array bound read (PodStructArrayBase)"));
 		return m_ar[idx];
 	}
 	ELEMTYPE& operator[]( SIZETYPE idx)
 	{
-		if (idx >= m_size) throw std::runtime_error( "array bound write (PodStructArrayBase)");
+		if (idx >= m_size) throw strus::runtime_error( _TXT("array bound write (PodStructArrayBase)"));
 		return m_ar[idx];
 	}
 	SIZETYPE size() const
@@ -77,9 +85,19 @@ private:
 		{
 			throw std::logic_error( "illegal call of PodStructArrayBase::expand");
 		}
-		ELEMTYPE* ar_ = (ELEMTYPE*)std::realloc( m_ar, newallocsize * sizeof(*m_ar));
-		if (!ar_) throw std::bad_alloc();
-
+		ELEMTYPE* ar_;
+		if (m_allocated)
+		{
+			ar_ = (ELEMTYPE*)std::realloc( m_ar, newallocsize * sizeof(*m_ar));
+			if (!ar_) throw std::bad_alloc();
+		}
+		else
+		{
+			ar_ = (ELEMTYPE*)std::malloc( newallocsize * sizeof(*m_ar));
+			if (!ar_) throw std::bad_alloc();
+			std::memcpy( ar_, m_ar, m_size * sizeof(*m_ar));
+			m_allocated = true;
+		}
 		m_ar = ar_;
 		m_allocsize = newallocsize;
 	}
@@ -89,7 +107,7 @@ private:
 	ELEMTYPE* m_ar;
 	SIZETYPE m_allocsize;
 	SIZETYPE m_size;
-	SIZETYPE m_freelistidx;
+	bool m_allocated;
 };
 
 }//namespace

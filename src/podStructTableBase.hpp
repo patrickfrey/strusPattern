@@ -10,6 +10,8 @@
 #define _STRUS_STREAM_POD_STRUCT_TABLE_BASE_HPP_INCLUDED
 #include "strus/base/stdint.h"
 #include "podStructArrayBase.hpp"
+#include "internationalization.hpp"
+#include "errorUtils.hpp"
 #include <limits>
 #include <stdexcept>
 #include <new>

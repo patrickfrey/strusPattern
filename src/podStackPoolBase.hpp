@@ -11,6 +11,8 @@
 #include "strus/base/stdint.h"
 #include "podStructArrayBase.hpp"
 #include "podStructTableBase.hpp"
+#include "internationalization.hpp"
+#include "errorUtils.hpp"
 #include <limits>
 #include <stdexcept>
 #include <new>
@@ -68,12 +70,25 @@ public:
 		return true;
 	}
 
+	void set( SIZETYPE stk, const ELEMTYPE& elem) const
+	{
+		if (stk == 0 || stk > Parent::size()) throw strus::runtime_error(_TXT( "illegal list access (set)"));
+		(*this)[ stk-1].value = elem;
+	}
+
 	bool next( SIZETYPE& stk, ELEMTYPE& elem) const
 	{
 		if (stk == 0) return false;
 		elem = (*this)[ stk-1].value;
 		stk = (*this)[ stk-1].next;
 		return true;
+	}
+	const ELEMTYPE* nextptr( SIZETYPE& stk) const
+	{
+		if (stk == 0) return 0;
+		const ELEMTYPE* rt = &(*this)[ stk-1].value;
+		stk = (*this)[ stk-1].next;
+		return rt;
 	}
 };
 
