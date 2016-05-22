@@ -4,8 +4,11 @@ cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
 # SOURCES AND INCLUDES
 # --------------------------------------
 set( source_files
+	utils.cpp
 	internationalization.cpp
 	ruleMatcherAutomaton.cpp
+	symbolTable.cpp
+	streamPatternMatch.cpp
 )
 
 include_directories(

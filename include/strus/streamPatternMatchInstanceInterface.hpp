@@ -23,24 +23,25 @@ class StreamPatternMatchInstanceInterface
 public:
 	virtual ~StreamPatternMatchInstanceInterface(){}
 
-	virtual void declareTerm( const std::string& name, unsigned int termid)=0;
+	virtual unsigned int getTermId( const std::string& name)=0;
 
 	virtual void pushTerm( unsigned int termid)=0;
 
 	virtual void pushExpression(
 			const char* operation,
-			std::size_t argc, int range, unsigned int cardinality)=0;
+			std::size_t argc, unsigned int range, unsigned int cardinality)=0;
+	virtual void pushPattern( const std::string& name);
 
 	/// \brief Attaches a variable to the top expression or term on the stack.
 	/// \param[in] name_ name of the variable attached
 	/// \remark The stack is not changed
 	virtual void attachVariable( const std::string& name_)=0;
 
-	virtual void closePattern( const std::string& name_);
+	virtual void closePattern( const std::string& name_)=0;
 
-	virtual StreamPatternMatchContextInterface* createContext() const;
+	virtual StreamPatternMatchContextInterface* createContext() const=0;
 };
 
-//namespace
+} //namespace
 #endif
 

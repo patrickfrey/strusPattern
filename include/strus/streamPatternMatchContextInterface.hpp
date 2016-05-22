@@ -7,7 +7,8 @@
  */
 #ifndef _STRUS_STREAM_PATTERN_MATCH_CONTEXT_INTERFACE_HPP_INCLUDED
 #define _STRUS_STREAM_PATTERN_MATCH_CONTEXT_INTERFACE_HPP_INCLUDED
-#include <string>
+#include "strus/stream/patternMatchResult.hpp"
+#include <vector>
 
 namespace strus
 {
@@ -18,10 +19,13 @@ class StreamPatternMatchContextInterface
 public:
 	virtual ~StreamPatternMatchContextInterface(){}
 
-	virtual void feedTerm( unsigned int termid, unsigned int ordpos, unsigned int bytepos, unsigned int bytesize)=0;
+	virtual unsigned int termId( const std::string& name) const=0;
 
-	
+	virtual void putInput( unsigned int termid, unsigned int ordpos, unsigned int bytepos, unsigned int bytesize)=0;
+
+	virtual std::vector<stream::PatternMatchResult> fetchResult();
 };
 
-//namespace
+} //namespace
 #endif
+

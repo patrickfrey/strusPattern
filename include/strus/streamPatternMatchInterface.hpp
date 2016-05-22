@@ -21,9 +21,9 @@ class StreamPatternMatchInterface
 public:
 	virtual ~StreamPatternMatchInterface(){}
 
-	virtual StreamPatternMatchInstanceInterface* createInstance() const;
+	virtual StreamPatternMatchInstanceInterface* createInstance() const=0;
 };
 
-//namespace
+} //namespace
 #endif
 

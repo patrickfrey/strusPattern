@@ -15,6 +15,9 @@
 #include <limits>
 #include <stdexcept>
 #include <new>
+#include <set>
+
+#define STRUS_CHECK_FREE_ITEMS
 
 namespace strus
 {
@@ -27,15 +30,42 @@ public:
 	typedef PodStructArrayBase<ELEMTYPE,SIZETYPE,BASEADDR> Parent;
 
 	PodStructTableBase()
+#ifdef STRUS_CHECK_FREE_ITEMS
+		:m_free_elemtab()
+#else
 		:m_freelistidx(0)
+#endif
 	{}
 
 	PodStructTableBase( const PodStructTableBase& o)
+#ifdef STRUS_CHECK_FREE_ITEMS
+		:Parent(o),m_free_elemtab(o.m_free_elemtab)
+#else
 		:Parent(o),m_freelistidx(o.m_freelistidx)
+#endif
 	{}
+
+#ifdef STRUS_CHECK_FREE_ITEMS
+	ELEMTYPE& operator[]( SIZETYPE idx)
+	{
+		typename std::set<SIZETYPE>::const_iterator fi = m_free_elemtab.find( idx);
+		if (fi != m_free_elemtab.end()) throw strus::runtime_error( _TXT("write of element disposed (PodStructArrayBase)"));
+		return Parent::operator []( idx);
+	}
+#endif
+
+#ifdef STRUS_CHECK_FREE_ITEMS
+	const ELEMTYPE& operator[]( SIZETYPE idx) const
+	{
+		typename std::set<SIZETYPE>::const_iterator fi = m_free_elemtab.find( idx);
+		if (fi != m_free_elemtab.end()) throw strus::runtime_error( _TXT("read of element disposed (PodStructArrayBase)"));
+		return Parent::operator []( idx);
+	}
+#endif
 
 	SIZETYPE add( const ELEMTYPE& elem)
 	{
+#ifndef STRUS_CHECK_FREE_ITEMS
 		if (m_freelistidx)
 		{
 			SIZETYPE newidx = m_freelistidx-1;
@@ -44,6 +74,7 @@ public:
 			return newidx;
 		}
 		else
+#endif
 		{
 			return Parent::add( elem);
 		}
@@ -51,15 +82,23 @@ public:
 
 	void remove( SIZETYPE idx)
 	{
+#ifdef STRUS_CHECK_FREE_ITEMS
+		m_free_elemtab.insert( idx);
+#else
 		((FREELISTTYPE*)(void*)(&(*this)[ idx]))->next = m_freelistidx;
 		m_freelistidx = idx+1;
+#endif
 	}
 
 private:
 	void reset(){}		//< forbid usage of inherited method
 
 private:
+#ifdef STRUS_CHECK_FREE_ITEMS
+	std::set<SIZETYPE> m_free_elemtab;
+#else
 	SIZETYPE m_freelistidx;
+#endif
 };
 
 }//namespace

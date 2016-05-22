@@ -77,13 +77,13 @@ struct ActionSlot
 	uint32_t rule;
 	uint32_t group;
 	uint32_t start_ordpos;
-	std::size_t start_bytepos;
+	std::size_t start_origpos;
 	bool isComplete;
 
 	ActionSlot( uint32_t value_, uint32_t count_, uint32_t event_, uint32_t program_, uint32_t rule_, uint32_t group_, bool isComplete_)
-		:value(value_),count(count_),event(event_),program(program_),rule(rule_),group(group_),start_ordpos(0),start_bytepos(0),isComplete(isComplete_){}
+		:value(value_),count(count_),event(event_),program(program_),rule(rule_),group(group_),start_ordpos(0),start_origpos(0),isComplete(isComplete_){}
 	ActionSlot( const ActionSlot& o)
-		:value(o.value),count(o.count),event(o.event),program(o.program),rule(o.rule),group(o.group),start_ordpos(o.start_ordpos),start_bytepos(o.start_bytepos),isComplete(o.isComplete){}
+		:value(o.value),count(o.count),event(o.event),program(o.program),rule(o.rule),group(o.group),start_ordpos(o.start_ordpos),start_origpos(o.start_origpos),isComplete(o.isComplete){}
 };
 
 struct ActionSlotTableFreeListElem {uint32_t _;uint32_t next;};
@@ -177,18 +177,18 @@ public:
 
 struct EventData
 {
-	std::size_t bytepos;
-	std::size_t bytesize;
+	std::size_t origpos;
+	std::size_t origsize;
 	uint32_t ordpos;
 	uint32_t eventid;
 	uint32_t subdataref;
 
 	EventData()
-		:bytepos(0),bytesize(0),ordpos(0),eventid(0),subdataref(0){}
-	EventData( std::size_t bytepos_, std::size_t bytesize_, uint32_t ordpos_, uint32_t eventid_, uint32_t subdataref_)
-		:bytepos(bytepos_),bytesize(bytesize_),ordpos(ordpos_),eventid(eventid_),subdataref(subdataref_){}
+		:origpos(0),origsize(0),ordpos(0),eventid(0),subdataref(0){}
+	EventData( std::size_t origpos_, std::size_t origsize_, uint32_t ordpos_, uint32_t eventid_, uint32_t subdataref_)
+		:origpos(origpos_),origsize(origsize_),ordpos(ordpos_),eventid(eventid_),subdataref(subdataref_){}
 	EventData( const EventData& o)
-		:bytepos(o.bytepos),bytesize(o.bytesize),ordpos(o.ordpos),eventid(o.eventid),subdataref(o.subdataref){}
+		:origpos(o.origpos),origsize(o.origsize),ordpos(o.ordpos),eventid(o.eventid),subdataref(o.subdataref){}
 };
 
 struct EventDataReference

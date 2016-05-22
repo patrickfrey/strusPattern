@@ -295,7 +295,7 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 					if (slot.start_ordpos == 0 || slot.start_ordpos > data.ordpos)
 					{
 						slot.start_ordpos = data.ordpos;
-						slot.start_bytepos = data.bytepos;
+						slot.start_origpos = data.origpos;
 					}
 					break;
 				case Trigger::SigSeq:
@@ -312,7 +312,7 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 						if (slot.start_ordpos == 0 || slot.start_ordpos > data.ordpos)
 						{
 							slot.start_ordpos = data.ordpos;
-							slot.start_bytepos = data.bytepos;
+							slot.start_origpos = data.origpos;
 						}
 					}
 					break;
@@ -331,7 +331,7 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 						if (slot.start_ordpos == 0 || slot.start_ordpos > data.ordpos)
 						{
 							slot.start_ordpos = data.ordpos;
-							slot.start_bytepos = data.bytepos;
+							slot.start_origpos = data.origpos;
 						}
 					}
 					break;
@@ -356,8 +356,8 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 				}
 				if (slot.event)
 				{
-					std::size_t eventByteSize = data.bytepos + data.bytesize - slot.start_bytepos;
-					EventData followEventData( slot.start_bytepos, eventByteSize, slot.start_ordpos, slot.event, rule.eventDataReferenceIdx);
+					std::size_t eventOrigSize = data.origpos + data.origsize - slot.start_origpos;
+					EventData followEventData( slot.start_origpos, eventOrigSize, slot.start_ordpos, slot.event, rule.eventDataReferenceIdx);
 					referenceEventData( rule.eventDataReferenceIdx);
 					followList.add( followEventData);
 				}
