@@ -21,7 +21,7 @@ public:
 
 	virtual unsigned int termId( const std::string& name) const=0;
 
-	virtual void putInput( unsigned int termid, unsigned int ordpos, unsigned int bytepos, unsigned int bytesize)=0;
+	virtual void putInput( unsigned int termid, unsigned int ordpos, unsigned int origpos, unsigned int origsize)=0;
 
 	virtual std::vector<stream::PatternMatchResult> fetchResult();
 };

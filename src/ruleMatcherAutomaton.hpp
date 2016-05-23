@@ -9,6 +9,7 @@
 #ifndef _STRUS_RULE_MATCHER_AUTOMATON_HPP_INCLUDED
 #define _STRUS_RULE_MATCHER_AUTOMATON_HPP_INCLUDED
 #include "strus/base/stdint.h"
+#include "utils.hpp"
 #include "podStructArrayBase.hpp"
 #include "podStructTableBase.hpp"
 #include "podStackPoolBase.hpp"
@@ -19,24 +20,22 @@ namespace strus
 
 enum
 {
-	BaseAddrGroupTable =		(1000000 *  1),
-	BaseAddrRuleTable =		(1000000 *  2),
-	BaseAddrActionSlotDefTable =	(1000000 *  3),
-	BaseAddrTriggerDefTable =	(1000000 *  4),
-	BaseAddrProgramTable =		(1000000 *  5),
-	BaseAddrActionSlotTable =	(1000000 *  6),
-	BaseAddrActionSlotList =	(1000000 *  7),
-	BaseAddrEventTriggerList =	(1000000 *  8),
-	BaseAddrEventDataReferenceTable=(1000000 *  9),
-	BaseAddrGroupList =		(1000000 * 10),
-	BaseAddrEventItemList =		(1000000 * 11),
-	BaseAddrResultList =		(1000000 * 12)
+	BaseAddrRuleTable =		(1000000 *  1),
+	BaseAddrTriggerDefTable =	(1000000 *  2),
+	BaseAddrProgramTable =		(1000000 *  3),
+	BaseAddrActionSlotTable =	(1000000 *  4),
+	BaseAddrEventTriggerList =	(1000000 *  5),
+	BaseAddrEventDataReferenceTable=(1000000 *  6),
+	BaseAddrEventItemList =		(1000000 *  7),
+	BaseAddrResultList =		(1000000 *  8),
+	BaseAddrProgramList =		(1000000 *  9),
+	BaseAddrActionSlotDefTable =	(1000000 * 10)
 };
 
 class Trigger
 {
 public:
-	enum SigType {SigAll=0x0,SigSeq=0x1,SigAny=0x2,SigDel=0x3};
+	enum SigType {SigAny=0x0,SigSequence=0x1,SigInRange=0x2,SigDel=0x3};
 
 	Trigger( uint32_t slot_, SigType sigtype_, uint32_t sigval_, uint32_t variable_)
 		:m_slot(slot_),m_sigtype(sigtype_),m_variable(variable_),m_sigval(sigval_){}
@@ -73,17 +72,15 @@ struct ActionSlot
 	uint32_t value;
 	uint32_t count;
 	uint32_t event;
-	uint32_t program;
 	uint32_t rule;
-	uint32_t group;
+	uint32_t resultHandle;
 	uint32_t start_ordpos;
 	std::size_t start_origpos;
-	bool isComplete;
 
-	ActionSlot( uint32_t value_, uint32_t count_, uint32_t event_, uint32_t program_, uint32_t rule_, uint32_t group_, bool isComplete_)
-		:value(value_),count(count_),event(event_),program(program_),rule(rule_),group(group_),start_ordpos(0),start_origpos(0),isComplete(isComplete_){}
+	ActionSlot( uint32_t value_, uint32_t count_, uint32_t event_, uint32_t rule_, uint32_t resultHandle_)
+		:value(value_),count(count_),event(event_),rule(rule_),resultHandle(resultHandle_),start_ordpos(0),start_origpos(0){}
 	ActionSlot( const ActionSlot& o)
-		:value(o.value),count(o.count),event(o.event),program(o.program),rule(o.rule),group(o.group),start_ordpos(o.start_ordpos),start_origpos(o.start_origpos),isComplete(o.isComplete){}
+		:value(o.value),count(o.count),event(o.event),rule(o.rule),resultHandle(o.resultHandle),start_ordpos(o.start_ordpos),start_origpos(o.start_origpos){}
 };
 
 struct ActionSlotTableFreeListElem {uint32_t _;uint32_t next;};
@@ -108,7 +105,8 @@ public:
 	uint32_t add( const EventTrigger& et);
 	void remove( uint32_t idx);
 
-	void getTriggers( PodStructArrayBase<Trigger*,std::size_t,0>& triggers, uint32_t event) const;
+	typedef PodStructArrayBase<Trigger*,std::size_t,0> TriggerRefList;
+	void getTriggers( TriggerRefList& triggers, uint32_t event) const;
 
 private:
 	void expand( uint32_t newallocsize);
@@ -122,45 +120,21 @@ private:
 	uint32_t m_freelistidx;
 };
 
-struct Group
-{
-	uint32_t actionSlotListIdx;
-	uint32_t eventTriggerListIdx;
-
-	Group()
-		:actionSlotListIdx(0),eventTriggerListIdx(0){}
-	Group( uint32_t actionSlotListIdx_, uint32_t eventTriggerListIdx_)
-		:actionSlotListIdx(actionSlotListIdx_),eventTriggerListIdx(eventTriggerListIdx_){}
-	Group( const Group& o)
-		:actionSlotListIdx(o.actionSlotListIdx),eventTriggerListIdx(o.eventTriggerListIdx){}
-};
-
-struct GroupTableFreeListElem {uint32_t _;uint32_t next;};
-
-class GroupTable
-	:public PodStructTableBase<Group,uint32_t,GroupTableFreeListElem,BaseAddrGroupTable>
-{
-public:
-	typedef PodStructTableBase<Group,uint32_t,GroupTableFreeListElem,BaseAddrGroupTable> Parent;
-
-	GroupTable(){}
-	GroupTable( const GroupTable& o) :Parent(o){}
-};
-
 class Rule
 {
 public:
-	uint32_t groupListIdx;
+	uint32_t actionSlotIdx;
+	uint32_t eventTriggerListIdx;
 	uint32_t eventDataReferenceIdx;
-	uint32_t lastpos;
-	bool isComplete;
+	unsigned int done:1;
+	unsigned int lastpos:31;
 
 	Rule()
-		:groupListIdx(0),eventDataReferenceIdx(0),lastpos(0),isComplete(false){}
-	Rule( uint32_t groupListIdx_, uint32_t eventDataReferenceIdx_, uint32_t lastpos_)
-		:groupListIdx(groupListIdx_),eventDataReferenceIdx(eventDataReferenceIdx_),lastpos(lastpos_),isComplete(false){}
+		:actionSlotIdx(0),eventTriggerListIdx(0),eventDataReferenceIdx(0),done(0),lastpos(0){}
+	Rule( uint32_t actionSlotIdx_, uint32_t eventTriggerListIdx_, uint32_t eventDataReferenceIdx_, uint32_t lastpos_)
+		:actionSlotIdx(actionSlotIdx_),eventTriggerListIdx(eventTriggerListIdx_),eventDataReferenceIdx(eventDataReferenceIdx_),done(0),lastpos(lastpos_){}
 	Rule( const Rule& o)
-		:groupListIdx(o.groupListIdx),eventDataReferenceIdx(o.eventDataReferenceIdx),lastpos(o.lastpos),isComplete(o.isComplete){}
+		:actionSlotIdx(o.actionSlotIdx),eventTriggerListIdx(o.eventTriggerListIdx),eventDataReferenceIdx(o.eventDataReferenceIdx),done(o.done),lastpos(o.lastpos){}
 };
 
 struct RuleTableFreeListElem {uint32_t _;uint32_t next;};
@@ -219,13 +193,13 @@ struct EventItem
 
 struct Result
 {
-	uint32_t rule;
-	uint32_t eventItemListIdx;
+	uint32_t resultHandle;
+	uint32_t eventDataReferenceIdx;
 
-	Result( uint32_t rule_, uint32_t eventItemListIdx_)
-		:rule(rule_),eventItemListIdx(eventItemListIdx_){}
+	Result( uint32_t resultHandle_, uint32_t eventDataReferenceIdx_)
+		:resultHandle(resultHandle_),eventDataReferenceIdx(eventDataReferenceIdx_){}
 	Result( const Result& o)
-		:rule(o.rule),eventItemListIdx(o.eventItemListIdx){}
+		:resultHandle(o.resultHandle),eventDataReferenceIdx(o.eventDataReferenceIdx){}
 };
 
 struct ActionSlotDef
@@ -233,42 +207,41 @@ struct ActionSlotDef
 	uint32_t initsigval;
 	uint32_t initcount;
 	uint32_t event;
-	uint32_t program;
-	bool isComplete;
+	uint32_t resultHandle;
 
-	ActionSlotDef( uint32_t initsigval_, uint32_t initcount_, uint32_t event_, uint32_t program_, bool isComplete_)
-		:initsigval(initsigval_),initcount(initcount_),event(event_),program(program_),isComplete(isComplete_){}
+	ActionSlotDef( uint32_t initsigval_, uint32_t initcount_, uint32_t event_, uint32_t resultHandle_)
+		:initsigval(initsigval_),initcount(initcount_),event(event_),resultHandle(resultHandle_){}
 	ActionSlotDef( const ActionSlotDef& o)
-		:initsigval(o.initsigval),initcount(o.initcount),event(o.event),program(o.program),isComplete(o.isComplete){}
+		:initsigval(o.initsigval),initcount(o.initcount),event(o.event),resultHandle(o.resultHandle){}
 };
 
 struct TriggerDef
 {
 	uint32_t event;
-	uint32_t slot;
 	Trigger::SigType sigtype;
 	uint32_t sigval;
 	uint32_t variable;
 
-	TriggerDef( uint32_t event_, uint32_t slot_, Trigger::SigType sigtype_, uint32_t sigval_, uint32_t variable_)
-		:event(event_),slot(slot_),sigtype(sigtype_),sigval(sigval_),variable(variable_){}
+	TriggerDef( uint32_t event_, Trigger::SigType sigtype_, uint32_t sigval_, uint32_t variable_)
+		:event(event_),sigtype(sigtype_),sigval(sigval_),variable(variable_){}
 	TriggerDef( const TriggerDef& o)
-		:event(o.event),slot(o.slot),sigtype(o.sigtype),sigval(o.sigval),variable(o.variable){}
+		:event(o.event),sigtype(o.sigtype),sigval(o.sigval),variable(o.variable){}
 };
 
 struct Program
 {
-	uint32_t actionSlotListIdx;
+	ActionSlotDef slotDef;
 	uint32_t triggerListIdx;
 	uint32_t positionRange;
 
-	explicit Program( uint32_t positionRange_)
-		:actionSlotListIdx(0),triggerListIdx(0),positionRange(positionRange_){}
+	Program( uint32_t positionRange_, const ActionSlotDef& slotDef_)
+		:slotDef(slotDef_),triggerListIdx(0),positionRange(positionRange_){}
 	Program( const Program& o)
-		:actionSlotListIdx(o.actionSlotListIdx),triggerListIdx(o.triggerListIdx),positionRange(o.positionRange){}
+		:slotDef(o.slotDef),triggerListIdx(o.triggerListIdx),positionRange(o.positionRange){}
 };
 
 struct ProgramTableFreeListElem {uint32_t _;uint32_t next;};
+
 
 class ProgramTable
 {
@@ -276,18 +249,24 @@ public:
 	typedef PodStackPoolBase<ActionSlotDef,uint32_t,BaseAddrActionSlotDefTable> ActionSlotDefList;
 	typedef PodStackPoolBase<TriggerDef,uint32_t,BaseAddrTriggerDefTable> TriggerDefList;
 
-	uint32_t createProgram( uint32_t positionRange_);
-	void createSlot( uint32_t program, uint32_t initsigval, uint32_t initcount, uint32_t follow_event, uint32_t follow_program, bool isComplete);
-	void createTrigger( uint32_t program, uint32_t event, uint32_t slot, Trigger::SigType sigtype, uint32_t sigval, uint32_t variable);
+	uint32_t createProgram( uint32_t positionRange_, const ActionSlotDef& actionSlotDef_);
+	void createTrigger( uint32_t program, uint32_t event, Trigger::SigType sigtype, uint32_t sigval, uint32_t variable);
 
 	const Program& operator[]( uint32_t programidx) const	{return m_programTable[ programidx-1];}
-	const ActionSlotDefList& actionSlotList() const		{return m_actionSlotList;}
 	const TriggerDefList& triggerList() const		{return m_triggerList;}
 
+	void defineProgramResult( uint32_t programidx, uint32_t eventid, uint32_t resultHandle);
+
+	void defineEventProgram( uint32_t eventid, uint32_t programidx);
+	uint32_t getEventProgramList( uint32_t eventid) const;
+	bool nextProgram( uint32_t& programlist, uint32_t& program) const;
+
 private:
-	ActionSlotDefList m_actionSlotList;
+	ActionSlotDefList m_actionSlotArray;
 	TriggerDefList m_triggerList;
 	PodStructTableBase<Program,uint32_t,ProgramTableFreeListElem,BaseAddrProgramTable> m_programTable;
+	PodStackPoolBase<uint32_t,uint32_t,BaseAddrProgramList> programList;
+	utils::UnorderedMap<uint32_t,uint32_t> eventProgamMap;
 };
 
 struct DisposeEvent
@@ -312,39 +291,41 @@ public:
 	explicit StateMachine( const ProgramTable* programTable_);
 	StateMachine( const StateMachine& o);
 
-	uint32_t createRule( uint32_t positionRange);
-	uint32_t createGroup( uint32_t rule, uint32_t positionRange);
-	uint32_t createSlot( uint32_t rule, uint32_t group, uint32_t initsigval, uint32_t initcount, uint32_t event, uint32_t program, bool isComplete);
-	void createTrigger( uint32_t rule, uint32_t group, uint32_t event, uint32_t slot,
-				Trigger::SigType sigtype, uint32_t sigval, uint32_t variable);
-
 	void doTransition( uint32_t event, const EventData& data);
 	void setCurrentPos( uint32_t pos);
-	void installProgram( uint32_t ruleidx, uint32_t programidx);
+	void installProgram( uint32_t programidx);
+
+	typedef PodStructArrayBase<Result,std::size_t,BaseAddrResultList> ResultList;
+	const ResultList& results() const
+	{
+		return m_results;
+	}
+	uint32_t getEventDataItemListIdx( uint32_t dataref)
+	{
+		return m_eventDataReferenceTable[ dataref].eventItemListIdx;
+	}
+	const EventItem* nextResultItem( uint32_t& list) const
+	{
+		return m_eventItemList.nextptr( list);
+	}
 
 private:
+	uint32_t createRule( uint32_t positionRange, uint32_t actionSlotIdx, uint32_t eventTriggerListIdx, uint32_t eventDataReferenceIdx);
 	void disposeRule( uint32_t rule);
-	void deactivateGroup( uint32_t group);
 	void disposeEventDataReference( uint32_t eventdataref);
 	void referenceEventData( uint32_t eventdataref);
 	void appendEventData( uint32_t eventdataref, const EventItem& item);
 
 private:
 	const ProgramTable* m_programTable;
-	enum {MaxActionSlots=1024};
 	EventTriggerTable m_eventTriggerTable;
 	ActionSlotTable m_actionSlotTable;
-	GroupTable m_groupTable;
-	PodStackPoolBase<uint32_t,uint32_t,BaseAddrActionSlotList> m_actionSlotList;
 	PodStackPoolBase<uint32_t,uint32_t,BaseAddrEventTriggerList> m_eventTriggerList;
-	PodStackPoolBase<uint32_t,uint32_t,BaseAddrGroupList> m_groupList;
 	PodStackPoolBase<EventItem,uint32_t,BaseAddrEventItemList> m_eventItemList;
 	EventDataReferenceTable m_eventDataReferenceTable;
 	RuleTable m_ruleTable;
-	PodStructArrayBase<Result,std::size_t,BaseAddrResultList> m_results;
+	ResultList m_results;
 	uint32_t m_curpos;
-
-	std::vector<DisposeEvent> m_groupDisposeQueue;
 	std::vector<DisposeEvent> m_ruleDisposeQueue;
 };
 

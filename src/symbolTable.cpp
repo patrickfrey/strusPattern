@@ -96,7 +96,7 @@ uint32_t SymbolTable::getOrCreate( const std::string& key)
 	Map::const_iterator itr = m_map.find( key.c_str());
 	if (itr == m_map.end())
 	{
-		if (m_invmap.size() >= std::numeric_limits<int32_t>::max()-1)
+		if (m_invmap.size() >= (std::size_t)std::numeric_limits<int32_t>::max()-1)
 		{
 			throw std::bad_alloc();
 		}
