@@ -93,14 +93,19 @@ void StringMapKeyBlockList::clear()
 
 uint32_t SymbolTable::getOrCreate( const std::string& key)
 {
-	Map::const_iterator itr = m_map.find( key.c_str());
+	return getOrCreate( key.c_str(), key.size());
+}
+
+uint32_t SymbolTable::getOrCreate( const char* key, std::size_t keysize)
+{
+	Map::const_iterator itr = m_map.find( key);
 	if (itr == m_map.end())
 	{
 		if (m_invmap.size() >= (std::size_t)std::numeric_limits<int32_t>::max()-1)
 		{
 			throw std::bad_alloc();
 		}
-		m_invmap.push_back( m_keystring_blocks.allocKey( key.c_str(), key.size()));
+		m_invmap.push_back( m_keystring_blocks.allocKey( key, keysize));
 		m_map[ m_invmap.back()] = m_invmap.size();
 		return m_invmap.size();
 	}
@@ -112,7 +117,12 @@ uint32_t SymbolTable::getOrCreate( const std::string& key)
 
 uint32_t SymbolTable::get( const std::string& key) const
 {
-	Map::const_iterator itr = m_map.find( key.c_str());
+	return get( key.c_str(), key.size());
+}
+
+uint32_t SymbolTable::get( const char* key, std::size_t) const
+{
+	Map::const_iterator itr = m_map.find( key);
 	if (itr != m_map.end())
 	{
 		return itr->second;

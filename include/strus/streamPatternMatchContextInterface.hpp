@@ -17,9 +17,14 @@ namespace strus
 class StreamPatternMatchContextInterface
 {
 public:
+	/// \brief Destructor
 	virtual ~StreamPatternMatchContextInterface(){}
 
-	virtual unsigned int termId( const std::string& name) const=0;
+	/// \brief Get the internal numeric identifier of the term with the given name or 0 if not defined
+	/// \param[in] type type name of the term
+	/// \param[in] value value string of the term
+	/// \return term identifier or 0, if not defined
+	virtual unsigned int termId( const std::string& type, const std::string& value) const=0;
 
 	virtual void putInput( unsigned int termid, unsigned int ordpos, unsigned int origpos, unsigned int origsize)=0;
 

@@ -19,8 +19,11 @@ class StreamPatternMatchInstanceInterface;
 class StreamPatternMatchInterface
 {
 public:
+	/// \brief Destructor
 	virtual ~StreamPatternMatchInterface(){}
 
+	/// \brief Create an instance to build the rules of a pattern matcher
+	/// \return the pattern matcher instance
 	virtual StreamPatternMatchInstanceInterface* createInstance() const=0;
 };
 

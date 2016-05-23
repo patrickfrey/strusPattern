@@ -21,6 +21,7 @@
 #include <map>
 #include <limits>
 #include <vector>
+#include <cstring>
 
 
 using namespace strus;
@@ -42,6 +43,23 @@ static uint32_t eventHandle( PatternEventType type_, uint32_t idx)
 	return idx | ((uint32_t)type_ << 30);
 }
 
+static bool getKeyValueStrBuf( char* buf, std::size_t bufsize, std::size_t& size, const std::string& type, const std::string& value)
+{
+	if (type.size() + value.size() < bufsize -2)
+	{
+		std::string::const_iterator ti = type.begin(), te = type.end();
+		std::size_t tidx = 0;
+		for (; ti != te; ++ti,++tidx)
+		{
+			buf[ tidx] = tolower( *ti);
+		}
+		if (type.size()) buf[ tidx++] = ' ';
+		std::memcpy( buf+tidx, value.c_str(), value.size());
+		tidx += value.size();
+		size = tidx;
+	}
+}
+
 class StreamPatternMatchContext
 	:public StreamPatternMatchContextInterface
 {
@@ -51,11 +69,25 @@ public:
 
 	virtual ~StreamPatternMatchContext(){}
 
-	virtual unsigned int termId( const std::string& name) const
+	virtual unsigned int termId( const std::string& type, const std::string& value) const
 	{
 		try
 		{
-			return m_data->variableMap.get( name);
+			enum {StrBufSize=256};
+			char buf[ StrBufSize];
+			std::size_t keysize;
+			if (getKeyValueStrBuf( buf, StrBufSize, keysize, type, value))
+			{
+				return m_data->variableMap.get( buf, size);
+			}
+			else if (type.empty())
+			{
+				return m_data->variableMap.get( value);
+			}
+			else
+			{
+				return m_data->variableMap.get( utils::tolower(type)+" "+value);
+			}
 		}
 		CATCH_ERROR_MAP_RETURN( "failed to get/create pattern match term identifier", *m_errorhnd, 0);
 	}
@@ -148,11 +180,25 @@ public:
 
 	virtual ~StreamPatternMatchInstance(){}
 
-	virtual unsigned int getTermId( const std::string& name)
+	virtual unsigned int getTermId( const std::string& type, const std::string& value)
 	{
 		try
 		{
-			return m_data.variableMap.getOrCreate( name);
+			enum {StrBufSize=256};
+			char buf[ StrBufSize];
+			std::size_t keysize;
+			if (getKeyValueStrBuf( buf, StrBufSize, keysize, type, value))
+			{
+				return m_data->variableMap.getOrCreate( buf, size);
+			}
+			else if (type.empty())
+			{
+				return m_data->variableMap.getOrCreate( value);
+			}
+			else
+			{
+				return m_data->variableMap.getOrCreate( utils::tolower(type)+" "+value);
+			}
 		}
 		CATCH_ERROR_MAP_RETURN( "failed to get/create pattern match term identifier", *m_errorhnd, 0);
 	}
@@ -269,7 +315,7 @@ public:
 		CATCH_ERROR_MAP( "failed to push expression on pattern match expression stack", *m_errorhnd);
 	}
 
-	virtual void pushPattern( const std::string& name)
+	virtual void pushPattern( const std::string& name, bool visible)
 	{
 		try
 		{
@@ -297,7 +343,7 @@ public:
 		CATCH_ERROR_MAP( "failed to attach variable to top element of pattern match expression stack", *m_errorhnd);
 	}
 
-	virtual void closePattern( const std::string& name_)
+	virtual void closePattern( const std::string& name, bool visible)
 	{
 		try
 		{
@@ -305,9 +351,10 @@ public:
 			{
 				throw strus::runtime_error(_TXT("illegal operation close pattern when no node on the stack"));
 			}
-			uint32_t resultHandle = m_data.patternMap.getOrCreate( name_);
+			uint32_t resultHandle = m_data.patternMap.getOrCreate( name);
 			uint32_t resultEvent = eventHandle( ReferenceEvent, resultHandle);
-			m_data.programTable.defineProgramResult( m_stack.back().program, resultEvent, resultHandle);
+			m_data.programTable.defineProgramResult( 
+				m_stack.back().program, resultEvent, visible?resultHandle:0);
 		}
 		CATCH_ERROR_MAP( "failed to close pattern definition on pattern match expression stack", *m_errorhnd);
 	}

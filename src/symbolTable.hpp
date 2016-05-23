@@ -83,8 +83,10 @@ public:
 	SymbolTable(){}
 
 	uint32_t getOrCreate( const std::string& key);
+	uint32_t getOrCreate( const char* key, std::size_t keysize);
 
 	uint32_t get( const std::string& key) const;
+	uint32_t get( const char* key, std::size_t keysize) const;
 
 	const char* key( const uint32_t& value) const;
 
