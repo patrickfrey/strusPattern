@@ -27,3 +27,19 @@ link_directories(
 add_library( rulematch STATIC ${source_files} )
 target_link_libraries( rulematch strus_base ${Boost_LIBRARIES} ${Intl_LIBRARIES} )
 
+add_library( strus_stream SHARED libstrus_stream.cpp )
+target_link_libraries( strus_stream rulematch strus_base  )
+
+set_target_properties(
+    strus_stream
+    PROPERTIES
+    DEBUG_POSTFIX "_d"
+    SOVERSION "${STRUS_MAJOR_VERSION}.${STRUS_MINOR_VERSION}"
+    VERSION ${STRUS_VERSION} )
+
+# ------------------------------
+# INSTALLATION
+# ------------------------------
+install( TARGETS strus_stream
+           LIBRARY DESTINATION ${LIB_INSTALL_DIR}/strus )
+

@@ -57,7 +57,9 @@ static bool getKeyValueStrBuf( char* buf, std::size_t bufsize, std::size_t& size
 		std::memcpy( buf+tidx, value.c_str(), value.size());
 		tidx += value.size();
 		size = tidx;
+		return true;
 	}
+	return false;
 }
 
 class StreamPatternMatchContext
@@ -74,11 +76,11 @@ public:
 		try
 		{
 			enum {StrBufSize=256};
-			char buf[ StrBufSize];
-			std::size_t keysize;
-			if (getKeyValueStrBuf( buf, StrBufSize, keysize, type, value))
+			char keybuf[ StrBufSize];
+			std::size_t keysize = 0;
+			if (getKeyValueStrBuf( keybuf, StrBufSize, keysize, type, value))
 			{
-				return m_data->variableMap.get( buf, size);
+				return m_data->variableMap.get( keybuf, keysize);
 			}
 			else if (type.empty())
 			{
@@ -185,19 +187,19 @@ public:
 		try
 		{
 			enum {StrBufSize=256};
-			char buf[ StrBufSize];
-			std::size_t keysize;
-			if (getKeyValueStrBuf( buf, StrBufSize, keysize, type, value))
+			char keybuf[ StrBufSize];
+			std::size_t keysize = 0;
+			if (getKeyValueStrBuf( keybuf, StrBufSize, keysize, type, value))
 			{
-				return m_data->variableMap.getOrCreate( buf, size);
+				return m_data.variableMap.getOrCreate( keybuf, keysize);
 			}
 			else if (type.empty())
 			{
-				return m_data->variableMap.getOrCreate( value);
+				return m_data.variableMap.getOrCreate( value);
 			}
 			else
 			{
-				return m_data->variableMap.getOrCreate( utils::tolower(type)+" "+value);
+				return m_data.variableMap.getOrCreate( utils::tolower(type)+" "+value);
 			}
 		}
 		CATCH_ERROR_MAP_RETURN( "failed to get/create pattern match term identifier", *m_errorhnd, 0);
@@ -315,7 +317,7 @@ public:
 		CATCH_ERROR_MAP( "failed to push expression on pattern match expression stack", *m_errorhnd);
 	}
 
-	virtual void pushPattern( const std::string& name, bool visible)
+	virtual void pushPattern( const std::string& name)
 	{
 		try
 		{

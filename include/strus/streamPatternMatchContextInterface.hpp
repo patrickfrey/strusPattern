@@ -28,7 +28,7 @@ public:
 
 	virtual void putInput( unsigned int termid, unsigned int ordpos, unsigned int origpos, unsigned int origsize)=0;
 
-	virtual std::vector<stream::PatternMatchResult> fetchResult();
+	virtual std::vector<stream::PatternMatchResult> fetchResult()=0;
 };
 
 } //namespace
