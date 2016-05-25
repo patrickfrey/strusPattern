@@ -90,6 +90,10 @@ public:
 		stk = (*this)[ stk-1].next;
 		return rt;
 	}
+	void check( SIZETYPE idx) const
+	{
+		(*this)[ idx-1];
+	}
 };
 
 }//namespace

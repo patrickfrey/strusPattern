@@ -28,7 +28,20 @@ public:
 
 	virtual void putInput( unsigned int termid, unsigned int ordpos, unsigned int origpos, unsigned int origsize)=0;
 
-	virtual std::vector<stream::PatternMatchResult> fetchResult()=0;
+	virtual std::vector<stream::PatternMatchResult> fetchResults() const=0;
+
+	struct Statistics
+	{
+		unsigned int nofPatternsTriggered;
+		double nofOpenPatterns;
+
+		Statistics()
+			:nofPatternsTriggered(0),nofOpenPatterns(0){}
+		Statistics( const Statistics& o)
+			:nofPatternsTriggered(o.nofPatternsTriggered),nofOpenPatterns(o.nofOpenPatterns){}
+	};
+
+	virtual void getStatistics( Statistics& stats) const=0;
 };
 
 } //namespace

@@ -22,17 +22,17 @@ class PatternMatchResult
 public:
 	typedef PatternMatchResultItem Item;
 
-	PatternMatchResult( const std::string& name_, const std::vector<Item>& itemlist_)
+	PatternMatchResult( const char* name_, const std::vector<Item>& itemlist_)
 		:m_name(name_),m_itemlist(itemlist_){}
 	PatternMatchResult( const PatternMatchResult& o)
 		:m_name(o.m_name),m_itemlist(o.m_itemlist){}
 	~PatternMatchResult(){}
 
-	const std::string& name() const			{return m_name;}
+	const char* name() const			{return m_name;}
 	const std::vector<Item>& itemlist() const	{return m_itemlist;}
 
 private:
-	std::string m_name;
+	const char* m_name;
 	std::vector<Item> m_itemlist;
 };
 

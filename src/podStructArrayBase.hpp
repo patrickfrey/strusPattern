@@ -17,7 +17,7 @@
 #include <cstdlib>
 #include <new>
 
-#define STRUS_USE_BASEADDR
+#undef STRUS_USE_BASEADDR
 
 namespace strus
 {
@@ -70,7 +70,10 @@ public:
 #ifdef STRUS_USE_BASEADDR
 		idx -= BASEADDR;
 #endif
-		if (idx >= m_size) throw strus::runtime_error( _TXT("array bound read (PodStructArrayBase)"));
+		if (idx >= m_size)
+		{
+			throw strus::runtime_error( _TXT("array bound read (PodStructArrayBase)"));
+		}
 		return m_ar[idx];
 	}
 	ELEMTYPE& operator[]( SIZETYPE idx)
@@ -78,9 +81,29 @@ public:
 #ifdef STRUS_USE_BASEADDR
 		idx -= BASEADDR;
 #endif
-		if (idx >= m_size) throw strus::runtime_error( _TXT("array bound write (PodStructArrayBase)"));
+		if (idx >= m_size)
+		{
+			throw strus::runtime_error( _TXT("array bound write (PodStructArrayBase)"));
+		}
 		return m_ar[idx];
 	}
+	ELEMTYPE* reserve( SIZETYPE addsize)
+	{
+		if (m_allocsize < m_size + addsize)
+		{
+			expand( m_size + addsize);
+		}
+		return m_ar + m_size;
+	}
+	void commit_reserved( SIZETYPE addsize)
+	{
+		if (m_allocsize < m_size + addsize)
+		{
+			throw strus::runtime_error( _TXT("array bound write on reserved area (PodStructArrayBase)"));
+		}
+		m_size += addsize;
+	}
+
 	SIZETYPE size() const
 	{
 		return m_size;
@@ -89,6 +112,44 @@ public:
 	{
 		m_size = 0;
 	}
+
+	class const_iterator
+	{
+	public:
+		const_iterator( const ELEMTYPE* itr_)
+			:m_itr(itr_){}
+		const_iterator& operator++()
+		{
+			++m_itr;
+			return *this;
+		}
+		const_iterator& operator++(int)
+		{
+			const_iterator rt( m_itr);
+			++m_itr;
+			return rt;
+		}
+		const ELEMTYPE& operator*() const
+		{
+			return *m_itr;
+		}
+		const ELEMTYPE* operator->() const
+		{
+			return m_itr;
+		}
+		bool operator==( const const_iterator& o) const {return m_itr == o.m_itr;}
+		bool operator!=( const const_iterator& o) const {return m_itr != o.m_itr;}
+		bool operator<=( const const_iterator& o) const {return m_itr <= o.m_itr;}
+		bool operator<( const const_iterator& o) const  {return m_itr < o.m_itr;}
+		bool operator>=( const const_iterator& o) const {return m_itr >= o.m_itr;}
+		bool operator>( const const_iterator& o) const  {return m_itr > o.m_itr;}
+
+	private:
+		const ELEMTYPE* m_itr;
+	};
+
+	const_iterator begin() const	{return const_iterator(m_ar);}
+	const_iterator end() const	{return const_iterator(m_ar+m_size);}
 
 private:
 	void expand( SIZETYPE newallocsize)

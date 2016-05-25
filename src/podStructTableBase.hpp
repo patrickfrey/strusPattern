@@ -17,7 +17,7 @@
 #include <new>
 #include <set>
 
-#define STRUS_CHECK_FREE_ITEMS
+#undef STRUS_CHECK_FREE_ITEMS
 
 namespace strus
 {
@@ -45,23 +45,29 @@ public:
 #endif
 	{}
 
-#ifdef STRUS_CHECK_FREE_ITEMS
 	ELEMTYPE& operator[]( SIZETYPE idx)
 	{
+#ifdef STRUS_CHECK_FREE_ITEMS
 		typename std::set<SIZETYPE>::const_iterator fi = m_free_elemtab.find( idx);
-		if (fi != m_free_elemtab.end()) throw strus::runtime_error( _TXT("write of element disposed (PodStructArrayBase)"));
+		if (fi != m_free_elemtab.end())
+		{
+			throw strus::runtime_error( _TXT("write of element disposed (PodStructTableBase)"));
+		}
+#endif
 		return Parent::operator []( idx);
 	}
-#endif
 
-#ifdef STRUS_CHECK_FREE_ITEMS
 	const ELEMTYPE& operator[]( SIZETYPE idx) const
 	{
+#ifdef STRUS_CHECK_FREE_ITEMS
 		typename std::set<SIZETYPE>::const_iterator fi = m_free_elemtab.find( idx);
-		if (fi != m_free_elemtab.end()) throw strus::runtime_error( _TXT("read of element disposed (PodStructArrayBase)"));
+		if (fi != m_free_elemtab.end())
+		{
+			throw strus::runtime_error( _TXT("read of element disposed (PodStructTableBase)"));
+		}
+#endif
 		return Parent::operator []( idx);
 	}
-#endif
 
 	SIZETYPE add( const ELEMTYPE& elem)
 	{
@@ -69,7 +75,7 @@ public:
 		if (m_freelistidx)
 		{
 			SIZETYPE newidx = m_freelistidx-1;
-			m_freelistidx = ((FREELISTTYPE*)(void*)(&(*this)[ m_freelistidx-1]))->next;
+			m_freelistidx = ((FREELISTTYPE*)(void*)(&(*this)[ newidx]))->next;
 			(*this)[ newidx] = elem;
 			return newidx;
 		}

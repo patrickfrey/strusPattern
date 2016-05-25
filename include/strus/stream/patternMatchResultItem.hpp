@@ -18,19 +18,19 @@ namespace stream {
 class PatternMatchResultItem
 {
 public:
-	PatternMatchResultItem( const std::string& name_, unsigned int ordpos_, std::size_t origpos_, std::size_t origsize_)
+	PatternMatchResultItem( const char* name_, unsigned int ordpos_, std::size_t origpos_, std::size_t origsize_)
 		:m_name(name_),m_ordpos(ordpos_),m_origpos(origpos_),m_origsize(origsize_){}
 	PatternMatchResultItem( const PatternMatchResultItem& o)
 		:m_name(o.m_name),m_ordpos(o.m_ordpos),m_origpos(o.m_origpos),m_origsize(o.m_origsize){}
 	~PatternMatchResultItem(){}
 
-	const std::string& name() const			{return m_name;}
+	const char* name() const			{return m_name;}
 	unsigned int ordpos() const			{return m_ordpos;}
 	std::size_t origpos() const			{return m_origpos;}
 	std::size_t origsize() const			{return m_origsize;}
 
 private:
-	std::string m_name;
+	const char* m_name;
 	unsigned int m_ordpos;
 	std::size_t m_origpos;
 	std::size_t m_origsize;

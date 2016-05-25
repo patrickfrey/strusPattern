@@ -32,6 +32,7 @@ struct StreamPatternMatchData
 	StreamPatternMatchData(){}
 
 	SymbolTable variableMap;
+	SymbolTable termMap;
 	SymbolTable patternMap;
 	ProgramTable programTable;
 };
@@ -56,6 +57,7 @@ static bool getKeyValueStrBuf( char* buf, std::size_t bufsize, std::size_t& size
 		if (type.size()) buf[ tidx++] = ' ';
 		std::memcpy( buf+tidx, value.c_str(), value.size());
 		tidx += value.size();
+		buf[ tidx] = 0;
 		size = tidx;
 		return true;
 	}
@@ -67,7 +69,7 @@ class StreamPatternMatchContext
 {
 public:
 	StreamPatternMatchContext( const StreamPatternMatchData* data_, ErrorBufferInterface* errorhnd_)
-		:m_errorhnd(errorhnd_),m_data(data_),m_statemachine(&data_->programTable){}
+		:m_errorhnd(errorhnd_),m_data(data_),m_statemachine(&data_->programTable),m_nofEvents(0),m_curPosition(0){}
 
 	virtual ~StreamPatternMatchContext(){}
 
@@ -80,32 +82,41 @@ public:
 			std::size_t keysize = 0;
 			if (getKeyValueStrBuf( keybuf, StrBufSize, keysize, type, value))
 			{
-				return m_data->variableMap.get( keybuf, keysize);
+				return m_data->termMap.get( keybuf, keysize);
 			}
 			else if (type.empty())
 			{
-				return m_data->variableMap.get( value);
+				return m_data->termMap.get( value);
 			}
 			else
 			{
-				return m_data->variableMap.get( utils::tolower(type)+" "+value);
+				return m_data->termMap.get( utils::tolower(type)+" "+value);
 			}
 		}
-		CATCH_ERROR_MAP_RETURN( "failed to get/create pattern match term identifier", *m_errorhnd, 0);
+		CATCH_ERROR_MAP_RETURN( "failed to get/create pattern match term identifier: %s", *m_errorhnd, 0);
 	}
 
 	virtual void putInput( unsigned int termid, unsigned int ordpos, unsigned int origpos, unsigned int origsize)
 	{
 		try
 		{
+			if (m_curPosition > ordpos)
+			{
+				throw strus::runtime_error(_TXT("term events not fed in ascending order (%u > %u)"), m_curPosition, ordpos);
+			}
+			else if (m_curPosition < ordpos)
+			{
+				m_statemachine.setCurrentPos( m_curPosition = ordpos);
+			}
 			uint32_t eventid = eventHandle( TermEvent, termid);
 			EventData data( origpos, origsize, ordpos, eventid, 0/*subdataref*/);
 			m_statemachine.doTransition( eventid, data);
+			++m_nofEvents;
 		}
-		CATCH_ERROR_MAP( "failed to feed input to pattern patcher", *m_errorhnd);
+		CATCH_ERROR_MAP( "failed to feed input to pattern matcher: %s", *m_errorhnd);
 	}
 
-	void gatherResultItems( std::vector<PatternMatchResultItem>& resitemlist, uint32_t dataref)
+	void gatherResultItems( std::vector<PatternMatchResultItem>& resitemlist, uint32_t dataref) const
 	{
 		uint32_t itemList = m_statemachine.getEventDataItemListIdx( dataref);
 		const EventItem* item;
@@ -121,7 +132,7 @@ public:
 		}
 	}
 
-	virtual std::vector<stream::PatternMatchResult> fetchResult()
+	virtual std::vector<stream::PatternMatchResult> fetchResults() const
 	{
 		try
 		{
@@ -138,13 +149,21 @@ public:
 			}
 			return rt;
 		}
-		CATCH_ERROR_MAP_RETURN( "failed to fetch pattern match result", *m_errorhnd, std::vector<stream::PatternMatchResult>());
+		CATCH_ERROR_MAP_RETURN( "failed to fetch pattern match result: %s", *m_errorhnd, std::vector<stream::PatternMatchResult>());
+	}
+
+	virtual void getStatistics( Statistics& stats) const
+	{
+		stats.nofPatternsTriggered = m_statemachine.nofPatternsTriggered();
+		stats.nofOpenPatterns = m_statemachine.nofOpenPatterns() / m_nofEvents;
 	}
 
 private:
 	ErrorBufferInterface* m_errorhnd;
 	const StreamPatternMatchData* m_data;
 	StateMachine m_statemachine;
+	unsigned int m_nofEvents;
+	unsigned int m_curPosition;
 };
 
 ///\brief Join operations (same meaning as in query evaluation
@@ -191,18 +210,18 @@ public:
 			std::size_t keysize = 0;
 			if (getKeyValueStrBuf( keybuf, StrBufSize, keysize, type, value))
 			{
-				return m_data.variableMap.getOrCreate( keybuf, keysize);
+				return m_data.termMap.getOrCreate( keybuf, keysize);
 			}
 			else if (type.empty())
 			{
-				return m_data.variableMap.getOrCreate( value);
+				return m_data.termMap.getOrCreate( value);
 			}
 			else
 			{
-				return m_data.variableMap.getOrCreate( utils::tolower(type)+" "+value);
+				return m_data.termMap.getOrCreate( utils::tolower(type)+" "+value);
 			}
 		}
-		CATCH_ERROR_MAP_RETURN( "failed to get/create pattern match term identifier", *m_errorhnd, 0);
+		CATCH_ERROR_MAP_RETURN( "failed to get/create pattern match term identifier: %s", *m_errorhnd, 0);
 	}
 
 	virtual void pushTerm( unsigned int termid)
@@ -212,7 +231,7 @@ public:
 			uint32_t eventid = eventHandle( TermEvent, termid);
 			m_stack.push_back( StackElement( eventid));
 		}
-		CATCH_ERROR_MAP( "failed to push term on pattern match expression stack", *m_errorhnd);
+		CATCH_ERROR_MAP( "failed to push term on pattern match expression stack: %s", *m_errorhnd);
 	}
 
 	virtual void pushExpression(
@@ -225,7 +244,7 @@ public:
 			{
 				throw strus::runtime_error(_TXT("proximity range value out of range or negative"));
 			}
-			if (argc > m_stack.size() || (std::size_t)std::numeric_limits<uint32_t>::max())
+			if (argc > m_stack.size() || argc > (std::size_t)std::numeric_limits<uint32_t>::max())
 			{
 				throw strus::runtime_error(_TXT("expression references more arguments than nodes on the stack"));
 			}
@@ -248,7 +267,8 @@ public:
 					break;
 				case OpSequenceStruct:
 					slot_sigtype = Trigger::SigSequence;
-					slot_initsigval = argc;
+					slot_initsigval = argc-1;
+					--slot_initcount;
 					break;
 				case OpInRange:
 					slot_sigtype = Trigger::SigInRange;
@@ -265,56 +285,73 @@ public:
 						throw strus::runtime_error(_TXT("number of arguments out of range"));
 					}
 					slot_initsigval = 0xffFFffFF;
+					--slot_initcount;
 					break;
 				case OpAny:
 					slot_sigtype = Trigger::SigAny;
+					slot_initcount = 1;
 					break;
 			}
 			ActionSlotDef actionSlotDef( slot_initsigval, slot_initcount, slot_event, slot_resultHandle);
-			uint32_t program = m_data.programTable.createProgram( 0, actionSlotDef);
+			uint32_t program = m_data.programTable.createProgram( range_, actionSlotDef);
 
 			std::size_t ai = 0;
 			for (; ai != argc; ++ai)
 			{
 				bool isKeyEvent = false;
-				StackElement& elem = m_stack[ m_stack.size() - argc + ai];
+				uint32_t trigger_sigval = 0;
+				Trigger::SigType trigger_sigtype = slot_sigtype;
 				switch (joinop)
 				{
 					case OpSequenceStruct:
+						if (ai == 0)
+						{
+							//... structure delimiter
+							trigger_sigtype = Trigger::SigDel;
+						}
+						else
+						{
+							trigger_sigval = argc-ai-1;
+							isKeyEvent = (ai == 1);
+						}
+						break;
 					case OpInRangeStruct:
 						if (ai == 0)
 						{
 							//... structure delimiter
-							m_data.programTable.createTrigger(
-								program, elem.eventid, Trigger::SigDel,
-								0/*sigval*/, elem.variable);
+							trigger_sigtype = Trigger::SigDel;
 						}
 						else
 						{
-							isKeyEvent = joinop != OpSequenceStruct || (ai == 1);
-							m_data.programTable.createTrigger(
-								program, elem.eventid, slot_sigtype,
-								argc-ai-1, elem.variable);
-							
+							trigger_sigval = 1 << (argc-ai-1);
+							isKeyEvent = true;
 						}
+						break;
 					case OpSequence:
-					case OpInRange:
-					case OpAny:
-						isKeyEvent = joinop != OpSequence || (ai == 0);
+						trigger_sigval = argc-ai-1;
 						isKeyEvent = (ai == 0);
-						m_data.programTable.createTrigger(
-							program, elem.eventid, slot_sigtype,
-							argc-ai-1, elem.variable);
+						break;
+					case OpInRange:
+						trigger_sigval = 1 << (argc-ai-1);
+						isKeyEvent = true;
+						break;
+					case OpAny:
+						isKeyEvent = true;
+						break;
 				}
+				StackElement& elem = m_stack[ m_stack.size() - argc + ai];
+				m_data.programTable.createTrigger(
+					program, elem.eventid, trigger_sigtype,
+					trigger_sigval, elem.variable);
 				if (isKeyEvent)
 				{
 					m_data.programTable.defineEventProgram( elem.eventid, program);
 				}
 			}
 			m_stack.resize( m_stack.size() - argc);
-			m_stack.push_back( StackElement( slot_event));
+			m_stack.push_back( StackElement( slot_event, program));
 		}
-		CATCH_ERROR_MAP( "failed to push expression on pattern match expression stack", *m_errorhnd);
+		CATCH_ERROR_MAP( "failed to push expression on pattern match expression stack: %s", *m_errorhnd);
 	}
 
 	virtual void pushPattern( const std::string& name)
@@ -324,7 +361,7 @@ public:
 			uint32_t eventid = eventHandle( ReferenceEvent, m_data.patternMap.getOrCreate( name));
 			m_stack.push_back( StackElement( eventid));
 		}
-		CATCH_ERROR_MAP( "failed to push pattern reference on pattern match expression stack", *m_errorhnd);
+		CATCH_ERROR_MAP( "failed to push pattern reference on pattern match expression stack: %s", *m_errorhnd);
 	}
 
 	virtual void attachVariable( const std::string& name)
@@ -342,7 +379,7 @@ public:
 			}
 			m_stack.back().variable = m_data.variableMap.getOrCreate( name);
 		}
-		CATCH_ERROR_MAP( "failed to attach variable to top element of pattern match expression stack", *m_errorhnd);
+		CATCH_ERROR_MAP( "failed to attach variable to top element of pattern match expression stack: %s", *m_errorhnd);
 	}
 
 	virtual void closePattern( const std::string& name, bool visible)
@@ -353,12 +390,22 @@ public:
 			{
 				throw strus::runtime_error(_TXT("illegal operation close pattern when no node on the stack"));
 			}
+			StackElement& elem = m_stack.back();
 			uint32_t resultHandle = m_data.patternMap.getOrCreate( name);
 			uint32_t resultEvent = eventHandle( ReferenceEvent, resultHandle);
-			m_data.programTable.defineProgramResult( 
-				m_stack.back().program, resultEvent, visible?resultHandle:0);
+			uint32_t program = elem.program;
+			if (!program)
+			{
+				//... atomic event we have to envelope into a program
+				ActionSlotDef actionSlotDef( 0, 0, resultEvent, resultHandle);
+				program = m_data.programTable.createProgram( 0, actionSlotDef);
+				m_data.programTable.createTrigger(
+					program, elem.eventid, Trigger::SigAny, 0, elem.variable);
+				m_data.programTable.defineEventProgram( elem.eventid, program);
+			}
+			m_data.programTable.defineProgramResult( program, resultEvent, visible?resultHandle:0);
 		}
-		CATCH_ERROR_MAP( "failed to close pattern definition on pattern match expression stack", *m_errorhnd);
+		CATCH_ERROR_MAP( "failed to close pattern definition on pattern match expression stack: %s", *m_errorhnd);
 	}
 
 	virtual StreamPatternMatchContextInterface* createContext() const
@@ -367,7 +414,7 @@ public:
 		{
 			return new StreamPatternMatchContext( &m_data, m_errorhnd);
 		}
-		CATCH_ERROR_MAP_RETURN( "failed to create pattern match context", *m_errorhnd, 0);
+		CATCH_ERROR_MAP_RETURN( "failed to create pattern match context: %s", *m_errorhnd, 0);
 	}
 
 private:
@@ -379,8 +426,8 @@ private:
 
 		StackElement()
 			:eventid(0),program(0),variable(0){}
-		explicit StackElement( uint32_t eventid_)
-			:eventid(eventid_),program(0),variable(0){}
+		explicit StackElement( uint32_t eventid_, uint32_t program_=0)
+			:eventid(eventid_),program(program_),variable(0){}
 		StackElement( const StackElement& o)
 			:eventid(o.eventid),program(o.program),variable(o.variable){}
 	};
@@ -399,6 +446,6 @@ StreamPatternMatchInstanceInterface* StreamPatternMatch::createInstance() const
 	{
 		return new StreamPatternMatchInstance( m_errorhnd);
 	}
-	CATCH_ERROR_MAP_RETURN( "failed to create pattern match instance", *m_errorhnd, 0);
+	CATCH_ERROR_MAP_RETURN( "failed to create pattern match instance: %s", *m_errorhnd, 0);
 }
 

@@ -20,16 +20,15 @@ namespace strus
 
 enum
 {
-	BaseAddrRuleTable =		(1000000 *  1),
-	BaseAddrTriggerDefTable =	(1000000 *  2),
-	BaseAddrProgramTable =		(1000000 *  3),
-	BaseAddrActionSlotTable =	(1000000 *  4),
-	BaseAddrEventTriggerList =	(1000000 *  5),
-	BaseAddrEventDataReferenceTable=(1000000 *  6),
-	BaseAddrEventItemList =		(1000000 *  7),
-	BaseAddrResultList =		(1000000 *  8),
-	BaseAddrProgramList =		(1000000 *  9),
-	BaseAddrActionSlotDefTable =	(1000000 * 10)
+	BaseAddrRuleTable =		(10000000 *  1),
+	BaseAddrTriggerDefTable =	(10000000 *  2),
+	BaseAddrProgramTable =		(10000000 *  3),
+	BaseAddrActionSlotTable =	(10000000 *  4),
+	BaseAddrEventTriggerList =	(10000000 *  5),
+	BaseAddrEventDataReferenceTable=(10000000 *  6),
+	BaseAddrEventItemList =		(10000000 *  7),
+	BaseAddrProgramList =		(10000000 *  9),
+	BaseAddrActionSlotDefTable =	(10000000 * 10)
 };
 
 class Trigger
@@ -38,7 +37,8 @@ public:
 	enum SigType {SigAny=0x0,SigSequence=0x1,SigInRange=0x2,SigDel=0x3};
 
 	Trigger( uint32_t slot_, SigType sigtype_, uint32_t sigval_, uint32_t variable_)
-		:m_slot(slot_),m_sigtype(sigtype_),m_variable(variable_),m_sigval(sigval_){}
+		:m_slot(slot_),m_sigtype(sigtype_),m_variable(variable_),m_sigval(sigval_)
+	{}
 	Trigger( const Trigger& o)
 		:m_slot(o.m_slot),m_sigtype(o.m_sigtype),m_variable(o.m_variable),m_sigval(o.m_sigval){}
 	Trigger( const Trigger& o, uint32_t slot_)
@@ -51,8 +51,8 @@ public:
 
 private:
 	uint32_t m_slot;
-	unsigned int m_sigtype:4;
-	unsigned int m_variable:28;
+	SigType m_sigtype;
+	uint32_t m_variable;
 	uint32_t m_sigval;
 };
 
@@ -107,6 +107,7 @@ public:
 
 	typedef PodStructArrayBase<Trigger*,std::size_t,0> TriggerRefList;
 	void getTriggers( TriggerRefList& triggers, uint32_t event) const;
+	uint32_t size() const	{return m_size;}
 
 private:
 	void expand( uint32_t newallocsize);
@@ -129,12 +130,12 @@ public:
 	unsigned int done:1;
 	unsigned int lastpos:31;
 
-	Rule()
-		:actionSlotIdx(0),eventTriggerListIdx(0),eventDataReferenceIdx(0),done(0),lastpos(0){}
-	Rule( uint32_t actionSlotIdx_, uint32_t eventTriggerListIdx_, uint32_t eventDataReferenceIdx_, uint32_t lastpos_)
-		:actionSlotIdx(actionSlotIdx_),eventTriggerListIdx(eventTriggerListIdx_),eventDataReferenceIdx(eventDataReferenceIdx_),done(0),lastpos(lastpos_){}
+	explicit Rule( uint32_t lastpos_=0)
+		:actionSlotIdx(0),eventTriggerListIdx(0),eventDataReferenceIdx(0),done(0),lastpos(lastpos_){}
 	Rule( const Rule& o)
 		:actionSlotIdx(o.actionSlotIdx),eventTriggerListIdx(o.eventTriggerListIdx),eventDataReferenceIdx(o.eventDataReferenceIdx),done(o.done),lastpos(o.lastpos){}
+
+	bool isActive() const	{return actionSlotIdx!=0;}
 };
 
 struct RuleTableFreeListElem {uint32_t _;uint32_t next;};
@@ -295,12 +296,12 @@ public:
 	void setCurrentPos( uint32_t pos);
 	void installProgram( uint32_t programidx);
 
-	typedef PodStructArrayBase<Result,std::size_t,BaseAddrResultList> ResultList;
+	typedef PodStructArrayBase<Result,std::size_t,0> ResultList;
 	const ResultList& results() const
 	{
 		return m_results;
 	}
-	uint32_t getEventDataItemListIdx( uint32_t dataref)
+	uint32_t getEventDataItemListIdx( uint32_t dataref) const
 	{
 		return m_eventDataReferenceTable[ dataref].eventItemListIdx;
 	}
@@ -309,12 +310,19 @@ public:
 		return m_eventItemList.nextptr( list);
 	}
 
+public://getStatistics
+	unsigned int nofPatternsTriggered() const	{return m_nofPatternsTriggered;}
+	double nofOpenPatterns() const			{return m_nofOpenPatterns;}
+
 private:
-	uint32_t createRule( uint32_t positionRange, uint32_t actionSlotIdx, uint32_t eventTriggerListIdx, uint32_t eventDataReferenceIdx);
+	uint32_t createRule( uint32_t positionRange);
 	void disposeRule( uint32_t rule);
+	void deactivateRule( uint32_t rule);
 	void disposeEventDataReference( uint32_t eventdataref);
 	void referenceEventData( uint32_t eventdataref);
+	uint32_t createEventData();
 	void appendEventData( uint32_t eventdataref, const EventItem& item);
+	void joinEventData( uint32_t eventdataref_dest, uint32_t eventdataref_src);
 
 private:
 	const ProgramTable* m_programTable;
@@ -327,6 +335,8 @@ private:
 	ResultList m_results;
 	uint32_t m_curpos;
 	std::vector<DisposeEvent> m_ruleDisposeQueue;
+	unsigned int m_nofPatternsTriggered;
+	double m_nofOpenPatterns;
 };
 
 } //namespace
