@@ -98,6 +98,8 @@ inline std::ostream & operator << (std::ostream& out, const __v4si & val)
 				<< ", " << vals[3] << "]";
 }
 
+///\brief Linear search for triggers to fire on an event with help of SSE vectorization
+///\note This SIMD vectorization implementation with SSE was inspired by https://schani.wordpress.com/tag/c-optimization-linear-binary-search-sse2-simd
 static inline void getTriggers_SSE4( Trigger** results, std::size_t& nofresults, uint32_t event, const uint32_t* eventar_, Trigger* triggerar, std::size_t arsize)
 {
 	__v4si *eventar = (__v4si*)eventar_;		//... the SIMD search block (aligned to EventArrayMemoryAlignment byte blocks)
@@ -431,7 +433,7 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 			{
 				if (trigger.variable())
 				{
-					EventItem item( trigger.variable(), data);
+					EventItem item( trigger.variable(), trigger.weight(), data);
 					if (!rule.eventDataReferenceIdx)
 					{
 						rule.eventDataReferenceIdx = createEventData();

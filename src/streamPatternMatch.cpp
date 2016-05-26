@@ -123,7 +123,7 @@ public:
 		while (0!=(item=m_statemachine.nextResultItem( itemList)))
 		{
 			const char* itemName = m_data->variableMap.key( item->variable);
-			PatternMatchResultItem rtitem( itemName, item->data.ordpos, item->data.origpos, item->data.origsize);
+			PatternMatchResultItem rtitem( itemName, item->data.ordpos, item->data.origpos, item->data.origsize, item->weight);
 			resitemlist.push_back( rtitem);
 			if (item->data.subdataref)
 			{

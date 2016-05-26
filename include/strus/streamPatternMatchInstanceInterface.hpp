@@ -52,6 +52,7 @@ public:
 	/// \param[in] name name of the variable attached
 	/// \param[in] weight of the variable attached
 	/// \remark The stack is not changed
+	/// \note The weight attached is not used by the pattern matching itself. It is just forwarded to the result produced with this variable assignment.
 	virtual void attachVariable( const std::string& name, float weight)=0;
 
 	/// \brief Create a pattern that can be referenced by the given name and can be declared as part of the result

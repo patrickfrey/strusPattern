@@ -184,12 +184,13 @@ typedef PodStructTableBase<EventDataReference,uint32_t,EventDataReferenceTableFr
 struct EventItem
 {
 	uint32_t variable;
+	float weight;
 	EventData data;
 
-	EventItem( uint32_t variable_, const EventData& data_)
-		:variable(variable_),data(data_){}
+	EventItem( uint32_t variable_, float weight_, const EventData& data_)
+		:variable(variable_),weight(weight_),data(data_){}
 	EventItem( const EventItem& o)
-		:variable(o.variable),data(o.data){}
+		:variable(o.variable),weight(o.weight),data(o.data){}
 };
 
 struct Result
