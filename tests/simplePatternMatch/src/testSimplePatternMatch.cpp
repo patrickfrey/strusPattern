@@ -120,7 +120,7 @@ static void createTermOpRule( strus::StreamPatternMatchInstanceInterface* ptinst
 	std::size_t pi = 0, pe = paramsize;
 	bool with_delim = false;
 	if (std::strcmp( operation, "sequence_struct") == 0
-	|| std::strcmp( operation, "inrange_struct") == 0)
+	|| std::strcmp( operation, "within_struct") == 0)
 	{
 		with_delim = true;
 	}
@@ -134,7 +134,7 @@ static void createTermOpRule( strus::StreamPatternMatchInstanceInterface* ptinst
 	{
 		unsigned int termid = ptinst->getTermId( type, termValue(param[pi]));
 		ptinst->pushTerm( termid);
-		ptinst->attachVariable( std::string("A") + termValue(pi));
+		ptinst->attachVariable( std::string("A") + termValue(pi), 1.0f);
 	}
 	ptinst->pushExpression( operation, paramsize, range, cardinality);
 }
@@ -176,8 +176,8 @@ static void createRules( strus::StreamPatternMatchInstanceInterface* ptinst, con
 			{
 				"sequence_struct",
 				"sequence",
-				"inrange_struct",
-				"inrange",
+				"within_struct",
+				"within",
 				"any"
 			};
 			const char* op = opar[ selectOp];

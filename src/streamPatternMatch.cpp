@@ -171,14 +171,14 @@ enum JoinOperation
 {
 	OpSequence,		///< A subset specified by cardinality of the trigger events must appear in the specified order for then completion of the rule (objects must not overlap)
 	OpSequenceStruct,	///< A subset specified by cardinality of the trigger events must appear in the specified order without a structure element appearing before the last element for then completion of the rule (objects must not overlap)
-	OpInRange,		///< A subset specified by cardinality of the trigger events must appear for then completion of the rule (objects may overlap)
-	OpInRangeStruct,	///< A subset specified by cardinality of the trigger events must appear without a structure element appearing before the last element for then completion of the rule (objects may overlap)
+	OpWithin,		///< A subset specified by cardinality of the trigger events must appear for then completion of the rule (objects must not overlap)
+	OpWithinStruct,		///< A subset specified by cardinality of the trigger events must appear without a structure element appearing before the last element for then completion of the rule (objects must not overlap)
 	OpAny			///< Any of the trigger events leads for the completion of the rule
 };
 
 static JoinOperation joinOperationName( const char* joinopstr)
 {
-	static const char* ar[] = {"sequence","sequence_struct","inrange","inrange_struct","any",0};
+	static const char* ar[] = {"sequence","sequence_struct","within","within_struct","any",0};
 	std::size_t ai = 0;
 	for (; ar[ai]; ++ai)
 	{
@@ -270,16 +270,16 @@ public:
 					slot_initsigval = argc-1;
 					--slot_initcount;
 					break;
-				case OpInRange:
-					slot_sigtype = Trigger::SigInRange;
+				case OpWithin:
+					slot_sigtype = Trigger::SigWithin;
 					if (argc > 32)
 					{
 						throw strus::runtime_error(_TXT("number of arguments out of range"));
 					}
 					slot_initsigval = 0xffFFffFF;
 					break;
-				case OpInRangeStruct:
-					slot_sigtype = Trigger::SigInRange;
+				case OpWithinStruct:
+					slot_sigtype = Trigger::SigWithin;
 					if (argc > 32)
 					{
 						throw strus::runtime_error(_TXT("number of arguments out of range"));
@@ -315,7 +315,7 @@ public:
 							isKeyEvent = (ai == 1);
 						}
 						break;
-					case OpInRangeStruct:
+					case OpWithinStruct:
 						if (ai == 0)
 						{
 							//... structure delimiter
@@ -331,7 +331,7 @@ public:
 						trigger_sigval = argc-ai-1;
 						isKeyEvent = (ai == 0);
 						break;
-					case OpInRange:
+					case OpWithin:
 						trigger_sigval = 1 << (argc-ai-1);
 						isKeyEvent = true;
 						break;
@@ -342,7 +342,7 @@ public:
 				StackElement& elem = m_stack[ m_stack.size() - argc + ai];
 				m_data.programTable.createTrigger(
 					program, elem.eventid, trigger_sigtype,
-					trigger_sigval, elem.variable);
+					trigger_sigval, elem.variable, elem.weight);
 				if (isKeyEvent)
 				{
 					m_data.programTable.defineEventProgram( elem.eventid, program);
@@ -364,7 +364,7 @@ public:
 		CATCH_ERROR_MAP( "failed to push pattern reference on pattern match expression stack: %s", *m_errorhnd);
 	}
 
-	virtual void attachVariable( const std::string& name)
+	virtual void attachVariable( const std::string& name, float weight)
 	{
 		try
 		{
@@ -377,7 +377,8 @@ public:
 			{
 				throw strus::runtime_error(_TXT( "more than one variable assignment to a node"));
 			}
-			m_stack.back().variable = m_data.variableMap.getOrCreate( name);
+			elem.variable = m_data.variableMap.getOrCreate( name);
+			elem.weight = weight;
 		}
 		CATCH_ERROR_MAP( "failed to attach variable to top element of pattern match expression stack: %s", *m_errorhnd);
 	}
@@ -400,7 +401,7 @@ public:
 				ActionSlotDef actionSlotDef( 0, 0, resultEvent, resultHandle);
 				program = m_data.programTable.createProgram( 0, actionSlotDef);
 				m_data.programTable.createTrigger(
-					program, elem.eventid, Trigger::SigAny, 0, elem.variable);
+					program, elem.eventid, Trigger::SigAny, 0, elem.variable, elem.weight);
 				m_data.programTable.defineEventProgram( elem.eventid, program);
 			}
 			m_data.programTable.defineProgramResult( program, resultEvent, visible?resultHandle:0);
@@ -423,13 +424,14 @@ private:
 		uint32_t eventid;
 		uint32_t program;
 		uint32_t variable;
+		float weight;
 
 		StackElement()
-			:eventid(0),program(0),variable(0){}
+			:eventid(0),program(0),variable(0),weight(0.0f){}
 		explicit StackElement( uint32_t eventid_, uint32_t program_=0)
-			:eventid(eventid_),program(program_),variable(0){}
+			:eventid(eventid_),program(program_),variable(0),weight(0.0f){}
 		StackElement( const StackElement& o)
-			:eventid(o.eventid),program(o.program),variable(o.variable){}
+			:eventid(o.eventid),program(o.program),variable(o.variable),weight(o.weight){}
 	};
 
 private:

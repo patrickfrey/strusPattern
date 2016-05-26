@@ -50,8 +50,9 @@ public:
 
 	/// \brief Attaches a variable to the top expression or term on the stack.
 	/// \param[in] name name of the variable attached
+	/// \param[in] weight of the variable attached
 	/// \remark The stack is not changed
-	virtual void attachVariable( const std::string& name)=0;
+	virtual void attachVariable( const std::string& name, float weight)=0;
 
 	/// \brief Create a pattern that can be referenced by the given name and can be declared as part of the result
 	/// \param[in] name name of the pattern and the result if declared as visible

@@ -34,26 +34,26 @@ enum
 class Trigger
 {
 public:
-	enum SigType {SigAny=0x0,SigSequence=0x1,SigInRange=0x2,SigDel=0x3};
+	enum SigType {SigAny=0x0,SigSequence=0x1,SigWithin=0x2,SigDel=0x3};
 
-	Trigger( uint32_t slot_, SigType sigtype_, uint32_t sigval_, uint32_t variable_)
-		:m_slot(slot_),m_sigtype(sigtype_),m_variable(variable_),m_sigval(sigval_)
+	Trigger( uint32_t slot_, SigType sigtype_, uint32_t sigval_, uint32_t variable_, float weight_)
+		:m_slot(slot_),m_sigtype(sigtype_),m_variable(variable_),m_sigval(sigval_),m_weight(weight_)
 	{}
 	Trigger( const Trigger& o)
-		:m_slot(o.m_slot),m_sigtype(o.m_sigtype),m_variable(o.m_variable),m_sigval(o.m_sigval){}
-	Trigger( const Trigger& o, uint32_t slot_)
-		:m_slot(slot_),m_sigtype(o.m_sigtype),m_variable(o.m_variable),m_sigval(o.m_sigval){}
+		:m_slot(o.m_slot),m_sigtype(o.m_sigtype),m_variable(o.m_variable),m_sigval(o.m_sigval),m_weight(o.m_weight){}
 
 	uint32_t slot() const		{return m_slot;}
 	SigType sigtype() const		{return (SigType)m_sigtype;}
 	uint32_t sigval() const		{return (uint32_t)m_sigval;}
 	uint32_t variable() const	{return (uint32_t)m_variable;}
+	float weight() const		{return m_weight;}
 
 private:
 	uint32_t m_slot;
 	SigType m_sigtype;
 	uint32_t m_variable;
 	uint32_t m_sigval;
+	float m_weight;
 };
 
 struct EventTrigger
@@ -222,11 +222,12 @@ struct TriggerDef
 	Trigger::SigType sigtype;
 	uint32_t sigval;
 	uint32_t variable;
+	float weight;
 
-	TriggerDef( uint32_t event_, Trigger::SigType sigtype_, uint32_t sigval_, uint32_t variable_)
-		:event(event_),sigtype(sigtype_),sigval(sigval_),variable(variable_){}
+	TriggerDef( uint32_t event_, Trigger::SigType sigtype_, uint32_t sigval_, uint32_t variable_, float weight_)
+		:event(event_),sigtype(sigtype_),sigval(sigval_),variable(variable_),weight(weight_){}
 	TriggerDef( const TriggerDef& o)
-		:event(o.event),sigtype(o.sigtype),sigval(o.sigval),variable(o.variable){}
+		:event(o.event),sigtype(o.sigtype),sigval(o.sigval),variable(o.variable),weight(o.weight){}
 };
 
 struct Program
@@ -251,7 +252,7 @@ public:
 	typedef PodStackPoolBase<TriggerDef,uint32_t,BaseAddrTriggerDefTable> TriggerDefList;
 
 	uint32_t createProgram( uint32_t positionRange_, const ActionSlotDef& actionSlotDef_);
-	void createTrigger( uint32_t program, uint32_t event, Trigger::SigType sigtype, uint32_t sigval, uint32_t variable);
+	void createTrigger( uint32_t program, uint32_t event, Trigger::SigType sigtype, uint32_t sigval, uint32_t variable, float weight);
 
 	const Program& operator[]( uint32_t programidx) const	{return m_programTable[ programidx-1];}
 	const TriggerDefList& triggerList() const		{return m_triggerList;}

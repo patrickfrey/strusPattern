@@ -11,6 +11,10 @@
 #include <cstdlib>
 #include <stdexcept>
 #include <algorithm>
+#ifdef __SSE__
+#include <emmintrin.h>
+#define STRUS_USE_SSE_SCAN_TRIGGERS
+#endif
 
 using namespace strus;
 
@@ -32,13 +36,14 @@ EventTriggerTable::EventTriggerTable( const EventTriggerTable& o)
 	}
 }
 
+enum {EventArrayMemoryAlignment=64};
 void EventTriggerTable::expand( uint32_t newallocsize)
 {
 	if (m_size > newallocsize)
 	{
 		throw std::logic_error( "illegal call of EventTriggerTable::expand");
 	}
-	uint32_t* war = (uint32_t*)utils::aligned_malloc( newallocsize * sizeof(uint32_t), 32);
+	uint32_t* war = (uint32_t*)utils::aligned_malloc( newallocsize * sizeof(uint32_t), EventArrayMemoryAlignment);
 	if (!war) throw std::bad_alloc();
 	std::memcpy( war, m_eventAr, m_size * sizeof(uint32_t));
 	m_eventAr = war;
@@ -84,28 +89,91 @@ void EventTriggerTable::remove( uint32_t idx)
 	m_freelistidx = idx;
 }
 
+#ifdef STRUS_USE_SSE_SCAN_TRIGGERS
+inline std::ostream & operator << (std::ostream& out, const __v4si & val)
+{
+	const uint32_t* vals;
+	vals = (const uint32_t*)&val;
+	return out << "[" << vals[0] << ", " << vals[1] << ", " << vals[2]
+				<< ", " << vals[3] << "]";
+}
+
+static inline void getTriggers_SSE4( Trigger** results, std::size_t& nofresults, uint32_t event, const uint32_t* eventar_, Trigger* triggerar, std::size_t arsize)
+{
+	__v4si *eventar = (__v4si*)eventar_;		//... the SIMD search block (aligned to EventArrayMemoryAlignment byte blocks)
+	uint32_t ii = 0;				//... index on 16 word blocks we handle with SSE
+	uint32_t nn = ((uint32_t)arsize >> 4) << 2;	//... number of 16 word blocks we handle with SSE
+	// We prepare the SIMD search key vector as 4 times the value of the needle
+	__v4si event4 = (__v4si)_mm_set_epi32( event, event, event, event);
+
+	for (;ii<nn; ii+=4)
+	{
+		// Compare 4 times 4 words = 16 32 bit uints and store the results in cmp[i].
+		// cmp[i]: each [i] are 4 32 bit words, 0xFFffFFff true, 0x00000000 false:
+		__v4si cmp0 = __builtin_ia32_pcmpeqd128( event4, eventar[ ii + 0]);
+		__v4si cmp1 = __builtin_ia32_pcmpeqd128( event4, eventar[ ii + 1]);
+		__v4si cmp2 = __builtin_ia32_pcmpeqd128( event4, eventar[ ii + 2]);
+		__v4si cmp3 = __builtin_ia32_pcmpeqd128( event4, eventar[ ii + 3]);
+		// Pack two times the lo word (with sign) of 4 32 bit words into 8 * 16 bit words:
+		__v8hi pack01 = __builtin_ia32_packssdw128 (cmp0, cmp1);
+		// Pack two times the lo word (with sign) of 4 32 bit words into 8 * 16 bit words:
+		__v8hi pack23 = __builtin_ia32_packssdw128 (cmp2, cmp3);
+		// Pack two times the lo byte (with sign) of 8 16 bit words into 16 bytes:
+		__v16qi pack0123 = __builtin_ia32_packsswb128 (pack01, pack23);
+
+		// Pack the most significant bit of 16 bytes into a 16 bit word:
+		uint16_t res = __builtin_ia32_pmovmskb128( pack0123);
+		while (res)
+		{
+			// ... while there is a bit, that points to a match,
+			// get trailing bit index into 'tz':
+			uint8_t tz = __builtin_ctz( res);
+			// Evaluate the index of the corresponding match:
+			uint32_t idx = (ii << 2) + tz;
+			// and append it to the result (list of triggers fired by the event):
+			results[ nofresults++] = triggerar + idx;
+			// and mask out the visited match from the mask with the matches:
+			res ^= (1 << tz);
+		}
+	}
+	// The rest of the events modulo 16, we handle in the standard way:
+	ii <<= 2;
+	for (; ii < arsize; ++ii)
+	{
+		if (eventar_[ii] == event)
+		{
+			results[ nofresults++] = triggerar + ii;
+		}
+	}
+}
+#endif
+
 void EventTriggerTable::getTriggers( TriggerRefList& triggers, uint32_t event) const
 {
 	// The following implementation looks a little bit funny, but it is 
 	// crucial for the overall performance that this method is vectorizable.
 	if (!event) return;
-	uint32_t wi=0;
-	uint32_t ti=0;
 	Trigger** tar = triggers.reserve( m_size);
+	std::size_t nofresults = 0;
 
 #if __GNUC__ >= 4
-	const uint32_t* ar = (const uint32_t*)__builtin_assume_aligned( m_eventAr, 32);
+	const uint32_t* ar = (const uint32_t*)__builtin_assume_aligned( m_eventAr, EventArrayMemoryAlignment);
 #else
 	const uint32_t* ar = m_eventAr;
 #endif
+#ifdef STRUS_USE_SSE_SCAN_TRIGGERS
+	getTriggers_SSE4( tar, nofresults, event, ar, m_triggerAr, m_size);
+#else
+	uint32_t wi=0;
 	for (; wi<m_size; ++wi)
 	{
 		if (ar[ wi] == event)
 		{
-			tar[ ti++] = m_triggerAr + wi;
+			tar[ nofresults++] = m_triggerAr + wi;
 		}
 	}
-	triggers.commit_reserved( ti);
+#endif
+	triggers.commit_reserved( nofresults);
 }
 
 uint32_t ProgramTable::createProgram( uint32_t positionRange_, const ActionSlotDef& actionSlotDef_)
@@ -113,10 +181,10 @@ uint32_t ProgramTable::createProgram( uint32_t positionRange_, const ActionSlotD
 	return 1+m_programTable.add( Program( positionRange_, actionSlotDef_));
 }
 
-void ProgramTable::createTrigger( uint32_t programidx, uint32_t event, Trigger::SigType sigtype, uint32_t sigval, uint32_t variable)
+void ProgramTable::createTrigger( uint32_t programidx, uint32_t event, Trigger::SigType sigtype, uint32_t sigval, uint32_t variable, float weight)
 {
 	Program& program = m_programTable[ programidx-1];
-	m_triggerList.push( program.triggerListIdx, TriggerDef( event, sigtype, sigval, variable));
+	m_triggerList.push( program.triggerListIdx, TriggerDef( event, sigtype, sigval, variable, weight));
 }
 
 void ProgramTable::defineProgramResult( uint32_t programidx, uint32_t eventid, uint32_t resultHandle)
@@ -342,7 +410,7 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 						takeEventData = true;
 					}
 					break;
-				case Trigger::SigInRange:
+				case Trigger::SigWithin:
 				{
 					if ((trigger.sigval() & slot.value) != 0)
 					{
@@ -464,7 +532,7 @@ void StateMachine::installProgram( uint32_t programidx)
 			m_eventTriggerTable.add(
 				EventTrigger( triggerDef->event, 
 				Trigger( rule.actionSlotIdx-1, 
-					 triggerDef->sigtype, triggerDef->sigval, triggerDef->variable)));
+					 triggerDef->sigtype, triggerDef->sigval, triggerDef->variable, triggerDef->weight)));
 		m_eventTriggerList.push( rule.eventTriggerListIdx, eventTrigger);
 	}
 }
