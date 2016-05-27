@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <limits>
 #include <ctime>
 #include <cmath>
 #include <cstring>
@@ -64,13 +65,20 @@ static std::string termValue( unsigned int val)
 class ZipfDistribution
 {
 public:
-	explicit ZipfDistribution( std::size_t size)
+	explicit ZipfDistribution( std::size_t size, double S = 0.0)
 	{
 		std::size_t ii=1, ie=size;
 		m_ar.push_back( 1.0);
 		for (; ii < ie; ++ii)
 		{
-			m_ar.push_back( m_ar[ ii-1] + 1.0 / (double)(ii+1));
+			if (S > std::numeric_limits<double>::epsilon())
+			{
+				m_ar.push_back( m_ar[ ii-1] + 1.0 / pow((double)(ii+1), S));
+			}
+			else
+			{
+				m_ar.push_back( m_ar[ ii-1] + 1.0 / (double)(ii+1));
+			}
 		}
 	}
 
@@ -99,12 +107,12 @@ private:
 
 static Document createRandomDocument( unsigned int no, unsigned int size, unsigned int mod)
 {
-	ZipfDistribution zipfdist( mod);
+	ZipfDistribution featdist( mod);
 	Document rt( std::string("doc_") + termValue(no));
 	unsigned int ii = 0, ie = size;
 	for (; ii < ie; ++ii)
 	{
-		unsigned int tok = zipfdist.random();
+		unsigned int tok = featdist.random();
 		rt.itemar.push_back( DocumentItem( ii+1, "num", termValue( tok)));
 		if (RANDINT(0,12) == 0)
 		{
@@ -154,30 +162,31 @@ static void createTermOpPattern( strus::StreamPatternMatchInstanceInterface* pti
 
 static void createRules( strus::StreamPatternMatchInstanceInterface* ptinst, const char* joinop, unsigned int nofFeatures, unsigned int nofRules)
 {
-	ZipfDistribution zipfdist( nofFeatures);
-	unsigned int ni=0, ne=nofFeatures;
+	ZipfDistribution featdist( nofFeatures);
+	ZipfDistribution rangedist( 10, 1.7);
+	ZipfDistribution selopdist( 5);
+	unsigned int ni=0, ne=nofRules;
 	for (; ni < ne; ++ni)
 	{
-		unsigned int range = 5;
+		unsigned int range = rangedist.random()+1;
 		unsigned int cardinality = 0;
 		unsigned int param[2];
-		param[0] = zipfdist.random();
-		param[1] = zipfdist.random();
+		param[0] = featdist.random();
+		param[1] = featdist.random();
 
 		if (joinop)
 		{
-			if (nofRules-- == 0) return;
 			createTermOpPattern( ptinst, joinop, range, cardinality, param, 2);
 		}
 		else
 		{
-			unsigned int selectOp = RANDINT( 0, 5);
+			unsigned int selectOp = selopdist.random();
 			static const char* opar[] =
 			{
-				"sequence_struct",
 				"sequence",
-				"within_struct",
 				"within",
+				"sequence_struct",
+				"within_struct",
 				"any"
 			};
 			const char* op = opar[ selectOp];
@@ -266,7 +275,7 @@ static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptin
 
 static void printUsage( int argc, const char* argv[])
 {
-	std::cerr << "usage: " << argv[0] << " <features> <nofdocs> <docsize> [<joinop>]" << std::endl;
+	std::cerr << "usage: " << argv[0] << " <features> <nofdocs> <docsize> <nofpatterns> [<joinop>]" << std::endl;
 	std::cerr << "<features>= number of distinct features" << std::endl;
 	std::cerr << "<nofdocs> = number of documents to insert" << std::endl;
 	std::cerr << "<docsize> = size of a document" << std::endl;
