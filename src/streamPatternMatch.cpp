@@ -43,26 +43,6 @@ static uint32_t eventHandle( PatternEventType type_, uint32_t idx)
 	return idx | ((uint32_t)type_ << 30);
 }
 
-static bool getKeyValueStrBuf( char* buf, std::size_t bufsize, std::size_t& size, const std::string& type, const std::string& value)
-{
-	if (type.size() + value.size() < bufsize -2)
-	{
-		std::string::const_iterator ti = type.begin(), te = type.end();
-		std::size_t tidx = 0;
-		for (; ti != te; ++ti,++tidx)
-		{
-			buf[ tidx] = tolower( *ti);
-		}
-		if (type.size()) buf[ tidx++] = ' ';
-		std::memcpy( buf+tidx, value.c_str(), value.size());
-		tidx += value.size();
-		buf[ tidx] = 0;
-		size = tidx;
-		return true;
-	}
-	return false;
-}
-
 class StreamPatternMatchContext
 	:public StreamPatternMatchContextInterface
 {
