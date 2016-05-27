@@ -35,13 +35,12 @@ strus::ErrorBufferInterface* g_errorBuffer = 0;
 struct DocumentItem
 {
 	unsigned int pos;
-	std::string type;
-	std::string value;
+	unsigned int termid;
 
-	DocumentItem( unsigned int pos_, std::string type_, std::string value_)
-		:pos(pos_),type(type_),value(value_){}
+	DocumentItem( unsigned int pos_, unsigned int termid_)
+		:pos(pos_),termid(termid_){}
 	DocumentItem( const DocumentItem& o)
-		:pos(o.pos),type(o.type),value(o.value){}
+		:pos(o.pos),termid(o.termid){}
 };
 
 struct Document
@@ -54,13 +53,6 @@ struct Document
 	Document( const Document& o)
 		:id(o.id),itemar(o.itemar){}
 };
-
-static std::string termValue( unsigned int val)
-{
-	char buf[ 32];
-	snprintf( buf, 32, "%u", val);
-	return std::string( buf);
-}
 
 class ZipfDistribution
 {
@@ -104,47 +96,72 @@ private:
 	std::vector<double> m_ar;
 };
 
+enum TermType {Token, SentenceDelim};
+static unsigned int termId( TermType tp, unsigned int no)
+{
+	return ((unsigned int)tp << 24) + no;
+}
 
 static Document createRandomDocument( unsigned int no, unsigned int size, unsigned int mod)
 {
 	ZipfDistribution featdist( mod);
-	Document rt( std::string("doc_") + termValue(no));
+	char docid[ 32];
+	snprintf( docid, sizeof(docid), "doc_%u", no);
+	Document rt( docid);
 	unsigned int ii = 0, ie = size;
 	for (; ii < ie; ++ii)
 	{
 		unsigned int tok = featdist.random();
-		rt.itemar.push_back( DocumentItem( ii+1, "num", termValue( tok)));
+		rt.itemar.push_back( DocumentItem( ii+1, termId( Token, tok)));
 		if (RANDINT(0,12) == 0)
 		{
-			rt.itemar.push_back( DocumentItem( ii+1, "sent", ""));
+			rt.itemar.push_back( DocumentItem( ii+1, termId( SentenceDelim, 0)));
 		}
 	}
 	return rt;
 }
 
-static void createTermOpRule( strus::StreamPatternMatchInstanceInterface* ptinst, const char* operation, unsigned int range, unsigned int cardinality, unsigned int* param, std::size_t paramsize)
+typedef strus::StreamPatternMatchInstanceInterface::JoinOperation JoinOperation;
+static JoinOperation joinOperation( const char* joinopstr)
+{
+	static const char* ar[] = {"sequence","sequence_struct","within","within_struct","any",0};
+	std::size_t ai = 0;
+	for (; ar[ai]; ++ai)
+	{
+		if (std::strcmp( joinopstr, ar[ai]))
+		{
+			return (JoinOperation)ai;
+		}
+	}
+	throw std::runtime_error( "unknown join operation");
+}
+
+static void createTermOpRule( strus::StreamPatternMatchInstanceInterface* ptinst, const char* joinopstr, unsigned int range, unsigned int cardinality, unsigned int* param, std::size_t paramsize)
 {
 	std::string type( "num");
 	std::size_t pi = 0, pe = paramsize;
 	bool with_delim = false;
-	if (std::strcmp( operation, "sequence_struct") == 0
-	|| std::strcmp( operation, "within_struct") == 0)
+	if (std::strcmp( joinopstr, "sequence_struct") == 0
+	|| std::strcmp( joinopstr, "within_struct") == 0)
 	{
 		with_delim = true;
 	}
 	if (with_delim)
 	{
-		unsigned int delim_termid = ptinst->getTermId( "sent", "");
+		unsigned int delim_termid = termId( SentenceDelim, 0);
 		ptinst->pushTerm( delim_termid);
 		++paramsize;
 	}
 	for (; pi != pe; ++pi)
 	{
-		unsigned int termid = ptinst->getTermId( type, termValue(param[pi]));
+		unsigned int termid = termId( Token, param[pi]);
 		ptinst->pushTerm( termid);
-		ptinst->attachVariable( std::string("A") + termValue(pi), 1.0f);
+		char variablename[ 32];
+		snprintf( variablename, sizeof(variablename), "A%u", (unsigned int)pi);
+		ptinst->attachVariable( variablename, 1.0f);
 	}
-	ptinst->pushExpression( operation, paramsize, range, cardinality);
+	JoinOperation joinop = joinOperation( joinopstr);
+	ptinst->pushExpression( joinop, paramsize, range, cardinality);
 }
 
 static void createTermOpPattern( strus::StreamPatternMatchInstanceInterface* ptinst, const char* operation, unsigned int range, unsigned int cardinality, unsigned int* param, std::size_t paramsize)
@@ -153,8 +170,9 @@ static void createTermOpPattern( strus::StreamPatternMatchInstanceInterface* pti
 	std::size_t pi = 0, pe = paramsize;
 	for (; pi != pe; ++pi)
 	{
-		rulename.push_back( '_');
-		rulename.append( termValue( param[pi]));
+		char strbuf[ 32];
+		snprintf( strbuf, sizeof( strbuf), "_%u", (unsigned int)pi);
+		rulename.append( strbuf);
 	}
 	createTermOpRule( ptinst, operation, range, cardinality, param, paramsize);
 	ptinst->closePattern( rulename, true);
@@ -238,17 +256,15 @@ static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptin
 	unsigned int didx = 0;
 	for (; di != de; ++di,++didx)
 	{
-		unsigned int termid = mt->termId( di->type, di->value);
-		if (termid)
-		{
-			mt->putInput( termid, di->pos, didx, 1);
-		}
+		mt->putInput( di->termid, di->pos, didx, 1);
+		if (g_errorBuffer->hasError()) throw std::runtime_error("error matching rules");
 	}
 	std::vector<strus::stream::PatternMatchResult> results = mt->fetchResults();
 	unsigned int nofMatches = results.size();
 
 	strus::StreamPatternMatchContextInterface::Statistics stats;
 	mt->getStatistics( stats);
+	globalstats.nofPatternsInitiated += stats.nofPatternsInitiated;
 	globalstats.nofPatternsTriggered += stats.nofPatternsTriggered;
 	globalstats.nofOpenPatterns += stats.nofOpenPatterns;
 
@@ -268,7 +284,7 @@ static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptin
 		}
 		std::cout << std::endl;
 	}
-	std::cout << "nof matches " << nofMatches << ", nof rules triggered " << stats.nofPatternsTriggered << " nof open rules " << doubleToString( stats.nofOpenPatterns) << std::endl;
+	std::cout << "nof matches " << nofMatches << ", nof programs installed " << globalstats.nofPatternsInitiated << ", nof rules triggered " << stats.nofPatternsTriggered << " nof open rules " << doubleToString( stats.nofOpenPatterns) << std::endl;
 #endif
 	return nofMatches;
 }
@@ -351,7 +367,7 @@ int main( int argc, const char** argv)
 			throw std::runtime_error("uncaugth exception");
 		}
 		std::cerr << "OK" << std::endl;
-		std::cerr << "processed " << docs.size() << " documents with " << nofPatterns << " patterns, total " << totalNofmatches << " matches, " << stats.nofPatternsTriggered << " patterns triggered " << (unsigned int)(stats.nofOpenPatterns/docs.size()+0.5) << " open patterns in average in " << doubleToString(duration) << " seconds" << std::endl;
+		std::cerr << "processed " << docs.size() << " documents with " << nofPatterns << " patterns, total " << totalNofmatches << " matches, " << stats.nofPatternsInitiated << " patterns initiated and " << stats.nofPatternsTriggered << " triggered " << (unsigned int)(stats.nofOpenPatterns/docs.size()+0.5) << " open patterns in average in " << doubleToString(duration) << " seconds" << std::endl;
 		delete g_errorBuffer;
 		return 0;
 	}

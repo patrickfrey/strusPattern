@@ -20,12 +20,6 @@ public:
 	/// \brief Destructor
 	virtual ~StreamPatternMatchContextInterface(){}
 
-	/// \brief Get the internal numeric identifier of the term with the given name or 0 if not defined
-	/// \param[in] type type name of the term
-	/// \param[in] value value string of the term
-	/// \return term identifier or 0, if not defined
-	virtual unsigned int termId( const std::string& type, const std::string& value) const=0;
-
 	/// \brief Feed the next input term
 	/// \brief termid term identifier
 	/// \brief ordpos 'ordinal position' term counting position for term proximity measures.
@@ -45,15 +39,18 @@ public:
 	/// \brief Some statistics for global pattern matching analysis
 	struct Statistics
 	{
-		unsigned int nofPatternsTriggered;	///< number of patterns opened = activated by some appearance of any rule initiating member term
-		double nofOpenPatterns;			///< number of patterns simultaneously active oin average
+		unsigned int nofPatternsInitiated;	///< number of patterns opened = activated by some appearance of any rule initiating member term
+		unsigned int nofPatternsTriggered;	///< number of events fired to this pattern
+		double nofOpenPatterns;			///< number of patterns simultaneously active in average
 
 		/// \brief Constructor
 		Statistics()
-			:nofPatternsTriggered(0),nofOpenPatterns(0){}
+			:nofPatternsInitiated(0),nofPatternsTriggered(0),nofOpenPatterns(0){}
 		/// \brief Copy constructor
 		Statistics( const Statistics& o)
-			:nofPatternsTriggered(o.nofPatternsTriggered),nofOpenPatterns(o.nofOpenPatterns){}
+			:nofPatternsInitiated(o.nofPatternsInitiated)
+			,nofPatternsTriggered(o.nofPatternsTriggered)
+			,nofOpenPatterns(o.nofOpenPatterns){}
 	};
 
 	/// \brief Get some statistics for global pattern matching analysis

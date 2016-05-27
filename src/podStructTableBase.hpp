@@ -18,6 +18,7 @@
 #include <set>
 
 #undef STRUS_CHECK_FREE_ITEMS
+#undef STRUS_CHECK_USED_ITEMS
 
 namespace strus
 {
@@ -35,6 +36,9 @@ public:
 #else
 		:m_freelistidx(0)
 #endif
+#ifdef STRUS_CHECK_USED_ITEMS
+		,m_used_size(0)
+#endif
 	{}
 
 	PodStructTableBase( const PodStructTableBase& o)
@@ -42,6 +46,9 @@ public:
 		:Parent(o),m_free_elemtab(o.m_free_elemtab)
 #else
 		:Parent(o),m_freelistidx(o.m_freelistidx)
+#endif
+#ifdef STRUS_CHECK_USED_ITEMS
+		,m_used_size(o.m_used_size)
 #endif
 	{}
 
@@ -71,6 +78,9 @@ public:
 
 	SIZETYPE add( const ELEMTYPE& elem)
 	{
+#ifdef STRUS_CHECK_USED_ITEMS
+		++m_used_size;
+#endif
 #ifndef STRUS_CHECK_FREE_ITEMS
 		if (m_freelistidx)
 		{
@@ -94,8 +104,23 @@ public:
 		((FREELISTTYPE*)(void*)(&(*this)[ idx]))->next = m_freelistidx;
 		m_freelistidx = idx+1;
 #endif
+#ifdef STRUS_CHECK_USED_ITEMS
+		--m_used_size;
+#endif
 	}
 
+#ifdef STRUS_CHECK_USED_ITEMS
+	SIZETYPE used_size() const
+	{
+		return m_used_size;
+	}
+#else
+	SIZETYPE used_size() const
+	{
+		return Parent::size();
+	}
+#endif
+	
 private:
 	void reset(){}		//< forbid usage of inherited method
 
@@ -104,6 +129,9 @@ private:
 	std::set<SIZETYPE> m_free_elemtab;
 #else
 	SIZETYPE m_freelistidx;
+#endif
+#ifdef STRUS_CHECK_USED_ITEMS
+	SIZETYPE m_used_size;
 #endif
 };
 

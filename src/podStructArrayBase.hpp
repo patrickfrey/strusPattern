@@ -17,7 +17,7 @@
 #include <cstdlib>
 #include <new>
 
-#undef STRUS_USE_BASEADDR
+#define STRUS_USE_BASEADDR
 
 namespace strus
 {

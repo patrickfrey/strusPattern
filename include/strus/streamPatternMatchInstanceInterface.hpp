@@ -24,24 +24,33 @@ public:
 	/// \brief Destructor
 	virtual ~StreamPatternMatchInstanceInterface(){}
 
-	/// \brief Get or create a numeric identifier for name that can be used for pushTerm(unsigned int)
-	/// \param[in] type type name of the term
-	/// \param[in] value value string of the term
-	/// \return the numeric identifier assigned to the term specified
-	virtual unsigned int getTermId( const std::string& type, const std::string& value)=0;
+	/// \brief Define a relative document term frequency used for optimization of the automaton
+	/// \param[in] termid term identifier
+	/// \param[in] df document frequency (only compared relatively, value between 0 and a virtual collection size)
+	virtual void defineTermFrequency( unsigned int termid, double df)=0;
 
 	/// \brief Push a term on the stack
 	/// \param[in] termid term identifier
 	virtual void pushTerm( unsigned int termid)=0;
 
+	///\brief Join operations (same meaning as in query evaluation)
+	enum JoinOperation
+	{
+		OpSequence,		///< A subset specified by cardinality of the trigger events must appear in the specified order for then completion of the rule (objects must not overlap)
+		OpSequenceStruct,	///< A subset specified by cardinality of the trigger events must appear in the specified order without a structure element appearing before the last element for then completion of the rule (objects must not overlap)
+		OpWithin,		///< A subset specified by cardinality of the trigger events must appear for then completion of the rule (objects must not overlap)
+		OpWithinStruct,		///< A subset specified by cardinality of the trigger events must appear without a structure element appearing before the last element for then completion of the rule (objects must not overlap)
+		OpAny			///< Any of the trigger events leads for the completion of the rule
+	};
+
 	/// \brief Take the topmost elements from the stack, build an expression out of them and replace the argument elements with the created element on the stack
 	/// \param[in] operation identifier of the operation to perform as string
 	/// \param[in] argc number of arguments of this operation
 	/// \param[in] range position proximity range of the expression
-	/// \param[in] cardinality required size of matching results (e.g. minimum number of elements of any input subset selection that builds a result) (0 for use default)
+	/// \param[in] cardinality specifies a result dimension requirement (e.g. minimum number of elements of any input subset selection that builds a result) (0 for use default). Interpretation depends on operation, but in most cases it specifies the required size for a valid result.
 	/// \note The operation identifiers should if possible correspond to the names used for the standard posting join operators in the strus core query evaluation
 	virtual void pushExpression(
-			const char* operation,
+			JoinOperation operation,
 			std::size_t argc, unsigned int range, unsigned int cardinality)=0;
 
 	/// \brief Push a reference to a pattern on the stack
@@ -59,6 +68,22 @@ public:
 	/// \param[in] name name of the pattern and the result if declared as visible
 	/// \param[in] visible true, if the pattern result should be exported (be visible in the final result)
 	virtual void closePattern( const std::string& name, bool visible)=0;
+
+	/// \brief Structure with options for optimization of the pattern evaluation program
+	struct OptimizeOptions
+	{
+		float stopwordOccurrenceFactor;		///< The bias for the factor nof programs with a specific keyword divided by the number of programs defined that decides wheter we try to find another key event for the program
+		uint32_t maxRange;			///< Maximum proximity range a program must have in order to be triggered by an alternative key event
+
+		///\brief Constructor
+		OptimizeOptions()
+			:stopwordOccurrenceFactor(0.2),maxRange(5){}
+		///\brief Copy constructor
+		OptimizeOptions( const OptimizeOptions& o)
+			:stopwordOccurrenceFactor(o.stopwordOccurrenceFactor),maxRange(o.maxRange){}
+	};
+	/// \brief Try to optimize the program by setting initial key events of the programs to events that are relative rare 
+	virtual void optimize( OptimizeOptions& opt)=0;
 
 	/// \brief Create the context to process a document with the pattern matcher
 	/// \return the pattern matcher context
