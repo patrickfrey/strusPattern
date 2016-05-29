@@ -108,6 +108,14 @@ public:
 	{
 		return m_size;
 	}
+	SIZETYPE first() const
+	{
+#ifdef STRUS_USE_BASEADDR
+		return BASEADDR;
+#else
+		return 0;
+#endif
+	}
 	void reset()
 	{
 		m_size = 0;

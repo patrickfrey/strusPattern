@@ -22,7 +22,9 @@
 #include <limits>
 #include <vector>
 #include <cstring>
+#include <iostream>
 
+#define STRUS_LOWLEVEL_DEBUG
 
 using namespace strus;
 using namespace strus::stream;
@@ -50,7 +52,8 @@ public:
 	StreamPatternMatchContext( const StreamPatternMatchData* data_, ErrorBufferInterface* errorhnd_)
 		:m_errorhnd(errorhnd_),m_data(data_),m_statemachine(&data_->programTable),m_nofEvents(0),m_curPosition(0){}
 
-	virtual ~StreamPatternMatchContext(){}
+	virtual ~StreamPatternMatchContext()
+	{}
 
 	virtual void putInput( unsigned int termid, unsigned int ordpos, unsigned int origpos, unsigned int origsize)
 	{
@@ -100,7 +103,10 @@ public:
 				const Result& result = results[ ai];
 				const char* resultName = m_data->patternMap.key( result.resultHandle);
 				std::vector<PatternMatchResultItem> rtitemlist;
-				gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
+				if (result.eventDataReferenceIdx)
+				{
+					gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
+				}
 				rt.push_back( PatternMatchResult( resultName, rtitemlist));
 			}
 			return rt;
@@ -331,14 +337,45 @@ public:
 		CATCH_ERROR_MAP_RETURN( "failed to create pattern match context: %s", *m_errorhnd, 0);
 	}
 
-	virtual void optimize( OptimizeOptions& opt)
+#ifdef STRUS_LOWLEVEL_DEBUG
+	void printAutomatonStatistics()
+	{
+		ProgramTable::Statistics stats = m_data.programTable.getProgramStatistics();
+		std::vector<uint32_t>::const_iterator di = stats.keyEventDist.begin(), de = stats.keyEventDist.end();
+		std::cout << "occurrence dist:";
+		for (int didx=0; di != de; ++di,++didx)
+		{
+			std::cout << " " << *di;
+		}
+		std::cout << std::endl;
+		std::cout << "stop event list:";
+		std::vector<uint32_t>::const_iterator si = stats.stopWordSet.begin(), se = stats.stopWordSet.end();
+		for (; si != se; ++si)
+		{
+			std::cout << " " << *si;
+		}
+		std::cout << std::endl;
+	}
+#endif
+
+	virtual void optimize( const OptimizeOptions& opt)
 	{
 		try
 		{
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cout << "automaton statistics before otimization:" << std::endl;
+			printAutomatonStatistics();
+#endif
 			ProgramTable::OptimizeOptions popt;
-			popt.maxRange = opt.maxRange;
 			popt.stopwordOccurrenceFactor = opt.stopwordOccurrenceFactor;
+			popt.weightFactor = opt.weightFactor;
+			popt.maxRange = opt.maxRange;
 			m_data.programTable.optimize( popt);
+
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cout << "automaton statistics after otimization:" << std::endl;
+			printAutomatonStatistics();
+#endif
 		}
 		CATCH_ERROR_MAP( "failed to optimize pattern matching automaton: %s", *m_errorhnd);
 	}

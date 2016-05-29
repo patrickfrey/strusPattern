@@ -32,8 +32,10 @@ enum
 	BaseAddrEventTriggerList =	(10000000 *  6),
 	BaseAddrEventDataReferenceTable=(10000000 *  7),
 	BaseAddrEventItemList =		(10000000 *  8),
-	BaseAddrProgramList =		(10000000 *  9),
-	BaseAddrActionSlotDefTable =	(10000000 * 10)
+	BaseAddrEventStructList =	(10000000 *  9),
+	BaseAddrProgramList =		(10000000 * 10),
+	BaseAddrActionSlotDefTable =	(10000000 * 12),
+	BaseAddrDisposeRuleList =	(10000000 * 13)
 };
 
 class Trigger
@@ -125,6 +127,7 @@ public:
 
 	uint32_t add( const EventTrigger& et);
 	void remove( uint32_t idx);
+	Trigger const* getTriggerPtr( uint32_t idx, uint32_t event) const;
 
 	typedef PodStructArrayBase<Trigger const*,std::size_t,0> TriggerRefList;
 	void getTriggers( TriggerRefList& triggers, uint32_t event) const;
@@ -198,6 +201,7 @@ struct EventStruct
 	EventStruct( const EventStruct& o)
 		:data(o.data),eventid(o.eventid){}
 };
+typedef PodStructArrayBase<EventStruct,std::size_t,BaseAddrEventStructList> EventStructList;
 
 struct EventDataReference
 {
@@ -269,12 +273,22 @@ struct Program
 	ActionSlotDef slotDef;
 	uint32_t triggerListIdx;
 	uint32_t positionRange;
-	uint32_t firstPastEvent;
 
 	Program( uint32_t positionRange_, const ActionSlotDef& slotDef_)
-		:slotDef(slotDef_),triggerListIdx(0),positionRange(positionRange_),firstPastEvent(0){}
+		:slotDef(slotDef_),triggerListIdx(0),positionRange(positionRange_){}
 	Program( const Program& o)
-		:slotDef(o.slotDef),triggerListIdx(o.triggerListIdx),positionRange(o.positionRange),firstPastEvent(o.firstPastEvent){}
+		:slotDef(o.slotDef),triggerListIdx(o.triggerListIdx),positionRange(o.positionRange){}
+};
+
+struct ProgramTrigger
+{
+	uint32_t programidx;
+	uint32_t past_eventid;
+
+	ProgramTrigger( uint32_t programidx_, uint32_t past_eventid_)
+		:programidx(programidx_),past_eventid(past_eventid_){}
+	ProgramTrigger( const ProgramTrigger& o)
+		:programidx(o.programidx),past_eventid(o.past_eventid){}
 };
 
 struct ProgramTableFreeListElem {uint32_t _;uint32_t next;};
@@ -292,41 +306,51 @@ public:
 
 	uint32_t createProgram( uint32_t positionRange_, const ActionSlotDef& actionSlotDef_);
 	void createTrigger( uint32_t program, uint32_t event, Trigger::SigType sigtype, uint32_t sigval, uint32_t variable, float weight);
+	void defineEventProgram( uint32_t eventid, uint32_t programidx);
 
 	const Program& operator[]( uint32_t programidx) const	{return m_programTable[ programidx-1];}
 	const TriggerDefList& triggerList() const		{return m_triggerList;}
 
 	void defineProgramResult( uint32_t programidx, uint32_t eventid, uint32_t resultHandle);
 
-	void defineEventProgram( uint32_t eventid, uint32_t programidx);
 	uint32_t getEventProgramList( uint32_t eventid) const;
-	bool nextProgram( uint32_t& programlist, uint32_t& program) const;
+	const ProgramTrigger* nextProgramPtr( uint32_t& programlist) const;
 
 	struct OptimizeOptions
 	{
 		float stopwordOccurrenceFactor;
+		float weightFactor;
 		uint32_t maxRange;
 	
 		OptimizeOptions()
-			:stopwordOccurrenceFactor(0.2),maxRange(5){}
+			:stopwordOccurrenceFactor(0.01f),weightFactor(10.0f),maxRange(5){}
 		OptimizeOptions( const OptimizeOptions& o)
-			:stopwordOccurrenceFactor(o.stopwordOccurrenceFactor),maxRange(o.maxRange){}
+			:stopwordOccurrenceFactor(o.stopwordOccurrenceFactor),weightFactor(o.weightFactor),maxRange(o.maxRange){}
 	};
 	void optimize( OptimizeOptions& opt);
+
+	struct Statistics
+	{
+		std::vector<uint32_t> keyEventDist;
+		std::vector<uint32_t> stopWordSet;
+	};
+
+	Statistics getProgramStatistics() const;
 	bool isStopWord( uint32_t eventid) const		{return m_stopWordSet.find(eventid) != m_stopWordSet.end();}
 
 private:
+	void defineEventProgramAlt( uint32_t eventid, uint32_t programidx, uint32_t past_eventid);
 	double calcEventWeight( uint32_t eventid) const;
-	uint32_t alternativeEventId( uint32_t eventid, double eventweight, uint32_t triggerListIdx) const; 
+	uint32_t getAltEventId( uint32_t eventid, uint32_t triggerListIdx) const;
 	void getDelimTokenStopWordSet( uint32_t triggerListIdx);
 
 private:
 	ActionSlotDefList m_actionSlotArray;
 	TriggerDefList m_triggerList;
 	PodStructTableBase<Program,uint32_t,ProgramTableFreeListElem,BaseAddrProgramTable> m_programTable;
-	PodStackPoolBase<uint32_t,uint32_t,BaseAddrProgramList> m_programList;
-	typedef utils::UnorderedMap<uint32_t,uint32_t> EventProgamMap;
-	EventProgamMap m_eventProgamMap;
+	PodStackPoolBase<ProgramTrigger,uint32_t,BaseAddrProgramList> m_programTriggerList;
+	typedef utils::UnorderedMap<uint32_t,uint32_t> EventProgamTriggerMap;
+	EventProgamTriggerMap m_eventProgamTriggerMap;
 	std::set<uint32_t> m_stopWordSet;
 	typedef std::map<uint32_t,uint32_t> EventOccurrenceMap;
 	EventOccurrenceMap m_keyOccurrenceMap;
@@ -360,7 +384,7 @@ public:
 
 	void doTransition( uint32_t event, const EventData& data);
 	void setCurrentPos( uint32_t pos);
-	void installProgram( uint32_t programidx);
+	void installProgram( const ProgramTrigger& programtrigger);
 
 	typedef PodStructArrayBase<Result,std::size_t,0> ResultList;
 	const ResultList& results() const
@@ -382,6 +406,9 @@ public://getStatistics
 	double nofOpenPatterns() const			{return m_nofOpenPatterns;}
 
 private:
+	typedef PodStructArrayBase<uint32_t,std::size_t,BaseAddrDisposeRuleList> DisposeRuleList;
+	void fireTrigger( ActionSlot& slot, const Trigger& trigger, const EventData& data,
+				DisposeRuleList& disposeRuleList, EventStructList& followList);
 	uint32_t createRule( uint32_t positionRange);
 	void disposeRule( uint32_t rule);
 	void deactivateRule( uint32_t rule);

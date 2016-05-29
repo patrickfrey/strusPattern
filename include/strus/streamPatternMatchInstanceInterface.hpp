@@ -73,17 +73,20 @@ public:
 	struct OptimizeOptions
 	{
 		float stopwordOccurrenceFactor;		///< The bias for the factor nof programs with a specific keyword divided by the number of programs defined that decides wheter we try to find another key event for the program
+		float weightFactor;
 		uint32_t maxRange;			///< Maximum proximity range a program must have in order to be triggered by an alternative key event
 
 		///\brief Constructor
 		OptimizeOptions()
-			:stopwordOccurrenceFactor(0.2),maxRange(5){}
+			:stopwordOccurrenceFactor(0.01f),weightFactor(10.0f),maxRange(5){}
+		OptimizeOptions( float stopwordOccurrenceFactor_, float weightFactor_, uint32_t maxRange_)
+			:stopwordOccurrenceFactor(stopwordOccurrenceFactor_),weightFactor(weightFactor_),maxRange(maxRange_){}
 		///\brief Copy constructor
 		OptimizeOptions( const OptimizeOptions& o)
-			:stopwordOccurrenceFactor(o.stopwordOccurrenceFactor),maxRange(o.maxRange){}
+			:stopwordOccurrenceFactor(o.stopwordOccurrenceFactor),weightFactor(o.weightFactor),maxRange(o.maxRange){}
 	};
 	/// \brief Try to optimize the program by setting initial key events of the programs to events that are relative rare 
-	virtual void optimize( OptimizeOptions& opt)=0;
+	virtual void optimize( const OptimizeOptions& opt)=0;
 
 	/// \brief Create the context to process a document with the pattern matcher
 	/// \return the pattern matcher context
