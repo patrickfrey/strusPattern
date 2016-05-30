@@ -20,72 +20,104 @@
 
 using namespace strus;
 
-EventTriggerTable::EventTriggerTable()
-	:m_eventAr(0),m_triggerIndAr(0),m_triggerTab(),m_allocsize(0),m_size(0){}
-EventTriggerTable::EventTriggerTable( const EventTriggerTable& o)
-	:m_eventAr(0),m_triggerIndAr(0),m_triggerTab(o.m_triggerTab),m_allocsize(0),m_size(o.m_size)
+static inline uint32_t evhash( uint32_t a)
 {
-	if (o.m_allocsize)
+	a += ~(a>>5);
+	a +=  (a<<3);
+	a ^=  (a>>4);
+	return a;
+}
+
+EventTriggerTable::EventTriggerTable()
+	:m_nofTriggers(0){}
+EventTriggerTable::EventTriggerTable( const EventTriggerTable& o)
+	:m_triggerTab(o.m_triggerTab),m_nofTriggers(o.m_nofTriggers)
+{
+	std::size_t htidx=0;
+	for (; htidx != EventHashTabSize; ++htidx)
 	{
-		expandEventAr( o.m_allocsize);
-		std::memcpy( m_eventAr, o.m_eventAr, m_size * sizeof(*m_eventAr));
-		std::memcpy( m_triggerIndAr, o.m_triggerIndAr, m_size * sizeof(*m_triggerIndAr));
+		TriggerInd& rec = m_triggerIndAr[ htidx];
+		const TriggerInd& rec_o = o.m_triggerIndAr[ htidx];
+
+		if (rec_o.m_allocsize)
+		{
+			rec.expand( rec_o.m_allocsize);
+		}
+		std::memcpy( rec.m_eventAr, rec_o.m_eventAr, rec_o.m_size * sizeof(*rec.m_eventAr));
+		std::memcpy( rec.m_ar, rec_o.m_ar, rec_o.m_size * sizeof(*rec.m_ar));
+		rec.m_size = rec_o.m_size;
 	}
 }
 
 enum {EventArrayMemoryAlignment=64};
-void EventTriggerTable::expandEventAr( uint32_t newallocsize)
+void EventTriggerTable::TriggerInd::expand( uint32_t newallocsize)
 {
 	if (m_size > newallocsize)
 	{
-		throw std::logic_error( "illegal call of EventTriggerTable::expandEventAr");
+		throw std::logic_error( "illegal call of EventTriggerTable::TriggerInd::expand");
 	}
 	uint32_t* war = (uint32_t*)utils::aligned_malloc( newallocsize * sizeof(uint32_t), EventArrayMemoryAlignment);
 	if (!war) throw std::bad_alloc();
 	std::memcpy( war, m_eventAr, m_size * sizeof(uint32_t));
 	m_eventAr = war;
-	uint32_t* far = (uint32_t*)std::realloc( m_triggerIndAr, newallocsize * sizeof(uint32_t));
+	uint32_t* far = (uint32_t*)std::realloc( m_ar, newallocsize * sizeof(uint32_t));
 	if (!far) throw std::bad_alloc();
-	m_triggerIndAr = far;
+	m_ar = far;
 	m_allocsize = newallocsize;
+}
+
+static inline uint32_t linkid( uint32_t htidx, uint32_t elidx)
+{
+	if (elidx >= (1U<<EventTriggerTable::EventHashTabIdxShift)) throw strus::runtime_error(_TXT("too many event triggers defined, maximum is %u"), (1U<<EventTriggerTable::EventHashTabIdxShift));
+	return elidx + (htidx << EventTriggerTable::EventHashTabIdxShift);
 }
 
 uint32_t EventTriggerTable::add( const EventTrigger& et)
 {
-	if (m_size == m_allocsize)
+	uint32_t htidx = evhash( et.event) & EventHashTabIdxMask;
+	TriggerInd& rec = m_triggerIndAr[ htidx];
+	if (rec.m_size == rec.m_allocsize)
 	{
-		if (m_allocsize >= (1U<<31))
+		if (rec.m_allocsize >= (1U<<31))
 		{
-			throw std::bad_alloc();
+			throw std::runtime_error(_TXT("too many elements in event trigger table"));
 		}
-		expandEventAr( m_allocsize?(m_allocsize*2):BlockSize);
+		rec.expand( rec.m_allocsize?(rec.m_allocsize*2):BlockSize);
 	}
-	m_eventAr[ m_size] = et.event;
-	uint32_t rt = m_triggerIndAr[ m_size] = m_triggerTab.add( LinkedTrigger( m_size, et.trigger));
-	++m_size;
+	rec.m_eventAr[ rec.m_size] = et.event;
+	uint32_t rt = rec.m_ar[ rec.m_size] = m_triggerTab.add( LinkedTrigger( linkid( htidx,rec.m_size), et.trigger));
+	++rec.m_size;
+	++m_nofTriggers;
 	return rt;
 }
 
 void EventTriggerTable::remove( uint32_t idx)
 {
 	uint32_t link = m_triggerTab[ idx].link;
-	if (link >= m_size || m_triggerIndAr[ link] != idx)
+	uint32_t htidx = (link >> EventHashTabIdxShift) & EventHashTabIdxMask;
+	uint32_t aridx = link & ((1 << EventHashTabIdxShift) -1);
+	TriggerInd& rec = m_triggerIndAr[ htidx];
+	if (aridx >= rec.m_size || rec.m_ar[ aridx] != idx)
 	{
 		throw strus::runtime_error( _TXT("bad trigger index (remove trigger)"));
 	}
 	m_triggerTab.remove( idx);
-	if (link != m_size - 1)
+	if (aridx != rec.m_size - 1)
 	{
-		m_eventAr[ link] = m_eventAr[ m_size-1];
-		m_triggerIndAr[ link] = m_triggerIndAr[ m_size-1];
-		m_triggerTab[ m_triggerIndAr[ link]].link = link;
+		rec.m_eventAr[ aridx] = rec.m_eventAr[ rec.m_size-1];
+		rec.m_ar[ aridx] = rec.m_ar[ rec.m_size-1];
+		m_triggerTab[ rec.m_ar[ aridx]].link = link;
 	}
-	--m_size;
+	--rec.m_size;
+	--m_nofTriggers;
 }
 
 uint32_t EventTriggerTable::getTriggerEventId( uint32_t triggeridx) const
 {
-	return m_eventAr[ m_triggerTab[ triggeridx].link];
+	uint32_t link = m_triggerTab[ triggeridx].link;
+	uint32_t htidx = (link >> EventHashTabIdxShift) & EventHashTabIdxMask;
+	uint32_t aridx = link & ((1 << EventHashTabIdxShift) -1);
+	return m_triggerIndAr[ htidx].m_eventAr[ aridx];
 	
 }
 
@@ -160,23 +192,25 @@ void EventTriggerTable::getTriggers( TriggerRefList& triggers, uint32_t event) c
 	// The following implementation looks a little bit funny, but it is 
 	// crucial for the overall performance that this method is vectorizable.
 	if (!event) return;
-	Trigger const** tar = triggers.reserve( m_size);
+	uint32_t htidx = evhash( event) & EventHashTabIdxMask;
+	const TriggerInd& rec = m_triggerIndAr[ htidx];
+	Trigger const** tar = triggers.reserve( rec.m_size);
 	std::size_t nofresults = 0;
 
 #if __GNUC__ >= 4
-	const uint32_t* eventAr = (const uint32_t*)__builtin_assume_aligned( m_eventAr, EventArrayMemoryAlignment);
+	const uint32_t* eventAr = (const uint32_t*)__builtin_assume_aligned( rec.m_eventAr, EventArrayMemoryAlignment);
 #else
-	const uint32_t* eventAr = m_eventAr;
+	const uint32_t* eventAr = rec.m_eventAr;
 #endif
 #ifdef STRUS_USE_SSE_SCAN_TRIGGERS
-	getTriggers_SSE4( tar, nofresults, event, eventAr, m_triggerIndAr, m_triggerTab, m_size);
+	getTriggers_SSE4( tar, nofresults, event, eventAr, rec.m_ar, m_triggerTab, rec.m_size);
 #else
 	uint32_t wi=0;
-	for (; wi<m_size; ++wi)
+	for (; wi<rec.m_size; ++wi)
 	{
 		if (eventAr[ wi] == event)
 		{
-			tar[ nofresults++] = &m_triggerTab[ m_triggerIndAr[ wi]].trigger;
+			tar[ nofresults++] = &m_triggerTab[ rec.m_ar[ wi]].trigger;
 		}
 	}
 #endif
@@ -197,11 +231,26 @@ uint32_t ProgramTable::createProgram( uint32_t positionRange_, const ActionSlotD
 	return 1+m_programTable.add( Program( positionRange_, actionSlotDef_));
 }
 
-void ProgramTable::createTrigger( uint32_t programidx, uint32_t event, Trigger::SigType sigtype, uint32_t sigval, uint32_t variable, float weight)
+void ProgramTable::createTrigger( uint32_t programidx, uint32_t event, bool isKeyEvent, Trigger::SigType sigtype, uint32_t sigval, uint32_t variable, float weight)
 {
 	Program& program = m_programTable[ programidx-1];
-	m_triggerList.push( program.triggerListIdx, TriggerDef( event, sigtype, sigval, variable, weight));
+	m_triggerList.push( program.triggerListIdx, TriggerDef( event, isKeyEvent, sigtype, sigval, variable, weight));
 	m_eventOccurrenceMap[ event] += 1;
+}
+
+void ProgramTable::doneProgram( uint32_t programidx)
+{
+	Program& program = m_programTable[ programidx-1];
+	uint32_t triggerListIdx = program.triggerListIdx;
+	const TriggerDef* trigger;
+
+	while (0!=(trigger=m_triggerList.nextptr( triggerListIdx)))
+	{
+		if (trigger->isKeyEvent)
+		{
+			defineEventProgram( trigger->event, programidx);
+		}
+	}
 }
 
 void ProgramTable::defineProgramResult( uint32_t programidx, uint32_t eventid, uint32_t resultHandle)
@@ -289,14 +338,14 @@ uint32_t ProgramTable::getAltEventId( uint32_t eventid, uint32_t triggerListIdx)
 					{
 						eventid_selected = trigger->event;
 						sigval_selected = trigger->sigval;
-						sigtype = trigger->sigtype;
+						sigtype = (Trigger::SigType)trigger->sigtype;
 					}
 				}
 				else if (sigtype == Trigger::SigAny && trigger->event != eventid)
 				{
 					eventid_selected = trigger->event;
 					sigval_selected = trigger->sigval;
-					sigtype = trigger->sigtype;
+					sigtype = (Trigger::SigType)trigger->sigtype;
 				}
 				else
 				{
@@ -562,6 +611,8 @@ void StateMachine::fireTrigger(
 	bool match = false;
 	bool takeEventData = false;
 	bool finished = false;
+	++m_nofTriggersFired;
+
 #ifdef STRUS_LOWLEVEL_DEBUG
 	std::cout << "rule " << slot.rule << " fire sig " << Trigger::sigTypeName( trigger.sigtype()) << "(" << trigger.sigval() << ") at " << slot.value << "#" << slot.count;
 #endif
@@ -699,29 +750,12 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 	std::cout << "call doTransition( event=" << event << ", ordpos=" << data.ordpos << ")" << std::endl;
 #endif
 	// Some logging:
-	m_nofOpenPatterns += m_eventTriggerTable.size();
+	m_nofOpenPatterns += m_eventTriggerTable.nofTriggers();
 
 	enum {NofTriggers=1024,NofEventStruct=1024,NofDisposeRules=1024};
 	Trigger const* trigger_alloca[ NofTriggers];
 	EventStruct followList_alloca[ NofEventStruct];
 	uint32_t disposeRuleList_alloca[ NofDisposeRules];
-
-	// Install triggered programs:
-	uint32_t programlist = m_programTable->getEventProgramList( event);
-	const ProgramTrigger* programTrigger;
-#ifdef STRUS_LOWLEVEL_DEBUG
-	uint32_t icnt = 0;
-#endif
-	while (0!=(programTrigger=m_programTable->nextProgramPtr( programlist)))
-	{
-		installProgram( *programTrigger);
-#ifdef STRUS_LOWLEVEL_DEBUG
-		++icnt;
-#endif
-	}
-#ifdef STRUS_LOWLEVEL_DEBUG
-	std::cout << "programs installed " << icnt << ", nof rules used " << m_ruleTable.used_size() << ", triggers active " << m_eventTriggerTable.size() << std::endl;
-#endif
 
 	// Process the event and all follow events triggered:
 	EventStructList followList( followList_alloca, NofEventStruct);
@@ -737,8 +771,10 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 		DisposeRuleList disposeRuleList( disposeRuleList_alloca, NofDisposeRules);
 
 		EventStruct follow = followList[ ei];
+		// Install triggered programs:
+		installEventPrograms( follow.eventid, follow.data, followList, disposeRuleList);
+
 		m_eventTriggerTable.getTriggers( triggers, follow.eventid);
-		m_nofTriggersFired += triggers.size();
 		EventTriggerTable::TriggerRefList::const_iterator
 			ti = triggers.begin(), te = triggers.end();
 		for (; ti != te; ++ti)
@@ -792,11 +828,31 @@ void StateMachine::setCurrentPos( uint32_t pos)
 #endif
 }
 
-void StateMachine::installProgram( const ProgramTrigger& programTrigger)
+void StateMachine::installEventPrograms( uint32_t event, const EventData& data, EventStructList& followList, DisposeRuleList& disposeRuleList)
+{
+	uint32_t programlist = m_programTable->getEventProgramList( event);
+	const ProgramTrigger* programTrigger;
+#ifdef STRUS_LOWLEVEL_DEBUG
+	uint32_t icnt = 0;
+#endif
+	while (0!=(programTrigger=m_programTable->nextProgramPtr( programlist)))
+	{
+		installProgram( event, *programTrigger, data, followList, disposeRuleList);
+#ifdef STRUS_LOWLEVEL_DEBUG
+		++icnt;
+#endif
+	}
+#ifdef STRUS_LOWLEVEL_DEBUG
+	std::cout << "programs installed " << icnt << ", nof rules used " << m_ruleTable.used_size() << ", triggers active " << m_eventTriggerTable.size() << std::endl;
+#endif
+}
+
+void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& programTrigger, const EventData& data, EventStructList& followList, DisposeRuleList& disposeRuleList)
 {
 	const Program& program = (*m_programTable)[ programTrigger.programidx];
 	uint32_t ruleidx = createRule( program.positionRange);
 	Rule& rule = m_ruleTable[ ruleidx];
+	const TriggerDef* keyTriggerDef = 0;
 
 	rule.actionSlotIdx =
 		1+m_actionSlotTable.add(
@@ -808,12 +864,19 @@ void StateMachine::installProgram( const ProgramTrigger& programTrigger)
 
 	while (0!=(triggerDef=m_programTable->triggerList().nextptr( program_triggerListItr)))
 	{
-		uint32_t eventTrigger =
-			m_eventTriggerTable.add(
-				EventTrigger( triggerDef->event, 
-				Trigger( rule.actionSlotIdx-1, 
-					 triggerDef->sigtype, triggerDef->sigval, triggerDef->variable, triggerDef->weight)));
-		m_eventTriggerList.push( rule.eventTriggerListIdx, eventTrigger);
+		if (triggerDef->isKeyEvent && keyevent == triggerDef->event)
+		{
+			keyTriggerDef = triggerDef;
+		}
+		else
+		{
+			uint32_t eventTrigger =
+				m_eventTriggerTable.add(
+					EventTrigger( triggerDef->event, 
+					Trigger( rule.actionSlotIdx-1, 
+						 (Trigger::SigType)triggerDef->sigtype, triggerDef->sigval, triggerDef->variable, triggerDef->weight)));
+			m_eventTriggerList.push( rule.eventTriggerListIdx, eventTrigger);
+		}
 	}
 	m_nofProgramsInstalled += 1;
 
@@ -822,6 +885,14 @@ void StateMachine::installProgram( const ProgramTrigger& programTrigger)
 	{
 		m_nofAltKeyProgramsInstalled += 1;
 		replayPastEvent( programTrigger.past_eventid, rule, program.positionRange);
+	}
+	if (keyTriggerDef && rule.actionSlotIdx)
+	{
+		Trigger keyTrigger( rule.actionSlotIdx-1, 
+				(Trigger::SigType)keyTriggerDef->sigtype, keyTriggerDef->sigval,
+				keyTriggerDef->variable, keyTriggerDef->weight);
+		ActionSlot& slot = m_actionSlotTable[ rule.actionSlotIdx-1];
+		fireTrigger( slot, keyTrigger, data, disposeRuleList, followList);
 	}
 }
 
@@ -893,6 +964,7 @@ void StateMachine::replayPastEvent( uint32_t eventid, const Rule& rule, uint32_t
 					throw strus::runtime_error(_TXT("internal: encountered past trigger with follow"));
 					// ... only rules that really need the alternative event triggered should have an alternative key event
 				}
+				break;
 			}
 		}
 	}

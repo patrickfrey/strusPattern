@@ -197,7 +197,7 @@ static void createRules( strus::StreamPatternMatchInstanceInterface* ptinst, con
 		}
 		else
 		{
-			unsigned int selectOp = selopdist.random();
+			unsigned int selectOp = selopdist.random()-1;
 			static const char* opar[] =
 			{
 				"sequence",
@@ -285,7 +285,13 @@ static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptin
 		}
 		std::cout << std::endl;
 	}
-	std::cout << "nof matches " << nofMatches << ", nof programs installed " << globalstats.nofPatternsInitiated << ", nof rules triggered " << stats.nofPatternsTriggered << " nof open rules " << (int)( stats.nofOpenPatterns+0.5) << " in average" << std::endl;
+	std::cerr << "document stats:" << std::endl;
+	std::vector<strus::StreamPatternMatchContextInterface::Statistics::Item>::const_iterator
+		gi = stats.items().begin(), ge = stats.items().end();
+	for (; gi != ge; ++gi)
+	{
+		std::cerr << "\t" << gi->name() << ": " << (int)(gi->value()+0.5) << std::endl;
+	}
 #endif
 	return nofMatches;
 }
@@ -391,7 +397,16 @@ int main( int argc, const char** argv)
 		std::map<std::string,double>::const_iterator gi = stats.begin(), ge = stats.end();
 		for (; gi != ge; ++gi)
 		{
-			std::cerr << "\t" << gi->first << ": " << (int)(gi->second/docs.size() + 0.5) << std::endl;
+			int value;
+			if (gi->first == "nofTriggersAvgActive")
+			{
+				value = (int)(gi->second/docs.size() + 0.5);
+			}
+			else
+			{
+				value = (int)(gi->second + 0.5);
+			}
+			std::cerr << "\t" << gi->first << ": " << value << std::endl;
 		}
 		delete g_errorBuffer;
 		return 0;

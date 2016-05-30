@@ -267,13 +267,10 @@ public:
 				}
 				StackElement& elem = m_stack[ m_stack.size() - argc + ai];
 				m_data.programTable.createTrigger(
-					program, elem.eventid, trigger_sigtype,
+					program, elem.eventid, isKeyEvent, trigger_sigtype,
 					trigger_sigval, elem.variable, elem.weight);
-				if (isKeyEvent)
-				{
-					m_data.programTable.defineEventProgram( elem.eventid, program);
-				}
 			}
+			m_data.programTable.doneProgram( program);
 			m_stack.resize( m_stack.size() - argc);
 			m_stack.push_back( StackElement( slot_event, program));
 		}
@@ -327,8 +324,8 @@ public:
 				ActionSlotDef actionSlotDef( 0, 0, resultEvent, resultHandle);
 				program = m_data.programTable.createProgram( 0, actionSlotDef);
 				m_data.programTable.createTrigger(
-					program, elem.eventid, Trigger::SigAny, 0, elem.variable, elem.weight);
-				m_data.programTable.defineEventProgram( elem.eventid, program);
+					program, elem.eventid, true/*isKeyEvent*/, Trigger::SigAny, 0, elem.variable, elem.weight);
+				m_data.programTable.doneProgram( program);
 			}
 			m_data.programTable.defineProgramResult( program, resultEvent, visible?resultHandle:0);
 		}

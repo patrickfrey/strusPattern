@@ -137,18 +137,26 @@ public:
 
 	typedef PodStructArrayBase<Trigger const*,std::size_t,0> TriggerRefList;
 	void getTriggers( TriggerRefList& triggers, uint32_t event) const;
-	uint32_t size() const	{return m_size;}
+	uint32_t nofTriggers() const			{return m_nofTriggers;}
 
+public:
+	enum {BlockSize=256,EventHashTabSize=16,EventHashTabIdxShift=28,EventHashTabIdxMask=15};
 private:
-	void expandEventAr( uint32_t newallocsize);
+	void expandEventAr( uint32_t htidx, uint32_t newallocsize);
+private:
+	struct TriggerInd
+	{
+		uint32_t* m_eventAr;
+		uint32_t* m_ar;
+		uint32_t m_allocsize;
+		uint32_t m_size;
 
-private:
-	enum {BlockSize=256};
-	uint32_t* m_eventAr;
-	uint32_t* m_triggerIndAr;
+		TriggerInd() :m_eventAr(0),m_ar(0),m_allocsize(0),m_size(0){}
+		void expand( uint32_t newallocsize);
+	};
+	TriggerInd m_triggerIndAr[ EventHashTabSize];
 	LinkedTriggerTable m_triggerTab;
-	uint32_t m_allocsize;
-	uint32_t m_size;
+	uint32_t m_nofTriggers;
 };
 
 class Rule
@@ -263,15 +271,16 @@ struct ActionSlotDef
 struct TriggerDef
 {
 	uint32_t event;
-	Trigger::SigType sigtype;
+	unsigned char isKeyEvent;
+	unsigned char sigtype;
 	uint32_t sigval;
 	uint32_t variable;
 	float weight;
 
-	TriggerDef( uint32_t event_, Trigger::SigType sigtype_, uint32_t sigval_, uint32_t variable_, float weight_)
-		:event(event_),sigtype(sigtype_),sigval(sigval_),variable(variable_),weight(weight_){}
+	TriggerDef( uint32_t event_, bool isKeyEvent_, Trigger::SigType sigtype_, uint32_t sigval_, uint32_t variable_, float weight_)
+		:event(event_),isKeyEvent((unsigned char)isKeyEvent_),sigtype((unsigned char)sigtype_),sigval(sigval_),variable(variable_),weight(weight_){}
 	TriggerDef( const TriggerDef& o)
-		:event(o.event),sigtype(o.sigtype),sigval(o.sigval),variable(o.variable),weight(o.weight){}
+		:event(o.event),isKeyEvent(o.isKeyEvent),sigtype(o.sigtype),sigval(o.sigval),variable(o.variable),weight(o.weight){}
 };
 
 struct Program
@@ -311,8 +320,8 @@ public:
 	void defineEventFrequency( uint32_t eventid, double df);
 
 	uint32_t createProgram( uint32_t positionRange_, const ActionSlotDef& actionSlotDef_);
-	void createTrigger( uint32_t program, uint32_t event, Trigger::SigType sigtype, uint32_t sigval, uint32_t variable, float weight);
-	void defineEventProgram( uint32_t eventid, uint32_t programidx);
+	void createTrigger( uint32_t program, uint32_t event, bool isKeyEvent, Trigger::SigType sigtype, uint32_t sigval, uint32_t variable, float weight);
+	void doneProgram( uint32_t program);
 
 	const Program& operator[]( uint32_t programidx) const	{return m_programTable[ programidx-1];}
 	const TriggerDefList& triggerList() const		{return m_triggerList;}
@@ -349,6 +358,7 @@ private:
 	double calcEventWeight( uint32_t eventid) const;
 	uint32_t getAltEventId( uint32_t eventid, uint32_t triggerListIdx) const;
 	void getDelimTokenStopWordSet( uint32_t triggerListIdx);
+	void defineEventProgram( uint32_t eventid, uint32_t programidx);
 
 private:
 	ActionSlotDefList m_actionSlotArray;
@@ -390,7 +400,6 @@ public:
 
 	void doTransition( uint32_t event, const EventData& data);
 	void setCurrentPos( uint32_t pos);
-	void installProgram( const ProgramTrigger& programtrigger);
 
 	typedef PodStructArrayBase<Result,std::size_t,0> ResultList;
 	const ResultList& results() const
@@ -425,6 +434,8 @@ private:
 	void appendEventData( uint32_t eventdataref, const EventItem& item);
 	void joinEventData( uint32_t eventdataref_dest, uint32_t eventdataref_src);
 	void replayPastEvent( uint32_t eventid, const Rule& rule, uint32_t positionRange);
+	void installProgram( uint32_t keyevent, const ProgramTrigger& programTrigger, const EventData& data, EventStructList& followList, DisposeRuleList& disposeRuleList);
+	void installEventPrograms( uint32_t keyevent, const EventData& data, EventStructList& followList, DisposeRuleList& disposeRuleList);
 
 private:
 	const ProgramTable* m_programTable;
