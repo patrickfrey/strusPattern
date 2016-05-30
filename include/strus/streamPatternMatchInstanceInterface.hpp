@@ -73,7 +73,7 @@ public:
 	struct OptimizeOptions
 	{
 		float stopwordOccurrenceFactor;		///< The bias for the factor nof programs with a specific keyword divided by the number of programs defined that decides wheter we try to find another key event for the program
-		float weightFactor;
+		float weightFactor;			///< factor of weight an alternative key event of a pattern must exceed to be considered as alternative
 		uint32_t maxRange;			///< Maximum proximity range a program must have in order to be triggered by an alternative key event
 
 		///\brief Constructor

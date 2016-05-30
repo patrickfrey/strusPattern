@@ -14,9 +14,9 @@
 #include <iostream>
 #ifdef __SSE__
 #include <emmintrin.h>
-#undef STRUS_USE_SSE_SCAN_TRIGGERS
+#define STRUS_USE_SSE_SCAN_TRIGGERS
 #endif
-#define STRUS_LOWLEVEL_DEBUG
+#undef STRUS_LOWLEVEL_DEBUG
 
 using namespace strus;
 
@@ -428,7 +428,8 @@ StateMachine::StateMachine( const ProgramTable* programTable_)
 	:m_programTable(programTable_)
 	,m_curpos(0)
 	,m_nofProgramsInstalled(0)
-	,m_nofPatternsTriggered(0)
+	,m_nofAltKeyProgramsInstalled(0)
+	,m_nofTriggersFired(0)
 	,m_nofOpenPatterns(0.0)
 {
 	std::make_heap( m_ruleDisposeQueue.begin(), m_ruleDisposeQueue.end());
@@ -447,7 +448,7 @@ StateMachine::StateMachine( const StateMachine& o)
 	,m_ruleDisposeQueue(o.m_ruleDisposeQueue)
 	,m_stopWordsEventList(o.m_stopWordsEventList)
 	,m_nofProgramsInstalled(o.m_nofProgramsInstalled)
-	,m_nofPatternsTriggered(o.m_nofPatternsTriggered)
+	,m_nofTriggersFired(o.m_nofTriggersFired)
 	,m_nofOpenPatterns(o.m_nofOpenPatterns)
 {}
 
@@ -737,7 +738,7 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 
 		EventStruct follow = followList[ ei];
 		m_eventTriggerTable.getTriggers( triggers, follow.eventid);
-		m_nofPatternsTriggered += triggers.size();
+		m_nofTriggersFired += triggers.size();
 		EventTriggerTable::TriggerRefList::const_iterator
 			ti = triggers.begin(), te = triggers.end();
 		for (; ti != te; ++ti)
@@ -819,6 +820,7 @@ void StateMachine::installProgram( const ProgramTrigger& programTrigger)
 	// Trigger the past stopword event, that is the real key event:
 	if (programTrigger.past_eventid)
 	{
+		m_nofAltKeyProgramsInstalled += 1;
 		replayPastEvent( programTrigger.past_eventid, rule, program.positionRange);
 	}
 }

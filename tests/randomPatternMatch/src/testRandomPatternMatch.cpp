@@ -179,13 +179,13 @@ static void createTermOpPattern( strus::StreamPatternMatchInstanceInterface* pti
 
 static void createRules( strus::StreamPatternMatchInstanceInterface* ptinst, const char* joinop, unsigned int nofFeatures, unsigned int nofRules)
 {
-	ZipfDistribution featdist( nofFeatures);
+	ZipfDistribution featdist( nofFeatures, 0.8);
 	ZipfDistribution rangedist( 10, 1.7);
 	ZipfDistribution selopdist( 5);
 	unsigned int ni=0, ne=nofRules;
 	for (; ni < ne; ++ni)
 	{
-		unsigned int range = 2;/*[+]rangedist.random()+1;*/
+		unsigned int range = rangedist.random()+1;
 		unsigned int cardinality = 0;
 		unsigned int param[2];
 		param[0] = featdist.random();
@@ -248,7 +248,7 @@ static std::string doubleToString( double val_)
 	return val_str.str();
 }
 
-static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptinst, const Document& doc, strus::StreamPatternMatchContextInterface::Statistics& globalstats)
+static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptinst, const Document& doc, std::map<std::string,double>& globalstats)
 {
 	std::auto_ptr<strus::StreamPatternMatchContextInterface> mt( ptinst->createContext());
 	std::vector<DocumentItem>::const_iterator di = doc.itemar.begin(), de = doc.itemar.end();
@@ -261,11 +261,13 @@ static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptin
 	std::vector<strus::stream::PatternMatchResult> results = mt->fetchResults();
 	unsigned int nofMatches = results.size();
 
-	strus::StreamPatternMatchContextInterface::Statistics stats;
-	mt->getStatistics( stats);
-	globalstats.nofPatternsInitiated += stats.nofPatternsInitiated;
-	globalstats.nofPatternsTriggered += stats.nofPatternsTriggered;
-	globalstats.nofOpenPatterns += stats.nofOpenPatterns;
+	strus::StreamPatternMatchContextInterface::Statistics stats = mt->getStatistics();
+	std::vector<strus::StreamPatternMatchContextInterface::Statistics::Item>::const_iterator
+		li = stats.items().begin(), le = stats.items().end();
+	for (; li != le; ++li)
+	{
+		globalstats[ li->name()] += li->value();
+	}
 
 #ifdef STRUS_LOWLEVEL_DEBUG
 	std::vector<strus::stream::PatternMatchResult>::const_iterator
@@ -290,7 +292,8 @@ static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptin
 
 static void printUsage( int argc, const char* argv[])
 {
-	std::cerr << "usage: " << argv[0] << " <features> <nofdocs> <docsize> <nofpatterns> [<joinop>]" << std::endl;
+	std::cerr << "usage: " << argv[0] << " [<options>] <features> <nofdocs> <docsize> <nofpatterns> [<joinop>]" << std::endl;
+	std::cerr << "<options>= -h print this usage, -o do optimize automaton" << std::endl;
 	std::cerr << "<features>= number of distinct features" << std::endl;
 	std::cerr << "<nofdocs> = number of documents to insert" << std::endl;
 	std::cerr << "<docsize> = size of a document" << std::endl;
@@ -308,36 +311,52 @@ int main( int argc, const char** argv)
 			std::cerr << "construction of error buffer failed" << std::endl;
 			return -1;
 		}
-		if (argc <= 1 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
+		if (argc <= 1)
 		{
 			printUsage( argc, argv);
 			return 0;
 		}
-		else if (argc < 5)
+		bool doOpimize = false;
+		int argidx = 1;
+		for (; argidx < argc && argv[argidx][0] == '-'; ++argidx)
+		{
+			if (std::strcmp( argv[argidx], "-h") == 0)
+			{
+				printUsage( argc, argv);
+				return 0;
+			}
+			else if (std::strcmp( argv[argidx], "-o") == 0)
+			{
+				doOpimize = true;
+			}
+		}
+		if (argc - argidx < 4)
 		{
 			std::cerr << "ERROR too few arguments" << std::endl;
 			printUsage( argc, argv);
 			return 1;
 		}
-		else if (argc > 6)
+		else if (argc - argidx > 5)
 		{
 			std::cerr << "ERROR too many arguments" << std::endl;
 			printUsage( argc, argv);
 			return 1;
 		}
-		unsigned int nofFeatures = getUintValue( argv[1]);
-		unsigned int nofDocuments = getUintValue( argv[2]);
-		unsigned int documentSize = getUintValue( argv[3]);
-		unsigned int nofPatterns = getUintValue( argv[4]);
-		const char* joinop = (argc > 5)?argv[5]:0;
+		unsigned int nofFeatures = getUintValue( argv[ argidx+0]);
+		unsigned int nofDocuments = getUintValue( argv[ argidx+1]);
+		unsigned int documentSize = getUintValue( argv[ argidx+2]);
+		unsigned int nofPatterns = getUintValue( argv[ argidx+3]);
+		const char* joinop = (argc - argidx > 4)?argv[ argidx+4]:0;
 
 		std::auto_ptr<strus::StreamPatternMatchInterface> pt( strus::createStreamPatternMatch_standard( g_errorBuffer));
 		if (!pt.get()) throw std::runtime_error("failed to create pattern matcher");
 		std::auto_ptr<strus::StreamPatternMatchInstanceInterface> ptinst( pt->createInstance());
 		if (!ptinst.get()) throw std::runtime_error("failed to create pattern matcher instance");
 		createRules( ptinst.get(), joinop, nofFeatures, nofPatterns);
-		ptinst->optimize( strus::StreamPatternMatchInstanceInterface::OptimizeOptions(0.01f,3,5));
-
+		if (doOpimize)
+		{
+			ptinst->optimize( strus::StreamPatternMatchInstanceInterface::OptimizeOptions(0.01f,5,5));
+		}
 		if (g_errorBuffer->hasError())
 		{
 			throw std::runtime_error( "error creating automaton for evaluating rules");
@@ -347,7 +366,7 @@ int main( int argc, const char** argv)
 		std::cerr << "starting rule evaluation ..." << std::endl;
 
 		std::clock_t start = std::clock();
-		strus::StreamPatternMatchContextInterface::Statistics stats;
+		std::map<std::string,double> stats;
 		std::vector<Document>::const_iterator di = docs.begin(), de = docs.end();
 		for (; di != de; ++di)
 		{
@@ -367,7 +386,13 @@ int main( int argc, const char** argv)
 			throw std::runtime_error("uncaugth exception");
 		}
 		std::cerr << "OK" << std::endl;
-		std::cerr << "processed " << docs.size() << " documents with " << nofPatterns << " patterns, total " << totalNofmatches << " matches, " << stats.nofPatternsInitiated << " patterns initiated and " << stats.nofPatternsTriggered << " triggered " << (unsigned int)(stats.nofOpenPatterns/docs.size()+0.5) << " open patterns in average in " << doubleToString(duration) << " seconds" << std::endl;
+		std::cerr << "processed " << nofPatterns << " patterns on " << docs.size() << " documents with total " << totalNofmatches << " matches in " << doubleToString(duration) << " seconds" << std::endl;
+		std::cerr << "average document stats:" << std::endl;
+		std::map<std::string,double>::const_iterator gi = stats.begin(), ge = stats.end();
+		for (; gi != ge; ++gi)
+		{
+			std::cerr << "\t" << gi->first << ": " << (int)(gi->second/docs.size() + 0.5) << std::endl;
+		}
 		delete g_errorBuffer;
 		return 0;
 	}

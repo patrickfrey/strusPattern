@@ -135,7 +135,7 @@ static void createPatterns( strus::StreamPatternMatchInstanceInterface* ptinst, 
 	}
 }
 
-static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptinst, const Document& doc, strus::StreamPatternMatchContextInterface::Statistics& globalstats)
+static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptinst, const Document& doc)
 {
 	std::auto_ptr<strus::StreamPatternMatchContextInterface> mt( ptinst->createContext());
 	std::vector<DocumentItem>::const_iterator di = doc.itemar.begin(), de = doc.itemar.end();
@@ -147,12 +147,6 @@ static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptin
 	}
 	std::vector<strus::stream::PatternMatchResult> results = mt->fetchResults();
 	unsigned int nofMatches = results.size();
-
-	strus::StreamPatternMatchContextInterface::Statistics stats;
-	mt->getStatistics( stats);
-	globalstats.nofPatternsInitiated += stats.nofPatternsInitiated;
-	globalstats.nofPatternsTriggered += stats.nofPatternsTriggered;
-	globalstats.nofOpenPatterns += stats.nofOpenPatterns;
 
 #ifdef STRUS_LOWLEVEL_DEBUG
 	std::vector<strus::stream::PatternMatchResult>::const_iterator
@@ -170,7 +164,15 @@ static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptin
 		}
 		std::cout << std::endl;
 	}
-	std::cout << "nof matches " << nofMatches << ", nof programs installed " << globalstats.nofPatternsInitiated << ", nof rules triggered " << stats.nofPatternsTriggered << " nof open rules " << (int)( stats.nofOpenPatterns+0.5) << " in average" << std::endl;
+	strus::StreamPatternMatchContextInterface::Statistics stats = mt->getStatistics();
+	std::cout << "nof matches " << nofMatches;
+	std::vector<strus::StreamPatternMatchContextInterface::Statistics::Item>::const_iterator
+		li = stats.items().begin(), le = stats.items().end();
+	for (; li != le; ++li)
+	{
+		std::cout << ", " << li->name() << " " << (int)(li->value()+0.5);
+	}
+	std::cout << std::endl;
 #endif
 	return nofMatches;
 }
@@ -238,15 +240,13 @@ int main( int argc, const char** argv)
 		unsigned int totalNofmatches = 0;
 		std::cerr << "starting rule evaluation ..." << std::endl;
 
-		strus::StreamPatternMatchContextInterface::Statistics stats;
-		unsigned int nofmatches = matchRules( ptinst.get(), doc, stats);
+		unsigned int nofmatches = matchRules( ptinst.get(), doc);
 		totalNofmatches += nofmatches;
 		if (g_errorBuffer->hasError())
 		{
 			throw std::runtime_error("error matching rule");
 		}
 		std::cerr << "OK" << std::endl;
-		std::cerr << "total " << totalNofmatches << " matches, " << stats.nofPatternsInitiated << " patterns initiated and " << stats.nofPatternsTriggered << " triggered " << (unsigned int)(stats.nofOpenPatterns+0.5) << " open patterns in average"<< std::endl;
 		delete g_errorBuffer;
 		return 0;
 	}

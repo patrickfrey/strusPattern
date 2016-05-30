@@ -408,7 +408,8 @@ public:
 
 public://getStatistics
 	unsigned int nofProgramsInstalled() const	{return m_nofProgramsInstalled;}
-	unsigned int nofPatternsTriggered() const	{return m_nofPatternsTriggered;}
+	unsigned int nofAltKeyProgramsInstalled() const	{return m_nofAltKeyProgramsInstalled;}
+	unsigned int nofTriggersFired() const		{return m_nofTriggersFired;}
 	double nofOpenPatterns() const			{return m_nofOpenPatterns;}
 
 private:
@@ -438,7 +439,8 @@ private:
 	std::vector<DisposeEvent> m_ruleDisposeQueue;
 	std::vector<EventStruct> m_stopWordsEventList;
 	unsigned int m_nofProgramsInstalled;
-	unsigned int m_nofPatternsTriggered;
+	unsigned int m_nofAltKeyProgramsInstalled;
+	unsigned int m_nofTriggersFired;
 	double m_nofOpenPatterns;
 };
 

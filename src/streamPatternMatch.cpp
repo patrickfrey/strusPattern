@@ -24,7 +24,7 @@
 #include <cstring>
 #include <iostream>
 
-#define STRUS_LOWLEVEL_DEBUG
+#undef STRUS_LOWLEVEL_DEBUG
 
 using namespace strus;
 using namespace strus::stream;
@@ -114,11 +114,18 @@ public:
 		CATCH_ERROR_MAP_RETURN( "failed to fetch pattern match result: %s", *m_errorhnd, std::vector<stream::PatternMatchResult>());
 	}
 
-	virtual void getStatistics( Statistics& stats) const
+	virtual Statistics getStatistics() const
 	{
-		stats.nofPatternsInitiated = m_statemachine.nofProgramsInstalled();
-		stats.nofPatternsTriggered = m_statemachine.nofPatternsTriggered();
-		stats.nofOpenPatterns = m_statemachine.nofOpenPatterns() / m_nofEvents;
+		try
+		{
+			Statistics stats;
+			stats.define( "nofProgramsInstalled", m_statemachine.nofProgramsInstalled());
+			stats.define( "nofAltKeyProgramsInstalled", m_statemachine.nofAltKeyProgramsInstalled());
+			stats.define( "nofTriggersFired", m_statemachine.nofTriggersFired());
+			stats.define( "nofTriggersAvgActive", m_statemachine.nofOpenPatterns() / m_nofEvents);
+			return stats;
+		}
+		CATCH_ERROR_MAP_RETURN( "failed to get pattern match statistics: %s", *m_errorhnd, Statistics());
 	}
 
 private:

@@ -17,8 +17,8 @@
 #include <new>
 #include <set>
 
-#define STRUS_CHECK_FREE_ITEMS
-#define STRUS_CHECK_USED_ITEMS
+#undef STRUS_CHECK_FREE_ITEMS
+#undef STRUS_CHECK_USED_ITEMS
 
 namespace strus
 {
