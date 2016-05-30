@@ -12,6 +12,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <iostream>
+#include <new>
 #ifdef __SSE__
 #include <emmintrin.h>
 #define STRUS_USE_SSE_SCAN_TRIGGERS
@@ -481,6 +482,7 @@ StateMachine::StateMachine( const ProgramTable* programTable_)
 	,m_nofTriggersFired(0)
 	,m_nofOpenPatterns(0.0)
 {
+	std::memset( m_disposeWindow, 0, sizeof(m_disposeWindow));
 	std::make_heap( m_ruleDisposeQueue.begin(), m_ruleDisposeQueue.end());
 }
 
@@ -494,19 +496,21 @@ StateMachine::StateMachine( const StateMachine& o)
 	,m_ruleTable(o.m_ruleTable)
 	,m_results(o.m_results)
 	,m_curpos(o.m_curpos)
+	,m_disposeRuleList(o.m_disposeRuleList)
 	,m_ruleDisposeQueue(o.m_ruleDisposeQueue)
 	,m_stopWordsEventList(o.m_stopWordsEventList)
 	,m_nofProgramsInstalled(o.m_nofProgramsInstalled)
+	,m_nofAltKeyProgramsInstalled(o.m_nofAltKeyProgramsInstalled)
 	,m_nofTriggersFired(o.m_nofTriggersFired)
 	,m_nofOpenPatterns(o.m_nofOpenPatterns)
-{}
-
+{
+	std::memcpy( m_disposeWindow, o.m_disposeWindow, sizeof(m_disposeWindow));
+}
 
 uint32_t StateMachine::createRule( uint32_t positionRange)
 {
 	uint32_t rt = m_ruleTable.add( Rule( m_curpos + positionRange));
-	m_ruleDisposeQueue.push_back( DisposeEvent( m_curpos + positionRange, rt));
-	std::push_heap( m_ruleDisposeQueue.begin(), m_ruleDisposeQueue.end());
+	defineDisposeRule( m_curpos + positionRange, rt);
 	return rt;
 }
 
@@ -807,21 +811,68 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 #endif
 }
 
+void StateMachine::defineDisposeRule( uint32_t pos, uint32_t ruleidx)
+{
+	if (pos < m_curpos) throw strus::runtime_error(_TXT("illegal set of dispose rule"));
+	if (pos < m_curpos + DisposeWindowSize)
+	{
+		uint32_t widx = pos % DisposeWindowSize;
+		m_disposeRuleList.push( m_disposeWindow[ widx], ruleidx);
+	}
+	else
+	{
+		m_ruleDisposeQueue.push_back( DisposeEvent( pos, ruleidx));
+		std::push_heap( m_ruleDisposeQueue.begin(), m_ruleDisposeQueue.end());
+	}
+}
+
 void StateMachine::setCurrentPos( uint32_t pos)
 {
 	if (pos < m_curpos) throw strus::runtime_error(_TXT("illegal set of current pos (positions not ascending)"));
-	m_curpos = pos;
+	if (m_curpos == pos) return;
 #ifdef STRUS_LOWLEVEL_DEBUG
 	int disposeCount = 0;
 #endif
-	while (!m_ruleDisposeQueue.empty() && m_ruleDisposeQueue.front().pos < pos)
+	std::size_t wcnt=0;
+	for (; wcnt < DisposeWindowSize && m_curpos < pos; ++wcnt,++m_curpos)
 	{
+		uint32_t rulelist;
+		uint32_t widx = m_curpos % DisposeWindowSize;
+		if (widx == 0)
+		{
+			while (!m_ruleDisposeQueue.empty() && m_ruleDisposeQueue.front().pos < m_curpos + DisposeWindowSize)
+			{
+				wcnt = 0;
+				m_disposeRuleList.push( m_disposeWindow[ m_ruleDisposeQueue.front().pos % DisposeWindowSize], m_ruleDisposeQueue.front().idx);
+				std::pop_heap( m_ruleDisposeQueue.begin(), m_ruleDisposeQueue.end());
+				m_ruleDisposeQueue.pop_back();
+			}
+		}
+		if (0!=(rulelist = m_disposeWindow[ widx]))
+		{
+			uint32_t ruleidx;
+			while (m_disposeRuleList.next( rulelist, ruleidx))
+			{
+				disposeRule( ruleidx);
 #ifdef STRUS_LOWLEVEL_DEBUG
-		disposeCount += 1;
+				disposeCount += 1;
 #endif
-		disposeRule( m_ruleDisposeQueue.front().idx);
-		std::pop_heap( m_ruleDisposeQueue.begin(), m_ruleDisposeQueue.end());
-		m_ruleDisposeQueue.pop_back();
+			}
+			m_disposeWindow[ widx] = 0;
+		}
+	}
+	if (m_curpos < pos)
+	{
+		m_curpos = pos;
+		while (!m_ruleDisposeQueue.empty() && m_ruleDisposeQueue.front().pos < m_curpos)
+		{
+			disposeRule( m_ruleDisposeQueue.front().idx);
+#ifdef STRUS_LOWLEVEL_DEBUG
+			disposeCount += 1;
+#endif
+			std::pop_heap( m_ruleDisposeQueue.begin(), m_ruleDisposeQueue.end());
+			m_ruleDisposeQueue.pop_back();
+		}
 	}
 #ifdef STRUS_LOWLEVEL_DEBUG
 	std::cout << "set current position " << pos << ", rules deleted " << disposeCount << ", nof rules used " << m_ruleTable.used_size() << ", nof active triggers " << m_eventTriggerTable.size() << std::endl;

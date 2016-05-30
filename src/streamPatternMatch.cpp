@@ -114,18 +114,18 @@ public:
 		CATCH_ERROR_MAP_RETURN( "failed to fetch pattern match result: %s", *m_errorhnd, std::vector<stream::PatternMatchResult>());
 	}
 
-	virtual Statistics getStatistics() const
+	virtual PatternMatchStatistics getStatistics() const
 	{
 		try
 		{
-			Statistics stats;
+			PatternMatchStatistics stats;
 			stats.define( "nofProgramsInstalled", m_statemachine.nofProgramsInstalled());
 			stats.define( "nofAltKeyProgramsInstalled", m_statemachine.nofAltKeyProgramsInstalled());
 			stats.define( "nofTriggersFired", m_statemachine.nofTriggersFired());
 			stats.define( "nofTriggersAvgActive", m_statemachine.nofOpenPatterns() / m_nofEvents);
 			return stats;
 		}
-		CATCH_ERROR_MAP_RETURN( "failed to get pattern match statistics: %s", *m_errorhnd, Statistics());
+		CATCH_ERROR_MAP_RETURN( "failed to get pattern match statistics: %s", *m_errorhnd, PatternMatchStatistics());
 	}
 
 private:

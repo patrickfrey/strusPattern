@@ -85,7 +85,7 @@ public:
 		OptimizeOptions( const OptimizeOptions& o)
 			:stopwordOccurrenceFactor(o.stopwordOccurrenceFactor),weightFactor(o.weightFactor),maxRange(o.maxRange){}
 	};
-	/// \brief Try to optimize the program by setting initial key events of the programs to events that are relative rare 
+	/// \brief Try to optimize the program if possible by setting initial key events of the programs to events that are relative rare
 	virtual void optimize( const OptimizeOptions& opt)=0;
 
 	/// \brief Create the context to process a document with the pattern matcher

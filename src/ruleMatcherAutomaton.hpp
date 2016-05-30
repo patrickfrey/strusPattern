@@ -13,11 +13,12 @@
 #include "podStructArrayBase.hpp"
 #include "podStructTableBase.hpp"
 #include "podStackPoolBase.hpp"
+#include "errorUtils.hpp"
+#include "internationalization.hpp"
 #include <vector>
 #include <map>
 #include <string>
 #include <stdexcept>
-#include <new>
 
 namespace strus
 {
@@ -35,7 +36,8 @@ enum
 	BaseAddrEventStructList =	(10000000 *  9),
 	BaseAddrProgramList =		(10000000 * 10),
 	BaseAddrActionSlotDefTable =	(10000000 * 12),
-	BaseAddrDisposeRuleList =	(10000000 * 13)
+	BaseAddrDisposeRuleList =	(10000000 * 13),
+	BaseAddrDisposeEventList =	(10000000 * 14)
 };
 
 class Trigger
@@ -51,7 +53,7 @@ public:
 	Trigger( uint32_t slot_, SigType sigtype_, uint32_t sigval_, uint32_t variable_, float weight_)
 		:m_slot(slot_),m_sigtype(sigtype_),m_variable(variable_),m_sigval(sigval_),m_weight(weight_)
 	{
-		if (variable_ > MaxVariableId) throw std::bad_alloc();
+		if (variable_ > MaxVariableId) throw strus::runtime_error(_TXT("too many variables defined"));
 	}
 	Trigger( const Trigger& o)
 		:m_slot(o.m_slot),m_sigtype(o.m_sigtype),m_variable(o.m_variable),m_sigval(o.m_sigval),m_weight(o.m_weight){}
@@ -359,6 +361,7 @@ private:
 	uint32_t getAltEventId( uint32_t eventid, uint32_t triggerListIdx) const;
 	void getDelimTokenStopWordSet( uint32_t triggerListIdx);
 	void defineEventProgram( uint32_t eventid, uint32_t programidx);
+	void defineDisposeRule( uint32_t pos, uint32_t ruleidx);
 
 private:
 	ActionSlotDefList m_actionSlotArray;
@@ -436,6 +439,7 @@ private:
 	void replayPastEvent( uint32_t eventid, const Rule& rule, uint32_t positionRange);
 	void installProgram( uint32_t keyevent, const ProgramTrigger& programTrigger, const EventData& data, EventStructList& followList, DisposeRuleList& disposeRuleList);
 	void installEventPrograms( uint32_t keyevent, const EventData& data, EventStructList& followList, DisposeRuleList& disposeRuleList);
+	void defineDisposeRule( uint32_t pos, uint32_t ruleidx);
 
 private:
 	const ProgramTable* m_programTable;
@@ -447,6 +451,10 @@ private:
 	RuleTable m_ruleTable;
 	ResultList m_results;
 	uint32_t m_curpos;
+	enum {DisposeWindowSize=64};
+	uint32_t m_disposeWindow[ DisposeWindowSize];
+	typedef PodStackPoolBase<uint32_t,uint32_t,BaseAddrDisposeEventList> DisposeEventList;
+	DisposeEventList m_disposeRuleList;
 	std::vector<DisposeEvent> m_ruleDisposeQueue;
 	std::vector<EventStruct> m_stopWordsEventList;
 	unsigned int m_nofProgramsInstalled;

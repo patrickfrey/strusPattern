@@ -261,8 +261,8 @@ static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptin
 	std::vector<strus::stream::PatternMatchResult> results = mt->fetchResults();
 	unsigned int nofMatches = results.size();
 
-	strus::StreamPatternMatchContextInterface::Statistics stats = mt->getStatistics();
-	std::vector<strus::StreamPatternMatchContextInterface::Statistics::Item>::const_iterator
+	strus::stream::PatternMatchStatistics stats = mt->getStatistics();
+	std::vector<strus::stream::PatternMatchStatistics::Item>::const_iterator
 		li = stats.items().begin(), le = stats.items().end();
 	for (; li != le; ++li)
 	{
