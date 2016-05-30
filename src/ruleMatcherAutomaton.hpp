@@ -42,6 +42,11 @@ class Trigger
 {
 public:
 	enum SigType {SigAny=0x0,SigSequence=0x1,SigWithin=0x2,SigDel=0x3};
+	static const char* sigTypeName( SigType i)
+	{
+		static const char* ar[] = {"Any","Sequence","Within","Del"};
+		return ar[i];
+	}
 
 	Trigger( uint32_t slot_, SigType sigtype_, uint32_t sigval_, uint32_t variable_, float weight_)
 		:m_slot(slot_),m_sigtype(sigtype_),m_variable(variable_),m_sigval(sigval_),m_weight(weight_)
@@ -127,7 +132,8 @@ public:
 
 	uint32_t add( const EventTrigger& et);
 	void remove( uint32_t idx);
-	Trigger const* getTriggerPtr( uint32_t idx, uint32_t event) const;
+	uint32_t getTriggerEventId( uint32_t idx) const;
+	Trigger const* getTriggerPtr( uint32_t idx) const;
 
 	typedef PodStructArrayBase<Trigger const*,std::size_t,0> TriggerRefList;
 	void getTriggers( TriggerRefList& triggers, uint32_t event) const;
@@ -417,6 +423,7 @@ private:
 	uint32_t createEventData();
 	void appendEventData( uint32_t eventdataref, const EventItem& item);
 	void joinEventData( uint32_t eventdataref_dest, uint32_t eventdataref_src);
+	void replayPastEvent( uint32_t eventid, const Rule& rule, uint32_t positionRange);
 
 private:
 	const ProgramTable* m_programTable;

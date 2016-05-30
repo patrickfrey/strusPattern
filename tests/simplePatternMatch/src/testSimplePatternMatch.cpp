@@ -54,199 +54,85 @@ struct Document
 		:id(o.id),itemar(o.itemar){}
 };
 
-class ZipfDistribution
-{
-public:
-	explicit ZipfDistribution( std::size_t size, double S = 0.0)
-	{
-		std::size_t ii=1, ie=size;
-		m_ar.push_back( 1.0);
-		for (; ii < ie; ++ii)
-		{
-			if (S > std::numeric_limits<double>::epsilon())
-			{
-				m_ar.push_back( m_ar[ ii-1] + 1.0 / pow((double)(ii+1), S));
-			}
-			else
-			{
-				m_ar.push_back( m_ar[ ii-1] + 1.0 / (double)(ii+1));
-			}
-		}
-	}
-
-	unsigned int random() const
-	{
-		double val = m_ar.back() * (double)std::rand() / (double)RAND_MAX;
-		std::size_t ii=0;
-		for (; ii<m_ar.size(); ++ii)
-		{
-			if (val < m_ar[ii])
-			{
-				break;
-			}
-			while (m_ar.size() - ii > 100 && val > m_ar[ ii+100])
-			{
-				ii+=100;
-			}
-		}
-		return ii+1;
-	}
-
-private:
-	std::vector<double> m_ar;
-};
-
 enum TermType {Token, SentenceDelim};
 static unsigned int termId( TermType tp, unsigned int no)
 {
 	return ((unsigned int)tp << 24) + no;
 }
+#define TOKEN(no)  (((unsigned int)Token << 24) + no)
+#define DELIM      (((unsigned int)SentenceDelim << 24) + 0)
 
-static Document createRandomDocument( unsigned int no, unsigned int size, unsigned int mod)
+static Document createDocument( unsigned int no, unsigned int size)
 {
-	ZipfDistribution featdist( mod);
 	char docid[ 32];
 	snprintf( docid, sizeof(docid), "doc_%u", no);
 	Document rt( docid);
 	unsigned int ii = 0, ie = size;
 	for (; ii < ie; ++ii)
 	{
-		unsigned int tok = featdist.random();
+		unsigned int tok = ii+1;
 		rt.itemar.push_back( DocumentItem( ii+1, termId( Token, tok)));
-		if (RANDINT(0,12) == 0)
+		if ((ii+1) % 10 == 0)
 		{
-			rt.itemar.push_back( DocumentItem( ii+1, termId( SentenceDelim, 0)));
+			rt.itemar.push_back( DocumentItem( ii+2, termId( SentenceDelim, 0)));
 		}
 	}
 	return rt;
 }
 
 typedef strus::StreamPatternMatchInstanceInterface::JoinOperation JoinOperation;
-static JoinOperation joinOperation( const char* joinopstr)
+struct Operation
 {
-	static const char* ar[] = {"sequence","sequence_struct","within","within_struct","any",0};
-	std::size_t ai = 0;
-	for (; ar[ai]; ++ai)
+	enum Type {None,Term,Expression};
+	Type type;
+	unsigned int termid;
+	JoinOperation joinop;
+	unsigned int range;
+	unsigned int cardinality;
+	unsigned int argc;
+	unsigned int variable;
+};
+
+struct Pattern
+{
+	const char* name;
+	Operation operations[32];
+};
+
+static void createPattern( strus::StreamPatternMatchInstanceInterface* ptinst, const char* ptname, const Operation* oplist)
+{
+	std::size_t oi = 0;
+	for (; oplist[oi].type != Operation::None; ++oi)
 	{
-		if (0 == std::strcmp( joinopstr, ar[ai]))
+		const Operation& op = oplist[oi];
+		switch (op.type)
 		{
-			return (JoinOperation)ai;
+			case Operation::None:
+				break;
+			case Operation::Term:
+				ptinst->pushTerm( op.termid);
+				break;
+			case Operation::Expression:
+				ptinst->pushExpression( op.joinop, op.argc, op.range, op.cardinality);
+				break;
+		}
+		if (op.variable)
+		{
+			char variablename[ 32];
+			snprintf( variablename, sizeof(variablename), "A%u", (unsigned int)op.variable);
+			ptinst->attachVariable( variablename, 1.0f);
 		}
 	}
-	throw std::runtime_error( "unknown join operation");
+	ptinst->closePattern( ptname, ptname[0] != '_');
 }
 
-static void createTermOpRule( strus::StreamPatternMatchInstanceInterface* ptinst, const char* joinopstr, unsigned int range, unsigned int cardinality, unsigned int* param, std::size_t paramsize)
+static void createPatterns( strus::StreamPatternMatchInstanceInterface* ptinst, const Pattern* patterns)
 {
-	std::string type( "num");
-	std::size_t pi = 0, pe = paramsize;
-	bool with_delim = false;
-	if (std::strcmp( joinopstr, "sequence_struct") == 0
-	|| std::strcmp( joinopstr, "within_struct") == 0)
+	unsigned int pi=0;
+	for (; patterns[pi].name; ++pi)
 	{
-		with_delim = true;
+		createPattern( ptinst, patterns[pi].name, patterns[pi].operations);
 	}
-	if (with_delim)
-	{
-		unsigned int delim_termid = termId( SentenceDelim, 0);
-		ptinst->pushTerm( delim_termid);
-		++paramsize;
-	}
-	for (; pi != pe; ++pi)
-	{
-		unsigned int termid = termId( Token, param[pi]);
-		ptinst->pushTerm( termid);
-		char variablename[ 32];
-		snprintf( variablename, sizeof(variablename), "A%u", (unsigned int)pi);
-		ptinst->attachVariable( variablename, 1.0f);
-	}
-	JoinOperation joinop = joinOperation( joinopstr);
-	ptinst->pushExpression( joinop, paramsize, range, cardinality);
-}
-
-static void createTermOpPattern( strus::StreamPatternMatchInstanceInterface* ptinst, const char* operation, unsigned int range, unsigned int cardinality, unsigned int* param, std::size_t paramsize)
-{
-	std::string rulename = operation;
-	std::size_t pi = 0, pe = paramsize;
-	for (; pi != pe; ++pi)
-	{
-		char strbuf[ 32];
-		snprintf( strbuf, sizeof( strbuf), "_%u", (unsigned int)pi);
-		rulename.append( strbuf);
-	}
-	createTermOpRule( ptinst, operation, range, cardinality, param, paramsize);
-	ptinst->closePattern( rulename, true);
-}
-
-static void createRules( strus::StreamPatternMatchInstanceInterface* ptinst, const char* joinop, unsigned int nofFeatures, unsigned int nofRules)
-{
-	ZipfDistribution featdist( nofFeatures);
-	ZipfDistribution rangedist( 10, 1.7);
-	ZipfDistribution selopdist( 5);
-	unsigned int ni=0, ne=nofRules;
-	for (; ni < ne; ++ni)
-	{
-		unsigned int range = 2;/*[+]rangedist.random()+1;*/
-		unsigned int cardinality = 0;
-		unsigned int param[2];
-		param[0] = featdist.random();
-		param[1] = featdist.random();
-
-		if (joinop)
-		{
-			createTermOpPattern( ptinst, joinop, range, cardinality, param, 2);
-		}
-		else
-		{
-			unsigned int selectOp = selopdist.random();
-			static const char* opar[] =
-			{
-				"sequence",
-				"within",
-				"sequence_struct",
-				"within_struct",
-				"any"
-			};
-			const char* op = opar[ selectOp];
-			createTermOpPattern( ptinst, op, range, cardinality, param, 2);
-		}
-	}
-}
-
-static std::vector<Document> createRandomDocuments( unsigned int collSize, unsigned int docSize, unsigned int nofFeatures)
-{
-	std::vector<Document> rt;
-	unsigned int di=0, de=collSize;
-
-	for (di=0; di < de; ++di)
-	{
-		Document doc( createRandomDocument( di+1, docSize, nofFeatures));
-		rt.push_back( doc);
-	}
-	return rt;
-}
-
-static unsigned int getUintValue( const char* arg)
-{
-	unsigned int rt = 0, prev = 0;
-	char const* cc = arg;
-	for (; *cc; ++cc)
-	{
-		if (*cc < '0' || *cc > '9') throw std::runtime_error( std::string( "parameter is not a non negative integer number: ") + arg);
-		rt = (rt * 10) + (*cc - '0');
-		if (rt < prev) throw std::runtime_error( std::string( "parameter out of range: ") + arg);
-	}
-	return rt;
-}
-
-static std::string doubleToString( double val_)
-{
-	unsigned int val = (unsigned int)::floor( val_ * 1000);
-	unsigned int val_sec = val / 1000;
-	unsigned int val_ms = val & 1000;
-	std::ostringstream val_str;
-	val_str << val_sec << "." << std::setfill('0') << std::setw(3) << val_ms;
-	return val_str.str();
 }
 
 static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptinst, const Document& doc, strus::StreamPatternMatchContextInterface::Statistics& globalstats)
@@ -289,15 +175,36 @@ static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptin
 	return nofMatches;
 }
 
-static void printUsage( int argc, const char* argv[])
+typedef strus::StreamPatternMatchInstanceInterface PT;
+static const Pattern testPatterns[32] =
 {
-	std::cerr << "usage: " << argv[0] << " <features> <nofdocs> <docsize> <nofpatterns> [<joinop>]" << std::endl;
-	std::cerr << "<features>= number of distinct features" << std::endl;
-	std::cerr << "<nofdocs> = number of documents to insert" << std::endl;
-	std::cerr << "<docsize> = size of a document" << std::endl;
-	std::cerr << "<nofpatterns> = number of patterns to use" << std::endl;
-	std::cerr << "<joinop> = operator to use for patterns (default all)" << std::endl;
-}
+	{"seq[3]_1_2",
+		{{Operation::Term,TOKEN(1)},
+		 {Operation::Term,TOKEN(2)},
+		 {Operation::Expression,0,PT::OpSequence,3,0,2,1}}
+	},
+	{"seq[2]_1_2",
+		{{Operation::Term,TOKEN(1)},
+		 {Operation::Term,TOKEN(2)},
+		 {Operation::Expression,0,PT::OpSequence,2,0,2,1}}
+	},
+	{"seq[1]_1_2",
+		{{Operation::Term,TOKEN(1)},
+		 {Operation::Term,TOKEN(2)},
+		 {Operation::Expression,0,PT::OpSequence,1,0,2,1}}
+	},
+	{"seq[2]_1_3",
+		{{Operation::Term,TOKEN(1)},
+		 {Operation::Term,TOKEN(3)},
+		 {Operation::Expression,0,PT::OpSequence,2,0,2,1}}
+	},
+	{"seq[1]_1_3",
+		{{Operation::Term,TOKEN(1)},
+		 {Operation::Term,TOKEN(3)},
+		 {Operation::Expression,0,PT::OpSequence,1,0,2,1}}
+	},
+	{0,{Operation::None}}
+};
 
 int main( int argc, const char** argv)
 {
@@ -309,66 +216,37 @@ int main( int argc, const char** argv)
 			std::cerr << "construction of error buffer failed" << std::endl;
 			return -1;
 		}
-		if (argc <= 1 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
+		else if (argc > 1)
 		{
-			printUsage( argc, argv);
-			return 0;
-		}
-		else if (argc < 5)
-		{
-			std::cerr << "ERROR too few arguments" << std::endl;
-			printUsage( argc, argv);
+			std::cerr << "too many arguments" << std::endl;
 			return 1;
 		}
-		else if (argc > 6)
-		{
-			std::cerr << "ERROR too many arguments" << std::endl;
-			printUsage( argc, argv);
-			return 1;
-		}
-		unsigned int nofFeatures = getUintValue( argv[1]);
-		unsigned int nofDocuments = getUintValue( argv[2]);
-		unsigned int documentSize = getUintValue( argv[3]);
-		unsigned int nofPatterns = getUintValue( argv[4]);
-		const char* joinop = (argc > 5)?argv[5]:0;
+		unsigned int documentSize = 100;
 
 		std::auto_ptr<strus::StreamPatternMatchInterface> pt( strus::createStreamPatternMatch_standard( g_errorBuffer));
 		if (!pt.get()) throw std::runtime_error("failed to create pattern matcher");
 		std::auto_ptr<strus::StreamPatternMatchInstanceInterface> ptinst( pt->createInstance());
 		if (!ptinst.get()) throw std::runtime_error("failed to create pattern matcher instance");
-		createRules( ptinst.get(), joinop, nofFeatures, nofPatterns);
-		ptinst->optimize( strus::StreamPatternMatchInstanceInterface::OptimizeOptions(0.01f,3,5));
+		createPatterns( ptinst.get(), testPatterns);
+		ptinst->optimize( strus::StreamPatternMatchInstanceInterface::OptimizeOptions(0.5f,1.1f,5));
 
 		if (g_errorBuffer->hasError())
 		{
 			throw std::runtime_error( "error creating automaton for evaluating rules");
 		}
-		std::vector<Document> docs = createRandomDocuments( nofDocuments, documentSize, nofFeatures);
+		Document doc = createDocument( 1, documentSize);
 		unsigned int totalNofmatches = 0;
 		std::cerr << "starting rule evaluation ..." << std::endl;
 
-		std::clock_t start = std::clock();
 		strus::StreamPatternMatchContextInterface::Statistics stats;
-		std::vector<Document>::const_iterator di = docs.begin(), de = docs.end();
-		for (; di != de; ++di)
-		{
-#ifdef STRUS_LOWLEVEL_DEBUG
-			std::cout << "document " << di->id << ":" << std::endl;
-#endif
-			unsigned int nofmatches = matchRules( ptinst.get(), *di, stats);
-			totalNofmatches += nofmatches;
-			if (g_errorBuffer->hasError())
-			{
-				throw std::runtime_error("error matching rule");
-			}
-		}
-		double duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+		unsigned int nofmatches = matchRules( ptinst.get(), doc, stats);
+		totalNofmatches += nofmatches;
 		if (g_errorBuffer->hasError())
 		{
-			throw std::runtime_error("uncaugth exception");
+			throw std::runtime_error("error matching rule");
 		}
 		std::cerr << "OK" << std::endl;
-		std::cerr << "processed " << docs.size() << " documents with " << nofPatterns << " patterns, total " << totalNofmatches << " matches, " << stats.nofPatternsInitiated << " patterns initiated and " << stats.nofPatternsTriggered << " triggered " << (unsigned int)(stats.nofOpenPatterns/docs.size()+0.5) << " open patterns in average in " << doubleToString(duration) << " seconds" << std::endl;
+		std::cerr << "total " << totalNofmatches << " matches, " << stats.nofPatternsInitiated << " patterns initiated and " << stats.nofPatternsTriggered << " triggered " << (unsigned int)(stats.nofOpenPatterns+0.5) << " open patterns in average"<< std::endl;
 		delete g_errorBuffer;
 		return 0;
 	}

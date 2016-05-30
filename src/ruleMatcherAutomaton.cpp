@@ -16,7 +16,7 @@
 #include <emmintrin.h>
 #undef STRUS_USE_SSE_SCAN_TRIGGERS
 #endif
-#undef STRUS_LOWLEVEL_DEBUG
+#define STRUS_LOWLEVEL_DEBUG
 
 using namespace strus;
 
@@ -83,17 +83,15 @@ void EventTriggerTable::remove( uint32_t idx)
 	--m_size;
 }
 
-Trigger const* EventTriggerTable::getTriggerPtr( uint32_t idx, uint32_t event) const
+uint32_t EventTriggerTable::getTriggerEventId( uint32_t triggeridx) const
 {
-	const LinkedTrigger& trg = m_triggerTab[ idx];
-	if (m_eventAr[ trg.link] == event)
-	{
-		return &m_triggerTab[ idx].trigger;
-	}
-	else
-	{
-		return 0;
-	}
+	return m_eventAr[ m_triggerTab[ triggeridx].link];
+	
+}
+
+Trigger const* EventTriggerTable::getTriggerPtr( uint32_t idx) const
+{
+	return &m_triggerTab[ idx].trigger;
 }
 
 #ifdef STRUS_USE_SSE_SCAN_TRIGGERS
@@ -562,7 +560,10 @@ void StateMachine::fireTrigger(
 	Rule& rule = m_ruleTable[ slot.rule];
 	bool match = false;
 	bool takeEventData = false;
-	bool finished = true;
+	bool finished = false;
+#ifdef STRUS_LOWLEVEL_DEBUG
+	std::cout << "rule " << slot.rule << " fire sig " << Trigger::sigTypeName( trigger.sigtype()) << "(" << trigger.sigval() << ") at " << slot.value << "#" << slot.count;
+#endif
 	switch (trigger.sigtype())
 	{
 		case Trigger::SigAny:
@@ -577,7 +578,7 @@ void StateMachine::fireTrigger(
 		case Trigger::SigSequence:
 			if (trigger.sigval() == slot.value)
 			{
-				slot.value = trigger.sigval();
+				slot.value = trigger.sigval()-1;
 				if (slot.count > 0)
 				{
 					--slot.count;
@@ -618,6 +619,11 @@ void StateMachine::fireTrigger(
 			return;
 		}
 	}
+#ifdef STRUS_LOWLEVEL_DEBUG
+	if (match) std::cout << ", matches";
+	if (finished) std::cout << ", finishes";
+	if (takeEventData) std::cout << ", takes data";
+#endif
 	if (takeEventData)
 	{
 		if (trigger.variable())
@@ -667,15 +673,23 @@ void StateMachine::fireTrigger(
 				{
 					referenceEventData( rule.eventDataReferenceIdx);
 				}
-				rule.done = true;
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cout << ", produces result";
+#endif
 			}
 			rule.done = true;
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cout << ", done";
+#endif
 		}
 		if (finished)
 		{
 			disposeRuleList.add( slot.rule);
 		}
 	}
+#ifdef STRUS_LOWLEVEL_DEBUG
+	std::cout << std::endl;
+#endif
 }
 
 void StateMachine::doTransition( uint32_t event, const EventData& data)
@@ -744,7 +758,7 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 		// that is not the first appearing:
 		if (m_programTable->isStopWord( follow.eventid))
 		{
-			m_stopWordsEventList.push_back( EventStruct( follow.data, event));
+			m_stopWordsEventList.push_back( follow);
 		}
 		else if (follow.data.subdataref)
 		{
@@ -802,53 +816,75 @@ void StateMachine::installProgram( const ProgramTrigger& programTrigger)
 	}
 	m_nofProgramsInstalled += 1;
 
-	// Trigger past stopwords events matching if the key event is not first event expected:
+	// Trigger the past stopword event, that is the real key event:
 	if (programTrigger.past_eventid)
 	{
-		std::vector<EventStruct>::const_reverse_iterator
-			ei = m_stopWordsEventList.rbegin(), ee = m_stopWordsEventList.rend();
-		if (ei != ee)
+		replayPastEvent( programTrigger.past_eventid, rule, program.positionRange);
+	}
+}
+
+void StateMachine::replayPastEvent( uint32_t eventid, const Rule& rule, uint32_t positionRange)
+{
+	// Search for the event 'eventid' in the latest visited stopwords and trigger them
+	// to fire on the slot of the installed rule
+	std::vector<EventStruct>::const_reverse_iterator
+		ei = m_stopWordsEventList.rbegin(), ee = m_stopWordsEventList.rend();
+	if (ei != ee)
+	{
+		uint32_t start_position = ei->data.ordpos > positionRange ? (ei->data.ordpos - positionRange):0;
+		for (;ei != ee && ei->data.ordpos > start_position; ++ei)
 		{
-			uint32_t start_position = ei->data.origpos > program.positionRange ? (ei->data.origpos - program.positionRange):1;
-			for (;ei != ee && ei->data.origpos > start_position; ++ei)
-			{
-				if (programTrigger.past_eventid == ei->eventid)
-				{
-					break;
-				}
-			}
-			if (ei != ee && ei->data.origpos > start_position)
+			if (eventid == ei->eventid)
 			{
 				ActionSlot& slot = m_actionSlotTable[ rule.actionSlotIdx-1];
-
-				enum {NofDisposeRules=128};
+	
+				enum {NofDisposeRules=128,NofDelEvents=32};
 				EventStructList followList;
 				uint32_t disposeRuleList_alloca[ NofDisposeRules];
 				DisposeRuleList disposeRuleList( disposeRuleList_alloca, NofDisposeRules);
 
-				// Replay all stopword events starting with the key event found
-				// to get the slot of the triggered rule into its state expected:
-				std::vector<EventStruct>::const_iterator
-					ai = ei.base(), ae = m_stopWordsEventList.end();
-				for (--ai; ai != ae; ++ai)
+				uint32_t delEventList_alloca[ NofDelEvents];
+				typedef PodStructArrayBase<uint32_t,std::size_t,0> DelEventList;
+				DelEventList delEventList( delEventList_alloca, NofDelEvents);
+
+				uint32_t triggerlist = rule.eventTriggerListIdx;
+				uint32_t trigger;
+				while (m_eventTriggerList.next( triggerlist, trigger))
 				{
-					uint32_t triggerlist = rule.eventTriggerListIdx;
-					uint32_t trigger;
-					while (m_eventTriggerList.next( triggerlist, trigger))
+					Trigger const* tp = m_eventTriggerTable.getTriggerPtr( trigger);
+					uint32_t trigger_eventid = m_eventTriggerTable.getTriggerEventId( trigger);
+					if (tp->sigtype() == Trigger::SigDel)
 					{
-						Trigger const* tp = m_eventTriggerTable.getTriggerPtr( trigger, ai->eventid);
-						if (tp)
+						delEventList.add( trigger_eventid);
+					}
+					if (eventid == trigger_eventid)
+					{
+						fireTrigger( slot, *tp, ei->data, disposeRuleList, followList);
+					}
+				}
+				if (delEventList.size())
+				{
+					std::vector<EventStruct>::const_iterator
+						ai = ei.base(), ae = m_stopWordsEventList.end();
+					for (--ai; ai != ae; ++ai)
+					{
+						DelEventList::const_iterator
+							li = delEventList.begin(),
+							le = delEventList.end();
+						for (; li != le; ++li)
 						{
-							fireTrigger( slot, *tp, ai->data, disposeRuleList, followList);
+							if (ai->eventid == *li)
+							{
+								deactivateRule( slot.rule);
+							}
 						}
 					}
-					DisposeRuleList::const_iterator
-						di = disposeRuleList.begin(), de = disposeRuleList.end();
-					for (; di != de; ++di)
-					{
-						deactivateRule( *di);
-					}
-					if (!rule.isActive()) break;
+				}
+				DisposeRuleList::const_iterator
+					di = disposeRuleList.begin(), de = disposeRuleList.end();
+				for (; di != de; ++di)
+				{
+					deactivateRule( *di);
 				}
 				if (followList.size())
 				{

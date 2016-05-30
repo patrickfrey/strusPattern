@@ -182,11 +182,11 @@ public:
 			{
 				case OpSequence:
 					slot_sigtype = Trigger::SigSequence;
-					slot_initsigval = argc-1;
+					slot_initsigval = argc;
 					break;
 				case OpSequenceStruct:
 					slot_sigtype = Trigger::SigSequence;
-					slot_initsigval = argc-2;
+					slot_initsigval = argc-1;
 					--slot_initcount;
 					break;
 				case OpWithin:
@@ -230,7 +230,7 @@ public:
 						}
 						else
 						{
-							trigger_sigval = argc-ai-1;
+							trigger_sigval = argc-ai;
 							isKeyEvent = (ai == 1);
 						}
 						break;
@@ -242,12 +242,12 @@ public:
 						}
 						else
 						{
-							trigger_sigval = 1 << (argc-ai-1);
+							trigger_sigval = 1 << (argc-ai);
 							isKeyEvent = true;
 						}
 						break;
 					case OpSequence:
-						trigger_sigval = argc-ai-1;
+						trigger_sigval = argc-ai;
 						isKeyEvent = (ai == 0);
 						break;
 					case OpWithin:

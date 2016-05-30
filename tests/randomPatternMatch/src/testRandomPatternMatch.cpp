@@ -138,7 +138,6 @@ static JoinOperation joinOperation( const char* joinopstr)
 
 static void createTermOpRule( strus::StreamPatternMatchInstanceInterface* ptinst, const char* joinopstr, unsigned int range, unsigned int cardinality, unsigned int* param, std::size_t paramsize)
 {
-	std::string type( "num");
 	std::size_t pi = 0, pe = paramsize;
 	bool with_delim = false;
 	if (std::strcmp( joinopstr, "sequence_struct") == 0
