@@ -97,6 +97,7 @@ public:
 		{
 			std::vector<stream::PatternMatchResult> rt;
 			const StateMachine::ResultList& results = m_statemachine.results();
+			rt.reserve( results.size());
 			std::size_t ai = 0, ae = results.size();
 			for (; ai != ae; ++ai)
 			{

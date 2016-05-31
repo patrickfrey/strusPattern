@@ -142,7 +142,7 @@ public:
 	uint32_t nofTriggers() const			{return m_nofTriggers;}
 
 public:
-	enum {BlockSize=256,EventHashTabSize=16,EventHashTabIdxShift=28,EventHashTabIdxMask=15};
+	enum {BlockSize=1024,EventHashTabSize=16,EventHashTabIdxShift=28,EventHashTabIdxMask=15};
 private:
 	void expandEventAr( uint32_t htidx, uint32_t newallocsize);
 private:

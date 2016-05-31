@@ -290,7 +290,7 @@ static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptin
 		gi = stats.items().begin(), ge = stats.items().end();
 	for (; gi != ge; ++gi)
 	{
-		std::cerr << "\t" << gi->name() << ": " << (int)(gi->value()+0.5) << std::endl;
+		std::cerr << "\t" << gi->name() << ": " << floor( gi->value()+0.5) << std::endl;
 	}
 #endif
 	return nofMatches;

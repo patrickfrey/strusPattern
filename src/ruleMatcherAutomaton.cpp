@@ -484,6 +484,7 @@ StateMachine::StateMachine( const ProgramTable* programTable_)
 {
 	std::memset( m_disposeWindow, 0, sizeof(m_disposeWindow));
 	std::make_heap( m_ruleDisposeQueue.begin(), m_ruleDisposeQueue.end());
+	m_stopWordsEventList.reserve( 1024);
 }
 
 StateMachine::StateMachine( const StateMachine& o)
