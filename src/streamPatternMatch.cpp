@@ -55,20 +55,20 @@ public:
 	virtual ~StreamPatternMatchContext()
 	{}
 
-	virtual void putInput( unsigned int termid, unsigned int ordpos, unsigned int origpos, unsigned int origsize)
+	virtual void putInput( const PatternMatchTerm& term)
 	{
 		try
 		{
-			if (m_curPosition > ordpos)
+			if (m_curPosition > term.ordpos())
 			{
-				throw strus::runtime_error(_TXT("term events not fed in ascending order (%u > %u)"), m_curPosition, ordpos);
+				throw strus::runtime_error(_TXT("term events not fed in ascending order (%u > %u)"), m_curPosition, term.ordpos());
 			}
-			else if (m_curPosition < ordpos)
+			else if (m_curPosition < term.ordpos())
 			{
-				m_statemachine.setCurrentPos( m_curPosition = ordpos);
+				m_statemachine.setCurrentPos( m_curPosition = term.ordpos());
 			}
-			uint32_t eventid = eventHandle( TermEvent, termid);
-			EventData data( origpos, origsize, ordpos, 0/*subdataref*/);
+			uint32_t eventid = eventHandle( TermEvent, term.id());
+			EventData data( term.origpos(), term.origsize(), term.ordpos(), 0/*subdataref*/);
 			m_statemachine.doTransition( eventid, data);
 			++m_nofEvents;
 		}

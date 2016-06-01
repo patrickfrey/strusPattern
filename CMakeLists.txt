@@ -17,6 +17,7 @@ include( cmake/boost.cmake )
 include( cmake/intl.cmake )
 include( cmake/find_strus_package.cmake )
 
+find_strus_package( 3rdParty )
 find_strus_package( base )
 find_strus_package( analyzer )
 

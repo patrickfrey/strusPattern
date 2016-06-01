@@ -8,6 +8,7 @@
 #ifndef _STRUS_STREAM_PATTERN_MATCH_CONTEXT_INTERFACE_HPP_INCLUDED
 #define _STRUS_STREAM_PATTERN_MATCH_CONTEXT_INTERFACE_HPP_INCLUDED
 #include "strus/stream/patternMatchResult.hpp"
+#include "strus/stream/patternMatchTerm.hpp"
 #include "strus/stream/patternMatchStatistics.hpp"
 #include <vector>
 
@@ -22,16 +23,9 @@ public:
 	virtual ~StreamPatternMatchContextInterface(){}
 
 	/// \brief Feed the next input term
-	/// \brief termid term identifier
-	/// \brief ordpos 'ordinal position' term counting position for term proximity measures.
-	/// \brief origpos original position in the source. Not interpreted by the pattern matching (except for joining spans) but can be used by the caller to identify the source term.
-	/// \brief origsize original size in the source. Not interpreted by the pattern matching (except for joining spans) but can be used by the caller to identify the source term span.
+	/// \brief term term to feed
 	/// \remark The input terms must be fed in ascending order of 'ordpos'
-	virtual void putInput(
-			unsigned int termid,
-			unsigned int ordpos,
-			unsigned int origpos,
-			unsigned int origsize)=0;
+	virtual void putInput( const stream::PatternMatchTerm& term)=0;
 
 	/// \brief Get the list of matches detected in the current document
 	/// \return the list of matches

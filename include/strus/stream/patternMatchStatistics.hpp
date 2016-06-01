@@ -27,11 +27,14 @@ public:
 		/// \brief Value of the item
 		double value() const		{return m_value;}
 
+		/// \brief Constructor
 		Item( const char* name_, double value_)
 			:m_name(name_),m_value(value_){}
+		/// \brief Copy constructor
 		Item( const Item& o)
 			:m_name(o.m_name),m_value(o.m_value){}
 
+		/// \brief Update the statistics value
 		void setValue( double value_)	{m_value = value_;}
 	private:
 		const char* m_name;
@@ -49,7 +52,7 @@ public:
 		m_items.push_back( Item( name, value));
 	}
 
-	/// \brief Get all items defined
+	/// \brief Get all statistics items defined
 	const std::vector<Item>& items() const	{return m_items;}
 
 private:

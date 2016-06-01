@@ -255,7 +255,7 @@ static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptin
 	unsigned int didx = 0;
 	for (; di != de; ++di,++didx)
 	{
-		mt->putInput( di->termid, di->pos, didx, 1);
+		mt->putInput( strus::stream::PatternMatchTerm( di->termid, di->pos, didx, 1));
 		if (g_errorBuffer->hasError()) throw std::runtime_error("error matching rules");
 	}
 	std::vector<strus::stream::PatternMatchResult> results = mt->fetchResults();
