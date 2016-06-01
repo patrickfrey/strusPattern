@@ -3,5 +3,6 @@ Library dependencies of strusStream:
 
 Ubuntu:
 	sudo apt-get install liboost-all-dev
+	sudo apt-get install ragel
 
 
