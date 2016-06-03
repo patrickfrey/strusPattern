@@ -4,8 +4,20 @@
 Table of Contents
 -----------------
   boost
+  textwolf
+  compactNodeTrie
+
 
 boost
------
+-------
   http://www.boost.org/LICENSE_1_0.txt
 
+textwolf
+----------
+   LGPL
+   Copyright (c) 2010 Patrick P. Frey
+
+compactNodeTrie
+----------------------
+   MPL v2.0
+   Copyright (c) 2014 Patrick P. Frey
