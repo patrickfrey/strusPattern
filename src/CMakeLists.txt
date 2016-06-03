@@ -9,23 +9,29 @@ set( source_files
 	ruleMatcherAutomaton.cpp
 	symbolTable.cpp
 	streamPatternMatch.cpp
+	streamTermMatch.cpp
 )
 
 include_directories(
 	"${Boost_INCLUDE_DIRS}"
 	"${Intl_INCLUDE_DIRS}"
 	"${PROJECT_SOURCE_DIR}/include"
-	"${strusanalyzer_INCLUDE_DIRS}" )
+	"${PROJECT_SOURCE_DIR}/3rdParty/compactNodeTrie/include"
+	"${strusbase_INCLUDE_DIRS}"
+)
+
 link_directories(
 	"${Boost_LIBRARY_DIRS}"
-	"${strusanalyzer_LIBRARY_DIRS}" )
+	"${PROJECT_SOURCE_DIR}/3rdParty/compactNodeTrie/src"
+	"${strusbase_LIBRARY_DIRS}"
+)
 
 
 # -------------------------------------------
 # STRUS TRACE LIBRARIES
 # -------------------------------------------
 add_library( rulematch STATIC ${source_files} )
-target_link_libraries( rulematch strus_base ${Boost_LIBRARIES} ${Intl_LIBRARIES} )
+target_link_libraries( rulematch strus_base compactnodetrie_static ${Boost_LIBRARIES} ${Intl_LIBRARIES} )
 
 add_library( strus_stream SHARED libstrus_stream.cpp )
 target_link_libraries( strus_stream rulematch strus_base  )

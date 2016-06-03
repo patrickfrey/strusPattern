@@ -24,7 +24,9 @@ public:
 	virtual ~StreamTermMatchContextInterface(){}
 
 	/// \brief Do process a list of tokens and return a list of labeled terms found that matched
-	virtual std::vector<PatternMatchTerm> match( const std::vector<PatternMatchToken>& tokens, const char* src);
+	/// \param[in] tokens tokens to match against
+	/// \param[in] src pointer to source of the tokens to match against
+	virtual std::vector<stream::PatternMatchTerm> match( const std::vector<stream::PatternMatchToken>& tokens, const char* src)=0;
 };
 
 } //namespace

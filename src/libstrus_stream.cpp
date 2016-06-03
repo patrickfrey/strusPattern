@@ -10,7 +10,7 @@
 #include "strus/lib/stream.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "streamPatternMatch.hpp"
-#include "strus/streamPatternMatchInterface.hpp"
+#include "streamTermMatch.hpp"
 #include "strus/base/dll_tags.hpp"
 #include "internationalization.hpp"
 #include "errorUtils.hpp"
@@ -30,5 +30,19 @@ DLL_PUBLIC StreamPatternMatchInterface* strus::createStreamPatternMatch_standard
 		return new StreamPatternMatch( errorhnd);
 	}
 	CATCH_ERROR_MAP_RETURN( _TXT("error stream pattern match interface: %s"), *errorhnd, 0);
+}
+
+DLL_PUBLIC StreamTermMatchInterface* strus::createStreamTermMatch_standard( ErrorBufferInterface* errorhnd)
+{
+	try
+	{
+		if (!g_intl_initialized)
+		{
+			strus::initMessageTextDomain();
+			g_intl_initialized = true;
+		}
+		return new StreamTermMatch( errorhnd);
+	}
+	CATCH_ERROR_MAP_RETURN( _TXT("error stream term match interface: %s"), *errorhnd, 0);
 }
 
