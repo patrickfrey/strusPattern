@@ -18,7 +18,9 @@ INCLUDE (CheckLibraryExists)
 INCLUDE (CheckSymbolExists)
 include (CMakeDependentOption)
 include (${CMAKE_MODULE_PATH}/platform.cmake)
+IF (WITH_RAGEL STREQUAL "YES")
 include (${CMAKE_MODULE_PATH}/ragel.cmake)
+ENDIF (WITH_RAGEL STREQUAL "YES")
 
 find_package(PkgConfig QUIET)
 
@@ -379,7 +381,9 @@ set_source_files_properties(
     PROPERTIES
         COMPILE_FLAGS "${RAGEL_C_FLAGS}")
 
+IF (WITH_RAGEL STREQUAL "YES")
 ragelmaker(src/parser/Parser.rl)
+ENDIF (WITH_RAGEL STREQUAL "YES")
 
 SET(hs_HEADERS
     src/hs.h

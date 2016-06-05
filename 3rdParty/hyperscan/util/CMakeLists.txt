@@ -8,7 +8,9 @@ set_source_files_properties(
     PROPERTIES
     COMPILE_FLAGS "${RAGEL_C_FLAGS}")
 
+IF (WITH_RAGEL STREQUAL "YES")
 ragelmaker(ExpressionParser.rl)
+ENDIF (WITH_RAGEL STREQUAL "YES")
 
 set(expressionutil_SRCS
     expressions.cpp
