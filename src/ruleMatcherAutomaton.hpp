@@ -219,6 +219,19 @@ struct EventStruct
 };
 typedef PodStructArrayBase<EventStruct,std::size_t,BaseAddrEventStructList> EventStructList;
 
+struct EventLog
+{
+	EventData data;
+	unsigned int timestmp;
+
+	EventLog()
+		:data(),timestmp(0){}
+	EventLog( const EventData& data_, unsigned int timestmp_)
+		:data(data_),timestmp(timestmp_){}
+	EventLog( const EventLog& o)
+		:data(o.data),timestmp(o.timestmp){}
+};
+
 struct EventDataReference
 {
 	uint32_t eventItemListIdx;
@@ -456,11 +469,12 @@ private:
 	typedef PodStackPoolBase<uint32_t,uint32_t,BaseAddrDisposeEventList> DisposeEventList;
 	DisposeEventList m_disposeRuleList;
 	std::vector<DisposeEvent> m_ruleDisposeQueue;
-	std::map<uint32_t,EventData> m_stopWordsEventMap;
+	std::map<uint32_t,EventLog> m_stopWordsEventLogMap;
 	unsigned int m_nofProgramsInstalled;
 	unsigned int m_nofAltKeyProgramsInstalled;
 	unsigned int m_nofTriggersFired;
 	double m_nofOpenPatterns;
+	unsigned int m_timestmp;
 };
 
 } //namespace

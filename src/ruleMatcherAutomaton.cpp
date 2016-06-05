@@ -481,6 +481,7 @@ StateMachine::StateMachine( const ProgramTable* programTable_)
 	,m_nofAltKeyProgramsInstalled(0)
 	,m_nofTriggersFired(0)
 	,m_nofOpenPatterns(0.0)
+	,m_timestmp(0)
 {
 	std::memset( m_disposeWindow, 0, sizeof(m_disposeWindow));
 	std::make_heap( m_ruleDisposeQueue.begin(), m_ruleDisposeQueue.end());
@@ -498,11 +499,12 @@ StateMachine::StateMachine( const StateMachine& o)
 	,m_curpos(o.m_curpos)
 	,m_disposeRuleList(o.m_disposeRuleList)
 	,m_ruleDisposeQueue(o.m_ruleDisposeQueue)
-	,m_stopWordsEventMap(o.m_stopWordsEventMap)
+	,m_stopWordsEventLogMap(o.m_stopWordsEventLogMap)
 	,m_nofProgramsInstalled(o.m_nofProgramsInstalled)
 	,m_nofAltKeyProgramsInstalled(o.m_nofAltKeyProgramsInstalled)
 	,m_nofTriggersFired(o.m_nofTriggersFired)
 	,m_nofOpenPatterns(o.m_nofOpenPatterns)
+	,m_timestmp(o.m_timestmp)
 {
 	std::memcpy( m_disposeWindow, o.m_disposeWindow, sizeof(m_disposeWindow));
 }
@@ -799,7 +801,7 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 		// that is not the first appearing:
 		if (m_programTable->isStopWord( follow.eventid))
 		{
-			m_stopWordsEventMap[ follow.eventid] = follow.data;
+			m_stopWordsEventLogMap[ follow.eventid] = EventLog( follow.data, ++m_timestmp);
 		}
 		else if (follow.data.subdataref)
 		{
@@ -951,9 +953,9 @@ void StateMachine::replayPastEvent( uint32_t eventid, const Rule& rule, uint32_t
 {
 	// Search for the event 'eventid' in the latest visited stopwords and trigger them
 	// to fire on the slot of the installed rule
-	std::map<uint32_t,EventData>::const_iterator
-		ei = m_stopWordsEventMap.find( eventid);
-	if (ei != m_stopWordsEventMap.end() && ei->second.ordpos + positionRange >= m_curpos)
+	std::map<uint32_t,EventLog>::const_iterator
+		ei = m_stopWordsEventLogMap.find( eventid);
+	if (ei != m_stopWordsEventLogMap.end() && ei->second.data.ordpos + positionRange >= m_curpos)
 	{
 		ActionSlot& slot = m_actionSlotTable[ rule.actionSlotIdx-1];
 
@@ -978,7 +980,7 @@ void StateMachine::replayPastEvent( uint32_t eventid, const Rule& rule, uint32_t
 			}
 			if (eventid == trigger_eventid)
 			{
-				fireTrigger( slot, *tp, ei->second, disposeRuleList, followList);
+				fireTrigger( slot, *tp, ei->second.data, disposeRuleList, followList);
 			}
 		}
 		if (delEventList.size())
@@ -988,9 +990,9 @@ void StateMachine::replayPastEvent( uint32_t eventid, const Rule& rule, uint32_t
 				le = delEventList.end();
 			for (; li != le; ++li)
 			{
-				std::map<uint32_t,EventData>::const_iterator
-					stopwi = m_stopWordsEventMap.find( *li);
-				if (stopwi != m_stopWordsEventMap.end() && stopwi->second.ordpos >= ei->second.ordpos)
+				std::map<uint32_t,EventLog>::const_iterator
+					stopwi = m_stopWordsEventLogMap.find( *li);
+				if (stopwi != m_stopWordsEventLogMap.end() && stopwi->second.timestmp > ei->second.timestmp)
 				{
 					deactivateRule( slot.rule);
 					break;
