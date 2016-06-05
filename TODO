@@ -1,0 +1,2 @@
+suppress trigger events not referenced by other rules
+better logging of past stop events: map eventid->rec+timestamp instead of vector

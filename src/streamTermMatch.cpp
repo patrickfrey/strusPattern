@@ -15,24 +15,31 @@
 #include "strus/errorBufferInterface.hpp"
 #include "compactNodeTrie.hpp"
 #include "symbolTable.hpp"
+#include "regexExpressions.hpp"
 #include "utils.hpp"
 #include "errorUtils.hpp"
 #include "internationalization.hpp"
-#include "textwolf/charset_utf8.hpp"
 #include <vector>
 #include <string>
+#include <cstring>
 #include <stdexcept>
 
 using namespace strus;
 using namespace strus::stream;
 
-static textwolf::charset::UTF8::CharLengthTab g_charLengthTab;
 
 struct KeyAnalysis
 {
 	bool matchesAny;
 	std::vector<std::string> prefixes;
 	std::vector<std::string> suffixes;
+
+	explicit KeyAnalysis( const std::string& expression)
+	{
+		prefixes = getRegexPrefixes( expression);
+		std::vector<std::string> getRegexSuffixes( const std::string& expr);
+
+	}
 };
 
 struct TermMatchData
