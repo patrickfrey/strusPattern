@@ -15,7 +15,6 @@
 #include "strus/errorBufferInterface.hpp"
 #include "compactNodeTrie.hpp"
 #include "symbolTable.hpp"
-#include "regexExpressions.hpp"
 #include "utils.hpp"
 #include "errorUtils.hpp"
 #include "internationalization.hpp"
@@ -27,26 +26,8 @@
 using namespace strus;
 using namespace strus::stream;
 
-
-struct KeyAnalysis
-{
-	bool matchesAny;
-	std::vector<std::string> prefixes;
-	std::vector<std::string> suffixes;
-
-	explicit KeyAnalysis( const std::string& expression)
-	{
-		prefixes = getRegexPrefixes( expression);
-		std::vector<std::string> getRegexSuffixes( const std::string& expr);
-
-	}
-};
-
 struct TermMatchData
 {
-	conotrie::CompactNodeTrie prefixtree;
-	conotrie::CompactNodeTrie suffixtree;
-	conotrie::CompactNodeTrie midtree;
 	SymbolTable symboltable;
 };
 

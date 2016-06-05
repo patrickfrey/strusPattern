@@ -9,7 +9,6 @@ set( source_files
 	ruleMatcherAutomaton.cpp
 	symbolTable.cpp
 	streamPatternMatch.cpp
-	regexExpressions.cpp
 	streamTermMatch.cpp
 )
 

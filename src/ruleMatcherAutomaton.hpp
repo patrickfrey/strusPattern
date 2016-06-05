@@ -456,7 +456,7 @@ private:
 	typedef PodStackPoolBase<uint32_t,uint32_t,BaseAddrDisposeEventList> DisposeEventList;
 	DisposeEventList m_disposeRuleList;
 	std::vector<DisposeEvent> m_ruleDisposeQueue;
-	std::vector<EventStruct> m_stopWordsEventList;
+	std::map<uint32_t,EventData> m_stopWordsEventMap;
 	unsigned int m_nofProgramsInstalled;
 	unsigned int m_nofAltKeyProgramsInstalled;
 	unsigned int m_nofTriggersFired;
