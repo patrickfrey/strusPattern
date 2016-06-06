@@ -78,6 +78,7 @@ private:
 	};
 
 	typedef boost::unordered_map<const char*,uint32_t,HashFunc,MapKeyEqual> Map;
+	typedef boost::unordered_map<const char*,uint32_t,HashFunc,MapKeyEqual>::const_iterator const_iterator;
 
 public:
 	SymbolTable(){}
@@ -89,6 +90,19 @@ public:
 	uint32_t get( const char* key, std::size_t keysize) const;
 
 	const char* key( const uint32_t& value) const;
+
+	const_iterator begin() const
+	{
+		return m_map.begin();
+	}
+	const_iterator end() const
+	{
+		return m_map.end();
+	}
+	std::size_t size() const
+	{
+		return m_invmap.size();
+	}
 
 private:
 	SymbolTable( const SymbolTable&){}	///> non copyable

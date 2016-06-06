@@ -18,12 +18,14 @@ include_directories(
 	"${PROJECT_SOURCE_DIR}/include"
 	"${PROJECT_SOURCE_DIR}/3rdParty/compactNodeTrie/include"
 	"${PROJECT_SOURCE_DIR}/3rdParty/textwolf/include"
+	"${PROJECT_SOURCE_DIR}/3rdParty/hyperscan/src"
 	"${strusbase_INCLUDE_DIRS}"
 )
 
 link_directories(
 	"${Boost_LIBRARY_DIRS}"
 	"${PROJECT_SOURCE_DIR}/3rdParty/compactNodeTrie/src"
+	"${PROJECT_SOURCE_DIR}/3rdParty/hyperscan/lib"
 	"${strusbase_LIBRARY_DIRS}"
 )
 
@@ -32,7 +34,7 @@ link_directories(
 # STRUS TRACE LIBRARIES
 # -------------------------------------------
 add_library( rulematch STATIC ${source_files} )
-target_link_libraries( rulematch strus_base compactnodetrie_static ${Boost_LIBRARIES} ${Intl_LIBRARIES} )
+target_link_libraries( rulematch strus_base compactnodetrie_static hs ${Boost_LIBRARIES} ${Intl_LIBRARIES} )
 
 add_library( strus_stream SHARED libstrus_stream.cpp )
 target_link_libraries( strus_stream rulematch strus_base  )

@@ -23,10 +23,10 @@ public:
 	/// \brief Destructor
 	virtual ~StreamTermMatchContextInterface(){}
 
-	/// \brief Do process a list of tokens and return a list of labeled terms found that matched
-	/// \param[in] tokens tokens to match against
+	/// \brief Do process a document source string to return a list of labeled terms found that matched
 	/// \param[in] src pointer to source of the tokens to match against
-	virtual std::vector<stream::PatternMatchTerm> match( const std::vector<stream::PatternMatchToken>& tokens, const char* src)=0;
+	/// \return list of matched terms
+	virtual std::vector<stream::PatternMatchTerm> match( const char* src)=0;
 };
 
 } //namespace
