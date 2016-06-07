@@ -25,8 +25,9 @@ public:
 
 	/// \brief Do process a document source string to return a list of labeled terms found that matched
 	/// \param[in] src pointer to source of the tokens to match against
+	/// \param[in] srclen length of src to scan in bytes
 	/// \return list of matched terms
-	virtual std::vector<stream::PatternMatchTerm> match( const char* src)=0;
+	virtual std::vector<stream::PatternMatchTerm> match( const char* src, std::size_t srclen)=0;
 };
 
 } //namespace
