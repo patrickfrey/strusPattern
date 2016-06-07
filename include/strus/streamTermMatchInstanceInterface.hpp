@@ -36,9 +36,10 @@ public:
 	/// \brief Define a pattern for the text matcher
 	/// \param[in] id identifier given to the tokens matching the pattern, 0 if the pattern is invisible.
 	/// \param[in] expression expression string of the pattern
-	/// \param[in] resultIndex index of subexpression that defines the result token, 
+	/// \param[in] resultIndex index of subexpression that defines the result token, 0 for the whole match
 	/// \param[in] level weight of the pattern. A pattern causes the suppressing of all tokens of lower level that are completely covered by one token of this pattern
 	/// \param[in] posbind defines how the ordinal position is assigned to the result token
+	/// \remark For performance it is better to define rules without resultIndex selection.
 	virtual void definePattern(
 			unsigned int id,
 			const std::string& expression,
