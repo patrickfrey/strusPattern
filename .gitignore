@@ -29,6 +29,7 @@
 *.app
 testSimplePatternMatch
 testRandomPatternMatch
+testRegexTermMatch
 
 # CMake generated files
 CMakeCache.txt

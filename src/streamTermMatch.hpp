@@ -16,7 +16,8 @@ namespace strus {
 ///\brief Forward declaration
 class ErrorBufferInterface;
 
-/// \brief Interface for creating an automaton for detecting terms defined as regular expressions
+/// \brief Implementation for creating an automaton for detecting terms defined as regular expressions
+///	based on the Intel hyperscan library as backend.
 class StreamTermMatch
 	:public StreamTermMatchInterface
 {
@@ -24,12 +25,9 @@ public:
 	explicit StreamTermMatch( ErrorBufferInterface* errorhnd_)
 		:m_errorhnd(errorhnd_){}
 
-	/// \brief Destructor
 	virtual ~StreamTermMatch(){}
 
-	/// \brief Create an instance to build the regular expressions for a term matcher
-	/// \return the term matcher instance
-	virtual StreamTermMatchInstanceInterface* createInstance() const;
+	virtual StreamTermMatchInstanceInterface* createInstance( const Options& opts) const;
 
 private:
 	ErrorBufferInterface* m_errorhnd;

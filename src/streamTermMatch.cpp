@@ -169,6 +169,9 @@ public:
 class PatternTable
 {
 public:
+	explicit PatternTable( unsigned int options_)
+		:m_options(options_){}
+
 	void definePattern(
 			unsigned int id,
 			const std::string& expression,
@@ -249,10 +252,7 @@ public:
 			}
 			hspt.patternar[ didx] = di->expression().c_str();
 			hspt.idar[ didx] = di->id();
-			hspt.flagar[ didx] = HS_FLAG_UTF8
-						| HS_FLAG_UCP
-						| HS_FLAG_DOTALL
-						| HS_FLAG_SOM_LEFTMOST;
+			hspt.flagar[ didx] = m_options | HS_FLAG_UTF8 | HS_FLAG_SOM_LEFTMOST;
 		}
 		hspt.patternar[ m_defar.size()] = 0;
 		hspt.idar[ m_defar.size()] = 0;
@@ -304,6 +304,7 @@ private:
 	typedef std::map<uint32_t,uint8_t> IdSymTabMap;
 	IdSymTabMap m_idsymtabmap;				///< map pattern id -> index in m_symtabmap == PatternDef::symtabref
 	std::vector<SubExpressionReference> m_subexprmap;	///< single regular expression patterns for extracting subexpressions if they are referenced.
+	unsigned int m_options;					///< options to stear matching
 };
 
 
@@ -312,8 +313,8 @@ struct TermMatchData
 	PatternTable patternTable;
 	hs_database_t* patterndb;
 
-	TermMatchData()
-		:patterndb(0){}
+	explicit TermMatchData( unsigned int options)
+		:patternTable(options),patterndb(0){}
 	~TermMatchData()
 	{
 		if (patterndb) hs_free_database(patterndb);
@@ -360,7 +361,7 @@ public:
 		StreamTermMatchContext* THIS = (StreamTermMatchContext*)context;
 		try
 		{
-			if (to - from >= (1U<<24))
+			if (to - from >= std::numeric_limits<uint16_t>::max())
 			{
 				throw strus::runtime_error( "size of matched term out of range");
 			}
@@ -379,6 +380,7 @@ public:
 			}
 			else
 			{
+				// Handle superseeding of elements by elements with higher level:
 				std::size_t nofDeletes = 0;
 				uint32_t matchLastPos = matchEvent.origpos + matchEvent.origsize;
 				std::vector<MatchEvent>::reverse_iterator
@@ -419,18 +421,47 @@ public:
 				THIS->m_matchEventAr.resize( THIS->m_matchEventAr.size()+1);
 				mi = THIS->m_matchEventAr.rbegin();
 				me = THIS->m_matchEventAr.rend();
-				for (++mi; mi != me && mi->origpos > matchEvent.origpos; ++mi){}
-				std::vector<MatchEvent>::iterator oi = mi.base()-1;
-				std::vector<MatchEvent>::iterator prev_oi = oi++;
-				for (; oi != THIS->m_matchEventAr.end(); prev_oi = oi++)
+				std::vector<MatchEvent>::reverse_iterator prev_mi = mi;
+				for (++mi; mi != me && mi->origpos > matchEvent.origpos; prev_mi=mi++)
 				{
-					*oi = *prev_oi;
+					*prev_mi = *mi;
 				}
-				*(mi.base()) = matchEvent;
+				--mi;
+				*mi = matchEvent;
 			}
 			return 0;
 		}
 		CATCH_ERROR_MAP_RETURN( "error calling hyperscan match event handler: %s", *THIS->m_errorhnd, -1);
+	}
+
+	static const char* hsErrorName( int ec)
+	{
+		switch (ec) {
+			case HS_SUCCESS:
+				return "HS_SUCCESS";
+			case HS_INVALID:
+				return "HS_INVALID";
+			case HS_NOMEM:
+				return "HS_NOMEM";
+			case HS_SCAN_TERMINATED:
+				return "HS_SCAN_TERMINATED";
+			case HS_COMPILER_ERROR:
+				return "HS_COMPILER_ERROR";
+			case HS_DB_VERSION_ERROR:
+				return "HS_DB_VERSION_ERROR";
+			case HS_DB_PLATFORM_ERROR:
+				return "HS_DB_PLATFORM_ERROR";
+			case HS_DB_MODE_ERROR:
+				return "HS_DB_MODE_ERROR";
+			case HS_BAD_ALIGN:
+				return "HS_BAD_ALIGN";
+			case HS_BAD_ALLOC:
+				return "HS_BAD_ALLOC";
+			case HS_SCRATCH_IN_USE:
+				return "HS_SCRATCH_IN_USE";
+			default:
+				return "unknown";
+		}
 	}
 
 	virtual std::vector<stream::PatternMatchTerm> match( const char* src, std::size_t srclen)
@@ -438,6 +469,8 @@ public:
 		try
 		{
 			std::vector<stream::PatternMatchTerm> rt;
+			unsigned int nofExpectedTokens = srclen / 4 + 10;
+			m_matchEventAr.reserve( nofExpectedTokens);
 			m_src = src;
 			if (srclen >= (std::size_t)std::numeric_limits<uint32_t>::max())
 			{
@@ -453,8 +486,10 @@ public:
 				std::memcpy( srcbuf, src, srclen);
 				srcbuf[ srclen] = 0;
 				m_matchEventAr.clear();
-				throw strus::runtime_error(_TXT("error matching pattern on '%s'"), srcbuf);
+				throw strus::runtime_error(_TXT("error matching pattern (hyperscan error %s) on '%s'"), hsErrorName(err), srcbuf);
 			}
+			rt.reserve( m_matchEventAr.size());
+
 			// Build the result term array, calculate ordinal positions of the result terms:
 			std::vector<MatchEvent>::const_iterator
 				mi = m_matchEventAr.begin(), me = m_matchEventAr.end();
@@ -468,6 +503,7 @@ public:
 						ordpos = 1;
 						origpos = mi->origpos;
 						rt.push_back( stream::PatternMatchTerm( mi->id, 1, mi->origpos, mi->origsize));
+						++mi;
 						goto EXITLOOP;
 					case StreamTermMatchInstanceInterface::BindSuccessor:
 						rt.push_back( stream::PatternMatchTerm( mi->id, 1, mi->origpos, mi->origsize));
@@ -488,6 +524,7 @@ public:
 					case StreamTermMatchInstanceInterface::BindContent:
 						if (mi->origpos > origpos)
 						{
+							origpos = mi->origpos;
 							++ordpos;
 						}
 						rt.push_back( stream::PatternMatchTerm( mi->id, ordpos, mi->origpos, mi->origsize));
@@ -518,8 +555,9 @@ class StreamTermMatchInstance
 	:public StreamTermMatchInstanceInterface
 {
 public:
-	explicit StreamTermMatchInstance( ErrorBufferInterface* errorhnd_)
-		:m_errorhnd(errorhnd_),m_state(DefinitionPhase){}
+	explicit StreamTermMatchInstance( unsigned int options, ErrorBufferInterface* errorhnd_)
+		:m_errorhnd(errorhnd_),m_data(options),m_state(DefinitionPhase)
+	{}
 
 	virtual ~StreamTermMatchInstance(){}
 
@@ -621,11 +659,46 @@ private:
 	State m_state;
 };
 
-StreamTermMatchInstanceInterface* StreamTermMatch::createInstance() const
+static unsigned int getFlags( const StreamTermMatchInterface::Options& opts)
+{
+	unsigned int rt = 0;
+	StreamTermMatchInterface::Options::const_iterator ai = opts.begin(), ae = opts.end();
+	for (; ai != ae; ++ai)
+	{
+		if (utils::caseInsensitiveEquals( *ai, "CASELESS"))
+		{
+			rt |= HS_FLAG_CASELESS;
+		}
+		else if (utils::caseInsensitiveEquals( *ai, "DOTALL"))
+		{
+			rt |= HS_FLAG_DOTALL;
+		}
+		else if (utils::caseInsensitiveEquals( *ai, "MULTILINE"))
+		{
+			rt |= HS_FLAG_MULTILINE;
+		}
+		else if (utils::caseInsensitiveEquals( *ai, "ALLOWEMPTY"))
+		{
+			rt |= HS_FLAG_ALLOWEMPTY;
+		}
+		else if (utils::caseInsensitiveEquals( *ai, "UCP"))
+		{
+			rt |= HS_FLAG_UCP;
+		}
+		else
+		{
+			throw strus::runtime_error(_TXT("unknown option '%s'"), ai->c_str());
+		}
+	}
+	return rt;
+}
+
+StreamTermMatchInstanceInterface* StreamTermMatch::createInstance( const Options& opts) const
 {
 	try
 	{
-		return new StreamTermMatchInstance( m_errorhnd);
+		unsigned int options = getFlags( opts);
+		return new StreamTermMatchInstance( options, m_errorhnd);
 	}
 	CATCH_ERROR_MAP_RETURN( "failed to create term match instance: %s", *m_errorhnd, 0);
 }
