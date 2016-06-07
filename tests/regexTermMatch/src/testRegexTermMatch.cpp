@@ -48,11 +48,20 @@ struct SymbolDef
 	const char* name;
 };
 
+struct ResultDef
+{
+	unsigned int id;
+	unsigned int ordpos;
+	unsigned int origpos;
+	unsigned int origsize;
+};
+
 struct TestDef
 {
 	const PatternDef patterns[64];
 	const SymbolDef symbols[64];
 	const char* src;
+	ResultDef result[128];
 };
 
 static void compile( strus::StreamTermMatchInstanceInterface* ptinst, const PatternDef* par, const SymbolDef* sar)
@@ -108,7 +117,44 @@ static const TestDef g_tests[32] =
 			{10,2,"believe"},
 			{0,0,0}
 		},
-		"The world was not created about 5000 years ago as some creationists still believe in the 21th century."
+		"The world was not created about 5000 years ago as some creationists still believe in the 21th century.",
+		{
+			{2,1,0,3},
+			{4,1,0,17},
+			{2,2,4,5},
+			{4,2,4,21},
+			{2,3,10,3},
+			{4,3,10,21},
+			{2,4,14,3},
+			{4,4,14,22},
+			{2,5,18,7},
+			{4,5,18,24},
+			{2,6,26,5},
+			{4,6,26,20},
+			{1,7,32,4},
+			{4,7,32,17},
+			{2,8,37,5},
+			{4,8,37,17},
+			{2,9,43,3},
+			{4,9,43,24},
+			{2,10,47,2},
+			{4,10,47,26},
+			{2,11,50,4},
+			{4,11,50,31},
+			{2,12,55,12},
+			{4,12,55,29},
+			{2,13,68,5},
+			{4,13,68,20},
+			{2,14,74,7},
+			{4,14,74,19},
+			{2,15,82,2},
+			{4,15,82,19},
+			{2,16,85,3},
+			{2,17,89,4},
+			{3,17,89,2},
+			{2,18,94,7},
+			{0,0,0,0}
+		}
 	},
 	{
 		{
@@ -117,7 +163,10 @@ static const TestDef g_tests[32] =
 		{
 			{0,0,0}
 		},
-		0
+		0,
+		{
+			{0,0,0,0}
+		}
 	}
 };
 
@@ -152,7 +201,22 @@ int main( int argc, const char** argv)
 			{
 				throw std::runtime_error( "error building automaton for test");
 			}
-			match( ptinst.get(), g_tests[ti].src);
+			std::vector<strus::stream::PatternMatchTerm> result = match( ptinst.get(), g_tests[ti].src);
+			std::vector<strus::stream::PatternMatchTerm>::const_iterator ri = result.begin(), re = result.end();
+			std::size_t ridx=0;
+			const ResultDef* expected = g_tests[ti].result;
+			for (; ri != re && expected[ridx].origsize != 0; ++ridx,++ri)
+			{
+				const ResultDef& exp = expected[ridx];
+				if (exp.id != ri->id()) break;
+				if (exp.ordpos != ri->ordpos()) break;
+				if (exp.origpos != ri->origpos()) break;
+				if (exp.origsize != ri->origsize()) break;
+			}
+			if (ri != re || expected[ridx].origsize != 0)
+			{
+				throw std::runtime_error( "test failed");
+			}
 		}
 		std::cerr << "OK" << std::endl;
 		delete g_errorBuffer;

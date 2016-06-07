@@ -28,13 +28,13 @@ public:
 	/// \brief Determines how document positions are assigned to terms
 	enum PositionBind
 	{
-		BindContent,		///< An element in the document that gets an own position assigned
-		BindSuccessor,		///< An element in the document that gets the position of the element at the same position or the succeding content element assigned
-		BindPredecessor		///< An element in the document that gets the position of the element at the same position or the preceding content element assigned
+		BindContent,		///< An element in the document that gets an own ordinal position assigned
+		BindSuccessor,		///< An element in the document that gets the ordinal position of the element at the same position or the succeding content element assigned
+		BindPredecessor		///< An element in the document that gets the ordinal position of the element at the same position or the preceding content element assigned
 	};
 
 	/// \brief Define a pattern for the text matcher
-	/// \param[in] id identifier given to the tokens matching the pattern, 0 if the pattern is invisible.
+	/// \param[in] id identifier given to the substring matching the pattern, 0 if the pattern is invisible.
 	/// \param[in] expression expression string of the pattern
 	/// \param[in] resultIndex index of subexpression that defines the result token, 0 for the whole match
 	/// \param[in] level weight of the pattern. A pattern causes the suppressing of all tokens of lower level that are completely covered by one token of this pattern
@@ -48,7 +48,7 @@ public:
 			PositionBind posbind)=0;
 
 	/// \brief Define a symbol, an instance of a pattern, that gets a different id
-	/// \param[in] id identifier given to the result tokens, 0 if the result token is invisible
+	/// \param[in] id identifier given to the result substring, 0 if the result term is invisible
 	/// \param[in] patternid identifier of the pattern this symbol belongs to
 	/// \param[in] name name (value string) of the symbol
 	virtual void defineSymbol(
