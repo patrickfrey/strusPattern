@@ -333,7 +333,7 @@ class Globals
 {
 public:
 	explicit Globals( const strus::StreamPatternMatchInstanceInterface* ptinst_)
-		:ptinst(ptinst_){}
+		:ptinst(ptinst_),totalNofMatches(0),totalNofDocs(0){}
 
 	const strus::StreamPatternMatchInstanceInterface* ptinst;
 	std::map<std::string,double> stats;
