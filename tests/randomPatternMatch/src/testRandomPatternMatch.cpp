@@ -286,7 +286,7 @@ static unsigned int matchRules( const strus::StreamPatternMatchInstanceInterface
 		std::cout << std::endl;
 	}
 	std::cerr << "document stats:" << std::endl;
-	std::vector<strus::StreamPatternMatchContextInterface::Statistics::Item>::const_iterator
+	std::vector<strus::stream::PatternMatchStatistics::Item>::const_iterator
 		gi = stats.items().begin(), ge = stats.items().end();
 	for (; gi != ge; ++gi)
 	{
@@ -313,18 +313,14 @@ static unsigned int runMatching( const strus::StreamPatternMatchInstanceInterfac
 	std::vector<Document>::const_iterator di = docs.begin(), de = docs.end();
 	for (; di != de; ++di)
 	{
-		std::vector<Document>::const_iterator di = docs.begin(), de = docs.end();
-		for (; di != de; ++di)
-		{
 #ifdef STRUS_LOWLEVEL_DEBUG
-			std::cout << "document " << di->id << ":" << std::endl;
+		std::cout << "document " << di->id << ":" << std::endl;
 #endif
-			unsigned int nofmatches = matchRules( ptinst, *di, stats);
-			totalNofmatches += nofmatches;
-			if (g_errorBuffer->hasError())
-			{
-				throw std::runtime_error("error matching rule");
-			}
+		unsigned int nofmatches = matchRules( ptinst, *di, stats);
+		totalNofmatches += nofmatches;
+		if (g_errorBuffer->hasError())
+		{
+			throw std::runtime_error("error matching rule");
 		}
 	}
 	return totalNofmatches;
