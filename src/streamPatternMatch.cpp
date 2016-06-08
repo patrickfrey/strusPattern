@@ -67,6 +67,10 @@ public:
 			{
 				m_statemachine.setCurrentPos( m_curPosition = term.ordpos());
 			}
+			else if (term.origpos() + term.origsize() >= (std::size_t)std::numeric_limits<uint32_t>::max())
+			{
+				throw strus::runtime_error(_TXT("term event orig position and length out of range"));
+			}
 			uint32_t eventid = eventHandle( TermEvent, term.id());
 			EventData data( term.origpos(), term.origsize(), term.ordpos(), 0/*subdataref*/);
 			m_statemachine.doTransition( eventid, data);

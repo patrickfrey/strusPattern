@@ -196,6 +196,7 @@ int main( int argc, const char** argv)
 			opt("DOTALL");
 			std::auto_ptr<strus::StreamTermMatchInstanceInterface> ptinst( pt->createInstance( opt));
 			if (!ptinst.get()) throw std::runtime_error("failed to create regular expression term matcher instance");
+
 			compile( ptinst.get(), g_tests[ti].patterns, g_tests[ti].symbols);
 			if (g_errorBuffer->hasError())
 			{

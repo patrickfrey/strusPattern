@@ -47,12 +47,15 @@ public:
 		:m_items(o.m_items){}
 
 	/// \brief Define statistics item
+	/// \param[in] name name of the statistics item
+	/// \param[in] value value of the statistics item
 	void define( const char* name, double value)
 	{
 		m_items.push_back( Item( name, value));
 	}
 
 	/// \brief Get all statistics items defined
+	/// \return the statistics items
 	const std::vector<Item>& items() const	{return m_items;}
 
 private:

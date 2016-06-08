@@ -36,11 +36,11 @@ public:
 	///\brief Join operations (same meaning as in query evaluation)
 	enum JoinOperation
 	{
-		OpSequence,		///< A subset specified by cardinality of the trigger events must appear in the specified order for then completion of the rule (objects must not overlap)
-		OpSequenceStruct,	///< A subset specified by cardinality of the trigger events must appear in the specified order without a structure element appearing before the last element for then completion of the rule (objects must not overlap)
-		OpWithin,		///< A subset specified by cardinality of the trigger events must appear for then completion of the rule (objects must not overlap)
-		OpWithinStruct,		///< A subset specified by cardinality of the trigger events must appear without a structure element appearing before the last element for then completion of the rule (objects must not overlap)
-		OpAny			///< Any of the trigger events leads for the completion of the rule
+		OpSequence,		///< The argument patterns must appear in the specified (strict) order (ordinal position) within a specified proximity range of ordinal positions for the completion of the rule.
+		OpSequenceStruct,	///< The argument patterns must appear in the specified (strict) order (ordinal position) within a specified proximity range of ordinal positions for the completion of the rule without a structure element appearing before the last argument pattern needed for then completion of the rule.
+		OpWithin,		///< The argument patterns must appear within a specified proximity range of ordinal positions for the completion of the rule.
+		OpWithinStruct,		///< The argument patterns must appear within a specified proximity range of ordinal positions for the completion of the rule without a structure element appearing before the last element for then completion of the rule.
+		OpAny			///< At least one of the argument patterns must appear for the completion of the rule.
 	};
 
 	/// \brief Take the topmost elements from the stack, build an expression out of them and replace the argument elements with the created element on the stack
@@ -48,7 +48,7 @@ public:
 	/// \param[in] argc number of arguments of this operation
 	/// \param[in] range position proximity range of the expression
 	/// \param[in] cardinality specifies a result dimension requirement (e.g. minimum number of elements of any input subset selection that builds a result) (0 for use default). Interpretation depends on operation, but in most cases it specifies the required size for a valid result.
-	/// \note The operation identifiers should if possible correspond to the names used for the standard posting join operators in the strus core query evaluation
+	/// \note The operation identifiers should if possible correspond to the names used for the standard posting join operators in the query evaluation of the strus core.
 	virtual void pushExpression(
 			JoinOperation operation,
 			std::size_t argc, unsigned int range, unsigned int cardinality)=0;
@@ -72,9 +72,9 @@ public:
 	/// \brief Structure with options for optimization of the pattern evaluation program
 	struct OptimizeOptions
 	{
-		float stopwordOccurrenceFactor;		///< The bias for the factor nof programs with a specific keyword divided by the number of programs defined that decides wheter we try to find another key event for the program
-		float weightFactor;			///< factor of weight an alternative key event of a pattern must exceed to be considered as alternative
-		uint32_t maxRange;			///< Maximum proximity range a program must have in order to be triggered by an alternative key event
+		float stopwordOccurrenceFactor;		///< The bias for the factor number of programs with a specific keyword divided by the number of programs defined that decides wheter we try to find another key event for the program.
+		float weightFactor;			///< factor of weight an alternative key event of a pattern must exceed to be considered as alternative.
+		uint32_t maxRange;			///< Maximum proximity range a program must have in order to be triggered by an alternative key event.
 
 		///\brief Constructor
 		OptimizeOptions()
@@ -86,6 +86,7 @@ public:
 			:stopwordOccurrenceFactor(o.stopwordOccurrenceFactor),weightFactor(o.weightFactor),maxRange(o.maxRange){}
 	};
 	/// \brief Try to optimize the program if possible by setting initial key events of the programs to events that are relative rare
+	/// \param[in] opt optimization options
 	virtual void optimize( const OptimizeOptions& opt)=0;
 
 	/// \brief Create the context to process a document with the pattern matcher

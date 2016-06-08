@@ -34,7 +34,7 @@ public:
 	};
 
 	/// \brief Define a pattern for the text matcher
-	/// \param[in] id identifier given to the substring matching the pattern, 0 if the pattern is invisible.
+	/// \param[in] id identifier given to the substring matching the pattern, 0 if the pattern is not part of the output.
 	/// \param[in] expression expression string of the pattern
 	/// \param[in] resultIndex index of subexpression that defines the result token, 0 for the whole match
 	/// \param[in] level weight of the pattern. A pattern causes the suppressing of all tokens of lower level that are completely covered by one token of this pattern
@@ -47,8 +47,8 @@ public:
 			unsigned int level,
 			PositionBind posbind)=0;
 
-	/// \brief Define a symbol, an instance of a pattern, that gets a different id
-	/// \param[in] id identifier given to the result substring, 0 if the result term is invisible
+	/// \brief Define a symbol, an instance of a pattern, that gets a different id than the pattern
+	/// \param[in] id identifier given to the result substring, 0 if the result term is not appearing in the output
 	/// \param[in] patternid identifier of the pattern this symbol belongs to
 	/// \param[in] name name (value string) of the symbol
 	virtual void defineSymbol(

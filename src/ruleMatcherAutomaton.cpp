@@ -229,19 +229,19 @@ void ProgramTable::defineEventFrequency( uint32_t eventid, double df)
 
 uint32_t ProgramTable::createProgram( uint32_t positionRange_, const ActionSlotDef& actionSlotDef_)
 {
-	return 1+m_programTable.add( Program( positionRange_, actionSlotDef_));
+	return 1+m_programMap.add( Program( positionRange_, actionSlotDef_));
 }
 
 void ProgramTable::createTrigger( uint32_t programidx, uint32_t event, bool isKeyEvent, Trigger::SigType sigtype, uint32_t sigval, uint32_t variable, float weight)
 {
-	Program& program = m_programTable[ programidx-1];
+	Program& program = m_programMap[ programidx-1];
 	m_triggerList.push( program.triggerListIdx, TriggerDef( event, isKeyEvent, sigtype, sigval, variable, weight));
 	m_eventOccurrenceMap[ event] += 1;
 }
 
 void ProgramTable::doneProgram( uint32_t programidx)
 {
-	Program& program = m_programTable[ programidx-1];
+	Program& program = m_programMap[ programidx-1];
 	uint32_t triggerListIdx = program.triggerListIdx;
 	const TriggerDef* trigger;
 
@@ -256,7 +256,7 @@ void ProgramTable::doneProgram( uint32_t programidx)
 
 void ProgramTable::defineProgramResult( uint32_t programidx, uint32_t eventid, uint32_t resultHandle)
 {
-	Program& program = m_programTable[ programidx-1];
+	Program& program = m_programMap[ programidx-1];
 	program.slotDef.event = eventid;
 	program.slotDef.resultHandle = resultHandle;
 }
@@ -406,8 +406,44 @@ ProgramTable::Statistics ProgramTable::getProgramStatistics() const
 	return rt;
 }
 
+void ProgramTable::eliminateUnusedEvents()
+{
+	std::set<uint32_t> usedEvents;
+	std::set<uint32_t> programs;
+	EventProgamTriggerMap::const_iterator
+		ei = m_eventProgamTriggerMap.begin(),
+		ee = m_eventProgamTriggerMap.end();
+	for (; ei != ee; ++ei)
+	{
+		uint32_t prglist = ei->second;
+		const ProgramTrigger* programTrigger;
+		while (0!=(programTrigger=m_programTriggerList.nextptr( prglist)))
+		{
+			programs.insert( programTrigger->programidx);
+			const Program& program = m_programMap[ programTrigger->programidx-1];
+			uint32_t triggerlistitr = program.triggerListIdx;
+			const TriggerDef* trigger;
+			while (0!=(trigger = m_triggerList.nextptr( triggerlistitr)))
+			{
+				usedEvents.insert( trigger->event);
+			}
+		}
+	}
+	std::set<uint32_t>::const_iterator gi = programs.begin(), ge = programs.end();
+	for (; gi != ge; ++gi)
+	{
+		Program& program = m_programMap[ *gi-1];
+		if (usedEvents.find( program.slotDef.event) == usedEvents.end())
+		{
+			program.slotDef.event = 0;
+		}
+	}
+}
+
 void ProgramTable::optimize( OptimizeOptions& opt)
 {
+	eliminateUnusedEvents();
+
 	// Evaluate the key event identifiers to replace:
 	std::vector<uint32_t> eventsToMove;
 	{
@@ -445,7 +481,7 @@ void ProgramTable::optimize( OptimizeOptions& opt)
 		const ProgramTrigger* programTrigger;
 		while (0!=(programTrigger=m_programTriggerList.nextptr( prglist)))
 		{
-			Program& program = m_programTable[ programTrigger->programidx-1];
+			Program& program = m_programMap[ programTrigger->programidx-1];
 			uint32_t alt_eventid;
 			if (!programTrigger->past_eventid
 			&&  opt.maxRange >= program.positionRange
@@ -634,8 +670,9 @@ void StateMachine::fireTrigger(
 			}
 			break;
 		case Trigger::SigSequence:
-			if (trigger.sigval() == slot.value)
+			if (trigger.sigval() == slot.value && slot.end_ordpos < data.ordpos)
 			{
+				slot.end_ordpos = data.ordpos;
 				slot.value = trigger.sigval()-1;
 				if (slot.count > 0)
 				{
@@ -777,9 +814,8 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 		DisposeRuleList disposeRuleList( disposeRuleList_alloca, NofDisposeRules);
 
 		EventStruct follow = followList[ ei];
-		// Install triggered programs:
-		installEventPrograms( follow.eventid, follow.data, followList, disposeRuleList);
 
+		// Fire triggers waiting for this event:
 		m_eventTriggerTable.getTriggers( triggers, follow.eventid);
 		EventTriggerTable::TriggerRefList::const_iterator
 			ti = triggers.begin(), te = triggers.end();
@@ -790,6 +826,10 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 
 			fireTrigger( slot, trigger, follow.data, disposeRuleList, followList);
 		}
+		// Install triggered programs:
+		installEventPrograms( follow.eventid, follow.data, followList, disposeRuleList);
+
+		// Deactivate rules that got a signal to be deleted:
 		DisposeRuleList::const_iterator
 			di = disposeRuleList.begin(), de = disposeRuleList.end();
 		for (; di != de; ++di)
@@ -803,6 +843,7 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 		{
 			m_stopWordsEventLogMap[ follow.eventid] = EventLog( follow.data, ++m_timestmp);
 		}
+		// Release event data not referenced by any active rule:
 		else if (follow.data.subdataref)
 		{
 			disposeEventDataReference( follow.data.subdataref);
@@ -900,6 +941,15 @@ void StateMachine::installEventPrograms( uint32_t event, const EventData& data, 
 #endif
 }
 
+static bool triggerDefNeedsInstall( const TriggerDef& triggerDef, const ActionSlot& slot)
+{
+	if ((Trigger::SigType)triggerDef.sigtype == Trigger::SigAny && slot.count > 1)
+	{
+		return true;
+	}
+	return false;
+}
+
 void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& programTrigger, const EventData& data, EventStructList& followList, DisposeRuleList& disposeRuleList)
 {
 	const Program& program = (*m_programTable)[ programTrigger.programidx];
@@ -912,16 +962,26 @@ void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& prog
 			ActionSlot( program.slotDef.initsigval, program.slotDef.initcount,
 					program.slotDef.event, ruleidx, program.slotDef.resultHandle));
 
+	ActionSlot& slot = m_actionSlotTable[ rule.actionSlotIdx-1];
 	uint32_t program_triggerListItr = program.triggerListIdx;
 	const TriggerDef* triggerDef;
 
 	while (0!=(triggerDef=m_programTable->triggerList().nextptr( program_triggerListItr)))
 	{
+		bool doInstall = false;
 		if (triggerDef->isKeyEvent && keyevent == triggerDef->event)
 		{
+			if (triggerDefNeedsInstall( *triggerDef, slot))
+			{
+				doInstall = true;
+			}
 			keyTriggerDef = triggerDef;
 		}
 		else
+		{
+			doInstall = true;
+		}
+		if (doInstall)
 		{
 			uint32_t eventTrigger =
 				m_eventTriggerTable.add(
@@ -939,12 +999,11 @@ void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& prog
 		m_nofAltKeyProgramsInstalled += 1;
 		replayPastEvent( programTrigger.past_eventid, rule, program.positionRange);
 	}
-	if (keyTriggerDef && rule.actionSlotIdx)
+	if (keyTriggerDef)
 	{
 		Trigger keyTrigger( rule.actionSlotIdx-1, 
 				(Trigger::SigType)keyTriggerDef->sigtype, keyTriggerDef->sigval,
 				keyTriggerDef->variable, keyTriggerDef->weight);
-		ActionSlot& slot = m_actionSlotTable[ rule.actionSlotIdx-1];
 		fireTrigger( slot, keyTrigger, data, disposeRuleList, followList);
 	}
 }

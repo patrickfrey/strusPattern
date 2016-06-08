@@ -92,12 +92,13 @@ struct ActionSlot
 	uint32_t rule;
 	uint32_t resultHandle;
 	uint32_t start_ordpos;
-	std::size_t start_origpos;
+	uint32_t end_ordpos;
+	uint32_t start_origpos;
 
 	ActionSlot( uint32_t value_, uint32_t count_, uint32_t event_, uint32_t rule_, uint32_t resultHandle_)
-		:value(value_),count(count_),event(event_),rule(rule_),resultHandle(resultHandle_),start_ordpos(0),start_origpos(0){}
+		:value(value_),count(count_),event(event_),rule(rule_),resultHandle(resultHandle_),start_ordpos(0),end_ordpos(0),start_origpos(0){}
 	ActionSlot( const ActionSlot& o)
-		:value(o.value),count(o.count),event(o.event),rule(o.rule),resultHandle(o.resultHandle),start_ordpos(o.start_ordpos),start_origpos(o.start_origpos){}
+		:value(o.value),count(o.count),event(o.event),rule(o.rule),resultHandle(o.resultHandle),start_ordpos(o.start_ordpos),end_ordpos(o.end_ordpos),start_origpos(o.start_origpos){}
 };
 
 struct ActionSlotTableFreeListElem {uint32_t _;uint32_t next;};
@@ -192,14 +193,14 @@ public:
 
 struct EventData
 {
-	std::size_t origpos;
-	std::size_t origsize;
+	uint32_t origpos;
+	uint32_t origsize;
 	uint32_t ordpos;
 	uint32_t subdataref;
 
 	EventData()
 		:origpos(0),origsize(0),ordpos(0),subdataref(0){}
-	EventData( std::size_t origpos_, std::size_t origsize_, uint32_t ordpos_, uint32_t subdataref_)
+	EventData( uint32_t origpos_, uint32_t origsize_, uint32_t ordpos_, uint32_t subdataref_)
 		:origpos(origpos_),origsize(origsize_),ordpos(ordpos_),subdataref(subdataref_){}
 	EventData( const EventData& o)
 		:origpos(o.origpos),origsize(o.origsize),ordpos(o.ordpos),subdataref(o.subdataref){}
@@ -338,7 +339,7 @@ public:
 	void createTrigger( uint32_t program, uint32_t event, bool isKeyEvent, Trigger::SigType sigtype, uint32_t sigval, uint32_t variable, float weight);
 	void doneProgram( uint32_t program);
 
-	const Program& operator[]( uint32_t programidx) const	{return m_programTable[ programidx-1];}
+	const Program& operator[]( uint32_t programidx) const	{return m_programMap[ programidx-1];}
 	const TriggerDefList& triggerList() const		{return m_triggerList;}
 
 	void defineProgramResult( uint32_t programidx, uint32_t eventid, uint32_t resultHandle);
@@ -375,11 +376,13 @@ private:
 	void getDelimTokenStopWordSet( uint32_t triggerListIdx);
 	void defineEventProgram( uint32_t eventid, uint32_t programidx);
 	void defineDisposeRule( uint32_t pos, uint32_t ruleidx);
+	void eliminateUnusedEvents();
 
 private:
 	ActionSlotDefList m_actionSlotArray;
 	TriggerDefList m_triggerList;
-	PodStructTableBase<Program,uint32_t,ProgramTableFreeListElem,BaseAddrProgramTable> m_programTable;
+	typedef PodStructTableBase<Program,uint32_t,ProgramTableFreeListElem,BaseAddrProgramTable> ProgramMap;
+	ProgramMap m_programMap;
 	PodStackPoolBase<ProgramTrigger,uint32_t,BaseAddrProgramList> m_programTriggerList;
 	typedef utils::UnorderedMap<uint32_t,uint32_t> EventProgamTriggerMap;
 	EventProgamTriggerMap m_eventProgamTriggerMap;
