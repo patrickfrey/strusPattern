@@ -248,7 +248,7 @@ static std::string doubleToString( double val_)
 	return val_str.str();
 }
 
-static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptinst, const Document& doc, std::map<std::string,double>& globalstats)
+static unsigned int matchRules( const strus::StreamPatternMatchInstanceInterface* ptinst, const Document& doc, std::map<std::string,double>& globalstats)
 {
 	std::auto_ptr<strus::StreamPatternMatchContextInterface> mt( ptinst->createContext());
 	std::vector<DocumentItem>::const_iterator di = doc.itemar.begin(), de = doc.itemar.end();
@@ -305,6 +305,29 @@ static void printUsage( int argc, const char* argv[])
 	std::cerr << "<docsize> = size of a document" << std::endl;
 	std::cerr << "<nofpatterns> = number of patterns to use" << std::endl;
 	std::cerr << "<joinop> = operator to use for patterns (default all)" << std::endl;
+}
+
+static unsigned int runMatching( const strus::StreamPatternMatchInstanceInterface* ptinst, const std::vector<Document>& docs, std::map<std::string,double>& stats)
+{
+	unsigned int totalNofmatches = 0;
+	std::vector<Document>::const_iterator di = docs.begin(), de = docs.end();
+	for (; di != de; ++di)
+	{
+		std::vector<Document>::const_iterator di = docs.begin(), de = docs.end();
+		for (; di != de; ++di)
+		{
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cout << "document " << di->id << ":" << std::endl;
+#endif
+			unsigned int nofmatches = matchRules( ptinst, *di, stats);
+			totalNofmatches += nofmatches;
+			if (g_errorBuffer->hasError())
+			{
+				throw std::runtime_error("error matching rule");
+			}
+		}
+	}
+	return totalNofmatches;
 }
 
 int main( int argc, const char** argv)
@@ -368,25 +391,18 @@ int main( int argc, const char** argv)
 			throw std::runtime_error( "error creating automaton for evaluating rules");
 		}
 		std::vector<Document> docs = createRandomDocuments( nofDocuments, documentSize, nofFeatures);
-		unsigned int totalNofmatches = 0;
 		std::cerr << "starting rule evaluation ..." << std::endl;
 
-		std::clock_t start = std::clock();
+		time_t start_time;
+		time_t end_time;
+		std::time( &start_time);
+
 		std::map<std::string,double> stats;
-		std::vector<Document>::const_iterator di = docs.begin(), de = docs.end();
-		for (; di != de; ++di)
-		{
-#ifdef STRUS_LOWLEVEL_DEBUG
-			std::cout << "document " << di->id << ":" << std::endl;
-#endif
-			unsigned int nofmatches = matchRules( ptinst.get(), *di, stats);
-			totalNofmatches += nofmatches;
-			if (g_errorBuffer->hasError())
-			{
-				throw std::runtime_error("error matching rule");
-			}
-		}
-		double duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+		unsigned int totalNofmatches = runMatching( ptinst.get(), docs, stats);
+
+		time( &end_time);
+		double duration = std::difftime( end_time, start_time);
+
 		if (g_errorBuffer->hasError())
 		{
 			throw std::runtime_error("uncaugth exception");

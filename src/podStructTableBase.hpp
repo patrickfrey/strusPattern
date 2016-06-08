@@ -98,6 +98,12 @@ public:
 
 	void remove( SIZETYPE idx)
 	{
+#ifdef STRUS_USE_BASEADDR
+		if (idx < BASEADDR)
+		{
+			throw strus::runtime_error(_TXT("removing illegal element from table"));
+		}
+#endif
 #ifdef STRUS_CHECK_FREE_ITEMS
 		m_free_elemtab.insert( idx);
 #else
@@ -120,7 +126,21 @@ public:
 		return Parent::size();
 	}
 #endif
-	
+	void checkTable() const
+	{
+		// Check freelist:
+		SIZETYPE fi = m_freelistidx;
+		while (fi)
+		{
+			fi = ((FREELISTTYPE*)(void*)(&(*this)[ fi-1]))->next;
+#ifdef STRUS_USE_BASEADDR
+			if (fi && fi < BASEADDR)
+			{
+				throw strus::runtime_error(_TXT("check table freelist failed"));
+			}
+#endif
+		}
+	}
 private:
 	void reset(){}		//< forbid usage of inherited method
 

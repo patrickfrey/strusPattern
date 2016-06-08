@@ -999,7 +999,7 @@ void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& prog
 		m_nofAltKeyProgramsInstalled += 1;
 		replayPastEvent( programTrigger.past_eventid, rule, program.positionRange);
 	}
-	if (keyTriggerDef)
+	if (keyTriggerDef && rule.actionSlotIdx)
 	{
 		Trigger keyTrigger( rule.actionSlotIdx-1, 
 				(Trigger::SigType)keyTriggerDef->sigtype, keyTriggerDef->sigval,
