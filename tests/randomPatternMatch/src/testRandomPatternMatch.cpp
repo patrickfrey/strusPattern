@@ -8,6 +8,7 @@
 #include "strus/base/stdint.h"
 #include "strus/lib/stream.hpp"
 #include "strus/lib/error.hpp"
+#include "strus/reference.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/streamPatternMatchInterface.hpp"
 #include "strus/streamPatternMatchInstanceInterface.hpp"
@@ -26,6 +27,8 @@
 #include <cmath>
 #include <cstring>
 #include <iomanip>
+#include <boost/thread.hpp>
+#include <boost/thread/mutex.hpp>
 
 #undef STRUS_LOWLEVEL_DEBUG
 #define RANDINT(MIN,MAX) ((std::rand()%(MAX-MIN))+MIN)
@@ -299,7 +302,7 @@ static unsigned int matchRules( const strus::StreamPatternMatchInstanceInterface
 static void printUsage( int argc, const char* argv[])
 {
 	std::cerr << "usage: " << argv[0] << " [<options>] <features> <nofdocs> <docsize> <nofpatterns> [<joinop>]" << std::endl;
-	std::cerr << "<options>= -h print this usage, -o do optimize automaton" << std::endl;
+	std::cerr << "<options>= -h print this usage, -o do optimize automaton, -t <N> number of threads" << std::endl;
 	std::cerr << "<features>= number of distinct features" << std::endl;
 	std::cerr << "<nofdocs> = number of documents to insert" << std::endl;
 	std::cerr << "<docsize> = size of a document" << std::endl;
@@ -326,21 +329,71 @@ static unsigned int runMatching( const strus::StreamPatternMatchInstanceInterfac
 	return totalNofmatches;
 }
 
+class Globals
+{
+public:
+	explicit Globals( const strus::StreamPatternMatchInstanceInterface* ptinst_)
+		:ptinst(ptinst_){}
+
+	const strus::StreamPatternMatchInstanceInterface* ptinst;
+	std::map<std::string,double> stats;
+	unsigned int totalNofMatches;
+	unsigned int totalNofDocs;
+	std::vector<std::string> errors;
+
+public:
+	void accumulateStats( std::map<std::string,double> addstats, unsigned int nofMatches, unsigned int nofDocs)
+	{
+		boost::mutex::scoped_lock lock( mutex);
+		std::map<std::string,double>::const_iterator
+			li = addstats.begin(), le = addstats.end();
+		for (; li != le; ++li)
+		{
+			stats[ li->first] += li->second;
+		}
+		totalNofMatches += nofMatches;
+		totalNofDocs += nofDocs;
+	}
+
+private:
+	boost::mutex mutex;
+};
+
+class Task
+{
+public:
+	Task( Globals* globals_, const std::vector<Document>& docs_)
+		:m_globals(globals_),m_docs(docs_){}
+	Task( const Task& o)
+		:m_globals(o.m_globals),m_docs(o.m_docs){}
+	~Task(){}
+
+	void run()
+	{
+		std::map<std::string,double> stats;
+		unsigned int nofMatches = runMatching( m_globals->ptinst, m_docs, stats);
+		m_globals->accumulateStats( stats, nofMatches, m_docs.size());
+		if (g_errorBuffer->hasError())
+		{
+			m_globals->errors.push_back( g_errorBuffer->fetchError());
+		}
+	}
+private:
+	Globals* m_globals;
+	std::vector<Document> m_docs;
+};
+
+
 int main( int argc, const char** argv)
 {
 	try
 	{
-		g_errorBuffer = strus::createErrorBuffer_standard( 0, 1);
-		if (!g_errorBuffer)
-		{
-			std::cerr << "construction of error buffer failed" << std::endl;
-			return -1;
-		}
 		if (argc <= 1)
 		{
 			printUsage( argc, argv);
 			return 0;
 		}
+		unsigned int nofThreads = 0;
 		bool doOpimize = false;
 		int argidx = 1;
 		for (; argidx < argc && argv[argidx][0] == '-'; ++argidx)
@@ -354,6 +407,10 @@ int main( int argc, const char** argv)
 			{
 				doOpimize = true;
 			}
+			else if (std::strcmp( argv[argidx], "-t") == 0)
+			{
+				nofThreads = getUintValue( argv[++argidx]);
+			}
 		}
 		if (argc - argidx < 4)
 		{
@@ -366,6 +423,12 @@ int main( int argc, const char** argv)
 			std::cerr << "ERROR too many arguments" << std::endl;
 			printUsage( argc, argv);
 			return 1;
+		}
+		g_errorBuffer = strus::createErrorBuffer_standard( 0, 1+nofThreads);
+		if (!g_errorBuffer)
+		{
+			std::cerr << "construction of error buffer failed" << std::endl;
+			return -1;
 		}
 		unsigned int nofFeatures = getUintValue( argv[ argidx+0]);
 		unsigned int nofDocuments = getUintValue( argv[ argidx+1]);
@@ -386,33 +449,68 @@ int main( int argc, const char** argv)
 		{
 			throw std::runtime_error( "error creating automaton for evaluating rules");
 		}
-		std::vector<Document> docs = createRandomDocuments( nofDocuments, documentSize, nofFeatures);
-		std::cerr << "starting rule evaluation ..." << std::endl;
+		Globals globals( ptinst.get());
+		double duration = 0.0;
+		if (nofThreads)
+		{
+			std::cerr << "starting " << nofThreads << " threads for rule evaluation ..." << std::endl;
+			time_t start_time;
+			time_t end_time;
+			std::time( &start_time);
 
-		time_t start_time;
-		time_t end_time;
-		std::time( &start_time);
+			std::vector<Task> taskar;
+			for (unsigned int ti=0; ti<nofThreads; ++ti)
+			{
+				taskar.push_back( Task( &globals, createRandomDocuments( nofDocuments, documentSize, nofFeatures)));
+			}
+			{
+				boost::thread_group tgroup;
+				for (unsigned int ti=0; ti<nofThreads; ++ti)
+				{
+					tgroup.create_thread( boost::bind( &Task::run, &taskar[ti]));
+				}
+				tgroup.join_all();
+			}
+			time( &end_time);
+			duration = std::difftime( end_time, start_time);
+			if (!globals.errors.empty())
+			{
+				std::vector<std::string>::const_iterator ei = globals.errors.begin(), ee = globals.errors.end();
+				for (; ei != ee; ++ei)
+				{
+					std::cerr << "ERROR in thread: " << *ei << std::endl;
+				}
+			}
+		}
+		else
+		{
+			std::vector<Document> docs = createRandomDocuments( nofDocuments, documentSize, nofFeatures);
+			std::cerr << "starting rule evaluation ..." << std::endl;
+			time_t start_time;
+			time_t end_time;
+			std::time( &start_time);
+	
+			std::map<std::string,double> stats;
+			globals.totalNofMatches = runMatching( ptinst.get(), docs, globals.stats);
+			globals.totalNofDocs = docs.size();
 
-		std::map<std::string,double> stats;
-		unsigned int totalNofmatches = runMatching( ptinst.get(), docs, stats);
-
-		time( &end_time);
-		double duration = std::difftime( end_time, start_time);
-
+			time( &end_time);
+			duration = std::difftime( end_time, start_time);
+		}
 		if (g_errorBuffer->hasError())
 		{
 			throw std::runtime_error("uncaugth exception");
 		}
 		std::cerr << "OK" << std::endl;
-		std::cerr << "processed " << nofPatterns << " patterns on " << docs.size() << " documents with total " << totalNofmatches << " matches in " << doubleToString(duration) << " seconds" << std::endl;
-		std::cerr << "average document stats:" << std::endl;
-		std::map<std::string,double>::const_iterator gi = stats.begin(), ge = stats.end();
+		std::cerr << "processed " << nofPatterns << " patterns on " << globals.totalNofDocs << " documents with total " << globals.totalNofMatches << " matches in " << doubleToString(duration) << " seconds" << std::endl;
+		std::cerr << "statistiscs:" << std::endl;
+		std::map<std::string,double>::const_iterator gi = globals.stats.begin(), ge = globals.stats.end();
 		for (; gi != ge; ++gi)
 		{
 			int value;
 			if (gi->first == "nofTriggersAvgActive")
 			{
-				value = (int)(gi->second/docs.size() + 0.5);
+				value = (int)(gi->second/globals.totalNofDocs + 0.5);
 			}
 			else
 			{
@@ -425,7 +523,7 @@ int main( int argc, const char** argv)
 	}
 	catch (const std::runtime_error& err)
 	{
-		if (g_errorBuffer->hasError())
+		if (g_errorBuffer && g_errorBuffer->hasError())
 		{
 			std::cerr << "error processing pattern matching: "
 					<< g_errorBuffer->fetchError() << " (" << err.what()
