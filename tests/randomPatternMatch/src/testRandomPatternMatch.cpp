@@ -446,7 +446,7 @@ int main( int argc, const char** argv)
 		if (nofThreads)
 		{
 			std::cerr << "starting " << nofThreads << " threads for rule evaluation ..." << std::endl;
-			boost::posix_time::ptime start_time = boost::posix_time::second_clock::local_time();
+			boost::posix_time::ptime start_time = boost::posix_time::microsec_clock::local_time();
 
 			std::vector<Task> taskar;
 			for (unsigned int ti=0; ti<nofThreads; ++ti)
@@ -461,7 +461,7 @@ int main( int argc, const char** argv)
 				}
 				tgroup.join_all();
 			}
-			boost::posix_time::ptime end_time = boost::posix_time::second_clock::local_time();
+			boost::posix_time::ptime end_time = boost::posix_time::microsec_clock::local_time();
 			duration = end_time - start_time;
 			if (!globals.errors.empty())
 			{
@@ -476,13 +476,13 @@ int main( int argc, const char** argv)
 		{
 			std::vector<Document> docs = createRandomDocuments( nofDocuments, documentSize, nofFeatures);
 			std::cerr << "starting rule evaluation ..." << std::endl;
-			boost::posix_time::ptime start_time = boost::posix_time::second_clock::local_time();
+			boost::posix_time::ptime start_time = boost::posix_time::microsec_clock::local_time();
 	
 			std::map<std::string,double> stats;
 			globals.totalNofMatches = runMatching( ptinst.get(), docs, globals.stats);
 			globals.totalNofDocs = docs.size();
 
-			boost::posix_time::ptime end_time = boost::posix_time::second_clock::local_time();
+			boost::posix_time::ptime end_time = boost::posix_time::microsec_clock::local_time();
 			duration = end_time - start_time;
 		}
 		if (g_errorBuffer->hasError())
