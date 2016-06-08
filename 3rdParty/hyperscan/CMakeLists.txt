@@ -94,9 +94,11 @@ else()
     message(FATAL_ERROR "No python interpreter found")
 endif()
 
+IF (WITH_RAGEL STREQUAL "YES")
 if(${RAGEL} STREQUAL "RAGEL-NOTFOUND")
     message(FATAL_ERROR "Ragel state machine compiler not found")
 endif()
+ENDIF (WITH_RAGEL STREQUAL "YES")
 
 option(OPTIMISE "Turns off compiler optimizations (on by default unless debug output enabled or coverage testing)" TRUE)
 
@@ -985,7 +987,9 @@ endif()
 # we want the static lib for testing
 add_library(hs STATIC ${hs_SRCS} $<TARGET_OBJECTS:hs_exec>)
 
+IF (WITH_RAGEL STREQUAL "YES")
 add_dependencies(hs ragel_Parser)
+ENDIF (WITH_RAGEL STREQUAL "YES")
 
 if (NOT BUILD_SHARED_LIBS)
 install(TARGETS hs DESTINATION lib)
@@ -993,7 +997,9 @@ endif()
 
 if (BUILD_STATIC_AND_SHARED OR BUILD_SHARED_LIBS)
     add_library(hs_shared SHARED ${hs_SRCS} $<TARGET_OBJECTS:hs_exec_shared>)
-    add_dependencies(hs_shared ragel_Parser)
+    IF (WITH_RAGEL STREQUAL "YES")
+        add_dependencies(hs_shared ragel_Parser)
+    ENDIF (WITH_RAGEL STREQUAL "YES")
     set_target_properties(hs_shared PROPERTIES
         OUTPUT_NAME hs
         VERSION ${LIB_VERSION}
