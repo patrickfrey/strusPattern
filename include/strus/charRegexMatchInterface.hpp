@@ -5,24 +5,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// \brief Interface for creating an automaton for detecting terms defined as regular expressions
-/// \file "streamTermMatchInterface.hpp"
-#ifndef _STRUS_STREAM_TERM_MATCH_INTERFACE_HPP_INCLUDED
-#define _STRUS_STREAM_TERM_MATCH_INTERFACE_HPP_INCLUDED
+/// \brief Interface for creating an automaton for detecting tokens defined as regular expressions in text
+/// \file "charRegexMatchInterface.hpp"
+#ifndef _STRUS_STREAM_CHAR_REGEX_MATCH_INTERFACE_HPP_INCLUDED
+#define _STRUS_STREAM_CHAR_REGEX_MATCH_INTERFACE_HPP_INCLUDED
 #include <vector>
 #include <string>
 
 namespace strus
 {
 /// \brief Forward declaration
-class StreamTermMatchInstanceInterface;
+class CharRegexMatchInstanceInterface;
 
-/// \brief Interface for creating an automaton for detecting terms defined as regular expressions
-class StreamTermMatchInterface
+/// \brief Interface for creating an automaton for detecting tokens defined as regular expressions in text
+class CharRegexMatchInterface
 {
 public:
 	/// \brief Destructor
-	virtual ~StreamTermMatchInterface(){}
+	virtual ~CharRegexMatchInterface(){}
 
 	/// \brief Options to stear regular expression automaton
 	/// \remark Available options depend on implementation
@@ -54,7 +54,7 @@ public:
 
 	/// \brief Create an instance to build the regular expressions for a term matcher
 	/// \return the term matcher instance
-	virtual StreamTermMatchInstanceInterface* createInstance( const Options& opts) const=0;
+	virtual CharRegexMatchInstanceInterface* createInstance( const Options& opts) const=0;
 };
 
 } //namespace

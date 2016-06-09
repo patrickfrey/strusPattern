@@ -5,29 +5,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// \brief Implementation of an automaton for detecting patterns in a document stream
-/// \file "streamPatternMatch.hpp"
+/// \brief Implementation of an automaton builder for detecting patterns of tokens in a document stream
+/// \file "tokenPatternMatch.hpp"
 #ifndef _STRUS_STREAM_PATTERN_MATCH_IMPLEMENTATION_HPP_INCLUDED
 #define _STRUS_STREAM_PATTERN_MATCH_IMPLEMENTATION_HPP_INCLUDED
-#include "strus/streamPatternMatchInterface.hpp"
+#include "strus/tokenPatternMatchInterface.hpp"
 
 namespace strus
 {
 /// \brief Forward declaration
-class StreamPatternMatchInstanceInterface;
+class TokenPatternMatchInstanceInterface;
 /// \brief Forward declaration
 class ErrorBufferInterface;
 
-/// \brief Implementation of an automaton builder for detecting patterns in a document stream
-class StreamPatternMatch
-	:public StreamPatternMatchInterface
+/// \brief Implementation of an automaton builder for detecting patterns of tokens in a document stream
+class TokenPatternMatch
+	:public TokenPatternMatchInterface
 {
 public:
-	explicit StreamPatternMatch( ErrorBufferInterface* errorhnd_)
+	explicit TokenPatternMatch( ErrorBufferInterface* errorhnd_)
 		:m_errorhnd(errorhnd_){}
-	virtual ~StreamPatternMatch(){}
+	virtual ~TokenPatternMatch(){}
 
-	virtual StreamPatternMatchInstanceInterface* createInstance() const;
+	virtual TokenPatternMatchInstanceInterface* createInstance() const;
 
 private:
 	ErrorBufferInterface* m_errorhnd;

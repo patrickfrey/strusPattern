@@ -5,24 +5,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// \brief Interface for building the automaton for detecting terms defined as regular expressions
-/// \file "streamTermMatchInstanceInterface.hpp"
-#ifndef _STRUS_STREAM_TERM_MATCH_INSTANCE_INTERFACE_HPP_INCLUDED
-#define _STRUS_STREAM_TERM_MATCH_INSTANCE_INTERFACE_HPP_INCLUDED
+/// \brief Interface for building the automaton for detecting tokens defined as regular expressions in text
+/// \file "charRegexMatchInstanceInterface.hpp"
+#ifndef _STRUS_STREAM_CHAR_REGEX_MATCH_INSTANCE_INTERFACE_HPP_INCLUDED
+#define _STRUS_STREAM_CHAR_REGEX_MATCH_INSTANCE_INTERFACE_HPP_INCLUDED
 #include <string>
 
 namespace strus
 {
 
 /// \brief Forward declaration
-class StreamTermMatchContextInterface;
+class CharRegexMatchContextInterface;
 
-/// \brief Interface for building the automaton for detecting terms defined as regular expressions
-class StreamTermMatchInstanceInterface
+/// \brief Interface for building the automaton for detecting tokens defined as regular expressions in text
+class CharRegexMatchInstanceInterface
 {
 public:
 	/// \brief Destructor
-	virtual ~StreamTermMatchInstanceInterface(){}
+	virtual ~CharRegexMatchInstanceInterface(){}
 
 	/// \enum PositionBind
 	/// \brief Determines how document positions are assigned to terms
@@ -33,7 +33,7 @@ public:
 		BindPredecessor		///< An element in the document that gets the ordinal position of the element at the same position or the preceding content element assigned
 	};
 
-	/// \brief Define a pattern for the text matcher
+	/// \brief Define a pattern for this regex matcher
 	/// \param[in] id identifier given to the substring matching the pattern, 0 if the pattern is not part of the output.
 	/// \param[in] expression expression string of the pattern
 	/// \param[in] resultIndex index of subexpression that defines the result token, 0 for the whole match
@@ -56,15 +56,15 @@ public:
 			unsigned int patternid,
 			const std::string& name)=0;
 
-	/// \brief Compile all patterns defined with 'getPatternId(const std::string&)'
+	/// \brief Compile all patterns and symbols defined
 	/// \return true on success, false on error (error reported in error buffer)
 	/// \remark This function has to be called in order to make the patterns active, resp. before calling 'createContext()'
 	virtual bool compile()=0;
 
-	/// \brief Create the context to process a chunk of text with the text matcher
+	/// \brief Create the context to process a chunk of text with this text matcher
 	/// \return the term matcher context
 	/// \remark The context cannot be reset. So the context has to be recreated for every processed unit (document)
-	virtual StreamTermMatchContextInterface* createContext() const=0;
+	virtual CharRegexMatchContextInterface* createContext() const=0;
 };
 
 } //namespace

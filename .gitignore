@@ -27,9 +27,9 @@
 *.exe
 *.out
 *.app
-testSimplePatternMatch
-testRandomPatternMatch
-testRegexTermMatch
+testSimpleTokenPatternMatch
+testRandomTokenPatternMatch
+testCharRegexMatch
 
 # CMake generated files
 CMakeCache.txt

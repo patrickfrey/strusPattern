@@ -5,17 +5,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// \brief Implementation of an automaton for detecting patterns in a document stream
-/// \file "streamPatternMatch.cpp"
-#include "streamPatternMatch.hpp"
+/// \brief Implementation of an automaton for detecting patterns of tokens in a document stream
+/// \file "tokenPatternMatch.cpp"
+#include "tokenPatternMatch.hpp"
 #include "symbolTable.hpp"
 #include "utils.hpp"
 #include "errorUtils.hpp"
 #include "internationalization.hpp"
 #include "strus/stream/patternMatchResultItem.hpp"
 #include "strus/stream/patternMatchResult.hpp"
-#include "strus/streamPatternMatchInstanceInterface.hpp"
-#include "strus/streamPatternMatchContextInterface.hpp"
+#include "strus/tokenPatternMatchInstanceInterface.hpp"
+#include "strus/tokenPatternMatchContextInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "ruleMatcherAutomaton.hpp"
 #include <map>
@@ -29,9 +29,9 @@
 using namespace strus;
 using namespace strus::stream;
 
-struct StreamPatternMatchData
+struct TokenPatternMatchData
 {
-	StreamPatternMatchData(){}
+	TokenPatternMatchData(){}
 
 	SymbolTable variableMap;
 	SymbolTable patternMap;
@@ -45,17 +45,17 @@ static uint32_t eventHandle( PatternEventType type_, uint32_t idx)
 	return idx | ((uint32_t)type_ << 30);
 }
 
-class StreamPatternMatchContext
-	:public StreamPatternMatchContextInterface
+class TokenPatternMatchContext
+	:public TokenPatternMatchContextInterface
 {
 public:
-	StreamPatternMatchContext( const StreamPatternMatchData* data_, ErrorBufferInterface* errorhnd_)
+	TokenPatternMatchContext( const TokenPatternMatchData* data_, ErrorBufferInterface* errorhnd_)
 		:m_errorhnd(errorhnd_),m_data(data_),m_statemachine(&data_->programTable),m_nofEvents(0),m_curPosition(0){}
 
-	virtual ~StreamPatternMatchContext()
+	virtual ~TokenPatternMatchContext()
 	{}
 
-	virtual void putInput( const PatternMatchTerm& term)
+	virtual void putInput( const PatternMatchToken& term)
 	{
 		try
 		{
@@ -79,14 +79,14 @@ public:
 		CATCH_ERROR_MAP( "failed to feed input to pattern matcher: %s", *m_errorhnd);
 	}
 
-	void gatherResultItems( std::vector<PatternMatchResultItem>& resitemlist, uint32_t dataref) const
+	void gatherResultItems( std::vector<TokenPatternMatchResultItem>& resitemlist, uint32_t dataref) const
 	{
 		uint32_t itemList = m_statemachine.getEventDataItemListIdx( dataref);
 		const EventItem* item;
 		while (0!=(item=m_statemachine.nextResultItem( itemList)))
 		{
 			const char* itemName = m_data->variableMap.key( item->variable);
-			PatternMatchResultItem rtitem( itemName, item->data.ordpos, item->data.origpos, item->data.origsize, item->weight);
+			TokenPatternMatchResultItem rtitem( itemName, item->data.ordpos, item->data.origpos, item->data.origsize, item->weight);
 			resitemlist.push_back( rtitem);
 			if (item->data.subdataref)
 			{
@@ -95,11 +95,11 @@ public:
 		}
 	}
 
-	virtual std::vector<stream::PatternMatchResult> fetchResults() const
+	virtual std::vector<stream::TokenPatternMatchResult> fetchResults() const
 	{
 		try
 		{
-			std::vector<stream::PatternMatchResult> rt;
+			std::vector<stream::TokenPatternMatchResult> rt;
 			const StateMachine::ResultList& results = m_statemachine.results();
 			rt.reserve( results.size());
 			std::size_t ai = 0, ae = results.size();
@@ -107,49 +107,49 @@ public:
 			{
 				const Result& result = results[ ai];
 				const char* resultName = m_data->patternMap.key( result.resultHandle);
-				std::vector<PatternMatchResultItem> rtitemlist;
+				std::vector<TokenPatternMatchResultItem> rtitemlist;
 				if (result.eventDataReferenceIdx)
 				{
 					gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
 				}
-				rt.push_back( PatternMatchResult( resultName, rtitemlist));
+				rt.push_back( TokenPatternMatchResult( resultName, rtitemlist));
 			}
 			return rt;
 		}
-		CATCH_ERROR_MAP_RETURN( "failed to fetch pattern match result: %s", *m_errorhnd, std::vector<stream::PatternMatchResult>());
+		CATCH_ERROR_MAP_RETURN( "failed to fetch pattern match result: %s", *m_errorhnd, std::vector<stream::TokenPatternMatchResult>());
 	}
 
-	virtual PatternMatchStatistics getStatistics() const
+	virtual TokenPatternMatchStatistics getStatistics() const
 	{
 		try
 		{
-			PatternMatchStatistics stats;
+			TokenPatternMatchStatistics stats;
 			stats.define( "nofProgramsInstalled", m_statemachine.nofProgramsInstalled());
 			stats.define( "nofAltKeyProgramsInstalled", m_statemachine.nofAltKeyProgramsInstalled());
 			stats.define( "nofTriggersFired", m_statemachine.nofTriggersFired());
 			stats.define( "nofTriggersAvgActive", m_statemachine.nofOpenPatterns() / m_nofEvents);
 			return stats;
 		}
-		CATCH_ERROR_MAP_RETURN( "failed to get pattern match statistics: %s", *m_errorhnd, PatternMatchStatistics());
+		CATCH_ERROR_MAP_RETURN( "failed to get pattern match statistics: %s", *m_errorhnd, TokenPatternMatchStatistics());
 	}
 
 private:
 	ErrorBufferInterface* m_errorhnd;
-	const StreamPatternMatchData* m_data;
+	const TokenPatternMatchData* m_data;
 	StateMachine m_statemachine;
 	unsigned int m_nofEvents;
 	unsigned int m_curPosition;
 };
 
 /// \brief Interface for building the automaton for detecting patterns in a document stream
-class StreamPatternMatchInstance
-	:public StreamPatternMatchInstanceInterface
+class TokenPatternMatchInstance
+	:public TokenPatternMatchInstanceInterface
 {
 public:
-	explicit StreamPatternMatchInstance( ErrorBufferInterface* errorhnd_)
+	explicit TokenPatternMatchInstance( ErrorBufferInterface* errorhnd_)
 		:m_errorhnd(errorhnd_),m_expression_event_cnt(0){}
 
-	virtual ~StreamPatternMatchInstance(){}
+	virtual ~TokenPatternMatchInstance(){}
 
 	virtual void defineTermFrequency( unsigned int termid, double df)
 	{
@@ -337,11 +337,11 @@ public:
 		CATCH_ERROR_MAP( "failed to close pattern definition on the pattern match expression stack: %s", *m_errorhnd);
 	}
 
-	virtual StreamPatternMatchContextInterface* createContext() const
+	virtual TokenPatternMatchContextInterface* createContext() const
 	{
 		try
 		{
-			return new StreamPatternMatchContext( &m_data, m_errorhnd);
+			return new TokenPatternMatchContext( &m_data, m_errorhnd);
 		}
 		CATCH_ERROR_MAP_RETURN( "failed to create pattern match context: %s", *m_errorhnd, 0);
 	}
@@ -367,7 +367,7 @@ public:
 	}
 #endif
 
-	virtual void optimize( const OptimizeOptions& opt)
+	virtual void optimize( const TokenPatternMatchOptimizeOptions& opt)
 	{
 		try
 		{
@@ -407,17 +407,17 @@ private:
 
 private:
 	ErrorBufferInterface* m_errorhnd;
-	StreamPatternMatchData m_data;
+	TokenPatternMatchData m_data;
 	std::vector<StackElement> m_stack;
 	uint32_t m_expression_event_cnt;
 };
 
 
-StreamPatternMatchInstanceInterface* StreamPatternMatch::createInstance() const
+TokenPatternMatchInstanceInterface* TokenPatternMatch::createInstance() const
 {
 	try
 	{
-		return new StreamPatternMatchInstance( m_errorhnd);
+		return new TokenPatternMatchInstance( m_errorhnd);
 	}
 	CATCH_ERROR_MAP_RETURN( "failed to create pattern match instance: %s", *m_errorhnd, 0);
 }

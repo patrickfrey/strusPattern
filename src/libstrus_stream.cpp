@@ -9,8 +9,8 @@
 /// \file libstrus_stream.cpp
 #include "strus/lib/stream.hpp"
 #include "strus/errorBufferInterface.hpp"
-#include "streamPatternMatch.hpp"
-#include "streamTermMatch.hpp"
+#include "tokenPatternMatch.hpp"
+#include "charRegexMatch.hpp"
 #include "strus/base/dll_tags.hpp"
 #include "internationalization.hpp"
 #include "errorUtils.hpp"
@@ -18,7 +18,7 @@
 using namespace strus;
 static bool g_intl_initialized = false;
 
-DLL_PUBLIC StreamPatternMatchInterface* strus::createStreamPatternMatch_standard( ErrorBufferInterface* errorhnd)
+DLL_PUBLIC TokenPatternMatchInterface* strus::createTokenPatternMatch_standard( ErrorBufferInterface* errorhnd)
 {
 	try
 	{
@@ -27,12 +27,12 @@ DLL_PUBLIC StreamPatternMatchInterface* strus::createStreamPatternMatch_standard
 			strus::initMessageTextDomain();
 			g_intl_initialized = true;
 		}
-		return new StreamPatternMatch( errorhnd);
+		return new TokenPatternMatch( errorhnd);
 	}
-	CATCH_ERROR_MAP_RETURN( _TXT("error stream pattern match interface: %s"), *errorhnd, 0);
+	CATCH_ERROR_MAP_RETURN( _TXT("error creating token pattern match interface: %s"), *errorhnd, 0);
 }
 
-DLL_PUBLIC StreamTermMatchInterface* strus::createStreamTermMatch_standard( ErrorBufferInterface* errorhnd)
+DLL_PUBLIC CharRegexMatchInterface* strus::createCharRegexMatch_standard( ErrorBufferInterface* errorhnd)
 {
 	try
 	{
@@ -41,8 +41,8 @@ DLL_PUBLIC StreamTermMatchInterface* strus::createStreamTermMatch_standard( Erro
 			strus::initMessageTextDomain();
 			g_intl_initialized = true;
 		}
-		return new StreamTermMatch( errorhnd);
+		return new CharRegexMatch( errorhnd);
 	}
-	CATCH_ERROR_MAP_RETURN( _TXT("error stream term match interface: %s"), *errorhnd, 0);
+	CATCH_ERROR_MAP_RETURN( _TXT("error creating char regex match interface: %s"), *errorhnd, 0);
 }
 

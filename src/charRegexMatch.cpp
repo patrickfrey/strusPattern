@@ -5,12 +5,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// \brief Implementation of detecting terms defined as regular expressions
-/// \file "streamTermMatch.hpp"
-#include "streamTermMatch.hpp"
-#include "strus/stream/patternMatchTerm.hpp"
-#include "strus/streamTermMatchInstanceInterface.hpp"
-#include "strus/streamTermMatchContextInterface.hpp"
+/// \brief Implementation of detecting tokens defined as regular expressions on text
+/// \file "charRegexMatch.hpp"
+#include "charRegexMatch.hpp"
+#include "strus/stream/patternMatchToken.hpp"
+#include "strus/charRegexMatchInstanceInterface.hpp"
+#include "strus/charRegexMatchContextInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/reference.hpp"
 #include "strus/base/stdint.h"
@@ -41,14 +41,14 @@ public:
 		:m_expression()
 		,m_subexpref(0)
 		,m_id(0)
-		,m_posbind(StreamTermMatchInstanceInterface::BindContent)
+		,m_posbind(CharRegexMatchInstanceInterface::BindContent)
 		,m_level(0)
 		,m_symtabref(0){}
 	PatternDef(
 			const std::string& expression_,
 			unsigned int subexpref_,
 			unsigned int id_,
-			StreamTermMatchInstanceInterface::PositionBind posbind_,
+			CharRegexMatchInstanceInterface::PositionBind posbind_,
 			unsigned int level_,
 			unsigned int symtabref_=0)
 		:m_expression(expression_)
@@ -91,9 +91,9 @@ public:
 	{
 		return m_id;
 	}
-	StreamTermMatchInstanceInterface::PositionBind posbind() const
+	CharRegexMatchInstanceInterface::PositionBind posbind() const
 	{
-		return (StreamTermMatchInstanceInterface::PositionBind)m_posbind;
+		return (CharRegexMatchInstanceInterface::PositionBind)m_posbind;
 	}
 	unsigned int level() const
 	{
@@ -176,7 +176,7 @@ public:
 			const std::string& expression,
 			unsigned int resultIndex,
 			unsigned int level,
-			StreamTermMatchInstanceInterface::PositionBind posbind)
+			CharRegexMatchInstanceInterface::PositionBind posbind)
 	{
 		unsigned int subexpref = 0;
 		if (resultIndex)
@@ -336,11 +336,11 @@ struct MatchEvent
 		:id(o.id),level(o.level),posbind(o.posbind),origsize(o.origsize),origpos(o.origpos){}
 };
 
-class StreamTermMatchContext
-	:public StreamTermMatchContextInterface
+class CharRegexMatchContext
+	:public CharRegexMatchContextInterface
 {
 public:
-	StreamTermMatchContext( const TermMatchData* data_, ErrorBufferInterface* errorhnd_)
+	CharRegexMatchContext( const TermMatchData* data_, ErrorBufferInterface* errorhnd_)
 		:m_errorhnd(errorhnd_),m_data(data_),m_hs_scratch(0),m_src(0)
 	{
 		hs_error_t err = hs_alloc_scratch( m_data->patterndb, &m_hs_scratch);
@@ -350,14 +350,14 @@ public:
 		}
 	}
 
-	virtual ~StreamTermMatchContext()
+	virtual ~CharRegexMatchContext()
 	{
 		hs_free_scratch( m_hs_scratch);
 	}
 
 	static int match_event_handler( unsigned int id, unsigned_long_long from, unsigned_long_long to, unsigned int, void *context)
 	{
-		StreamTermMatchContext* THIS = (StreamTermMatchContext*)context;
+		CharRegexMatchContext* THIS = (CharRegexMatchContext*)context;
 		try
 		{
 			if (to - from >= std::numeric_limits<uint16_t>::max())
@@ -463,11 +463,11 @@ public:
 		}
 	}
 
-	virtual std::vector<stream::PatternMatchTerm> match( const char* src, std::size_t srclen)
+	virtual std::vector<stream::PatternMatchToken> match( const char* src, std::size_t srclen)
 	{
 		try
 		{
-			std::vector<stream::PatternMatchTerm> rt;
+			std::vector<stream::PatternMatchToken> rt;
 			unsigned int nofExpectedTokens = srclen / 4 + 10;
 			m_matchEventAr.reserve( nofExpectedTokens);
 			m_src = src;
@@ -496,18 +496,18 @@ public:
 			uint32_t origpos = 0;
 			for (; mi != me; ++mi)
 			{
-				switch ((StreamTermMatchInstanceInterface::PositionBind)mi->posbind)
+				switch ((CharRegexMatchInstanceInterface::PositionBind)mi->posbind)
 				{
-					case StreamTermMatchInstanceInterface::BindContent:
+					case CharRegexMatchInstanceInterface::BindContent:
 						ordpos = 1;
 						origpos = mi->origpos;
-						rt.push_back( stream::PatternMatchTerm( mi->id, 1, mi->origpos, mi->origsize));
+						rt.push_back( stream::PatternMatchToken( mi->id, 1, mi->origpos, mi->origsize));
 						++mi;
 						goto EXITLOOP;
-					case StreamTermMatchInstanceInterface::BindSuccessor:
-						rt.push_back( stream::PatternMatchTerm( mi->id, 1, mi->origpos, mi->origsize));
+					case CharRegexMatchInstanceInterface::BindSuccessor:
+						rt.push_back( stream::PatternMatchToken( mi->id, 1, mi->origpos, mi->origsize));
 						break;
-					case StreamTermMatchInstanceInterface::BindPredecessor:
+					case CharRegexMatchInstanceInterface::BindPredecessor:
 						break;
 				}
 			}
@@ -518,28 +518,28 @@ public:
 			}
 			for (; mi != me; ++mi)
 			{
-				switch ((StreamTermMatchInstanceInterface::PositionBind)mi->posbind)
+				switch ((CharRegexMatchInstanceInterface::PositionBind)mi->posbind)
 				{
-					case StreamTermMatchInstanceInterface::BindContent:
+					case CharRegexMatchInstanceInterface::BindContent:
 						if (mi->origpos > origpos)
 						{
 							origpos = mi->origpos;
 							++ordpos;
 						}
-						rt.push_back( stream::PatternMatchTerm( mi->id, ordpos, mi->origpos, mi->origsize));
+						rt.push_back( stream::PatternMatchToken( mi->id, ordpos, mi->origpos, mi->origsize));
 						break;
-					case StreamTermMatchInstanceInterface::BindSuccessor:
-						rt.push_back( stream::PatternMatchTerm( mi->id, ordpos+1, mi->origpos, mi->origsize));
+					case CharRegexMatchInstanceInterface::BindSuccessor:
+						rt.push_back( stream::PatternMatchToken( mi->id, ordpos+1, mi->origpos, mi->origsize));
 						break;
-					case StreamTermMatchInstanceInterface::BindPredecessor:
-						rt.push_back( stream::PatternMatchTerm( mi->id, ordpos, mi->origpos, mi->origsize));
+					case CharRegexMatchInstanceInterface::BindPredecessor:
+						rt.push_back( stream::PatternMatchToken( mi->id, ordpos, mi->origpos, mi->origsize));
 						break;
 				}
 			}
 			m_matchEventAr.clear();
 			return rt;
 		}
-		CATCH_ERROR_MAP_RETURN( "failed to run pattern matching terms with regular expressions: %s", *m_errorhnd, std::vector<stream::PatternMatchTerm>());
+		CATCH_ERROR_MAP_RETURN( "failed to run pattern matching terms with regular expressions: %s", *m_errorhnd, std::vector<stream::PatternMatchToken>());
 	}
 
 private:
@@ -550,15 +550,15 @@ private:
 	std::vector<MatchEvent> m_matchEventAr;
 };
 
-class StreamTermMatchInstance
-	:public StreamTermMatchInstanceInterface
+class CharRegexMatchInstance
+	:public CharRegexMatchInstanceInterface
 {
 public:
-	explicit StreamTermMatchInstance( unsigned int options, ErrorBufferInterface* errorhnd_)
+	explicit CharRegexMatchInstance( unsigned int options, ErrorBufferInterface* errorhnd_)
 		:m_errorhnd(errorhnd_),m_data(options),m_state(DefinitionPhase)
 	{}
 
-	virtual ~StreamTermMatchInstance(){}
+	virtual ~CharRegexMatchInstance(){}
 
 	virtual void definePattern(
 			unsigned int id,
@@ -639,7 +639,7 @@ public:
 		CATCH_ERROR_MAP_RETURN( "failed to compile regular expression patterns: %s", *m_errorhnd, false);
 	}
 
-	virtual StreamTermMatchContextInterface* createContext() const
+	virtual CharRegexMatchContextInterface* createContext() const
 	{
 		try
 		{
@@ -647,7 +647,7 @@ public:
 			{
 				throw strus::runtime_error(_TXT("called create context without calling 'compile'"));
 			}
-			return new StreamTermMatchContext( &m_data, m_errorhnd);
+			return new CharRegexMatchContext( &m_data, m_errorhnd);
 		}
 		CATCH_ERROR_MAP_RETURN( "failed to create term match context: %s", *m_errorhnd, 0);
 	}
@@ -658,10 +658,10 @@ private:
 	State m_state;
 };
 
-static unsigned int getFlags( const StreamTermMatchInterface::Options& opts)
+static unsigned int getFlags( const CharRegexMatchInterface::Options& opts)
 {
 	unsigned int rt = 0;
-	StreamTermMatchInterface::Options::const_iterator ai = opts.begin(), ae = opts.end();
+	CharRegexMatchInterface::Options::const_iterator ai = opts.begin(), ae = opts.end();
 	for (; ai != ae; ++ai)
 	{
 		if (utils::caseInsensitiveEquals( *ai, "CASELESS"))
@@ -692,12 +692,12 @@ static unsigned int getFlags( const StreamTermMatchInterface::Options& opts)
 	return rt;
 }
 
-StreamTermMatchInstanceInterface* StreamTermMatch::createInstance( const Options& opts) const
+CharRegexMatchInstanceInterface* CharRegexMatch::createInstance( const Options& opts) const
 {
 	try
 	{
 		unsigned int options = getFlags( opts);
-		return new StreamTermMatchInstance( options, m_errorhnd);
+		return new CharRegexMatchInstance( options, m_errorhnd);
 	}
 	CATCH_ERROR_MAP_RETURN( "failed to create term match instance: %s", *m_errorhnd, 0);
 }

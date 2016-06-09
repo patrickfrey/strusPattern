@@ -9,10 +9,10 @@
 #include "strus/lib/stream.hpp"
 #include "strus/lib/error.hpp"
 #include "strus/errorBufferInterface.hpp"
-#include "strus/streamTermMatchInterface.hpp"
-#include "strus/streamTermMatchInstanceInterface.hpp"
-#include "strus/streamTermMatchContextInterface.hpp"
-#include "strus/stream/patternMatchTerm.hpp"
+#include "strus/charRegexMatchInterface.hpp"
+#include "strus/charRegexMatchInstanceInterface.hpp"
+#include "strus/charRegexMatchContextInterface.hpp"
+#include "strus/stream/patternMatchToken.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
@@ -64,14 +64,14 @@ struct TestDef
 	ResultDef result[128];
 };
 
-static void compile( strus::StreamTermMatchInstanceInterface* ptinst, const PatternDef* par, const SymbolDef* sar)
+static void compile( strus::CharRegexMatchInstanceInterface* ptinst, const PatternDef* par, const SymbolDef* sar)
 {
 	std::size_t pi = 0;
 	for (; par[pi].expression; ++pi)
 	{
-		strus::StreamTermMatchInstanceInterface::PositionBind posbind = par[pi].haspos
-			? strus::StreamTermMatchInstanceInterface::BindContent
-			: strus::StreamTermMatchInstanceInterface::BindPredecessor;
+		strus::CharRegexMatchInstanceInterface::PositionBind posbind = par[pi].haspos
+			? strus::CharRegexMatchInstanceInterface::BindContent
+			: strus::CharRegexMatchInstanceInterface::BindPredecessor;
 		ptinst->definePattern( par[pi].id, par[pi].expression, par[pi].resultIndex, par[pi].level, posbind);
 	}
 	for (pi=0; sar[pi].name; ++pi)
@@ -84,14 +84,14 @@ static void compile( strus::StreamTermMatchInstanceInterface* ptinst, const Patt
 	}
 }
 
-static std::vector<strus::stream::PatternMatchTerm>
-	match( strus::StreamTermMatchInstanceInterface* ptinst, const std::string& src)
+static std::vector<strus::stream::PatternMatchToken>
+	match( strus::CharRegexMatchInstanceInterface* ptinst, const std::string& src)
 {
-	std::auto_ptr<strus::StreamTermMatchContextInterface> mt( ptinst->createContext());
-	std::vector<strus::stream::PatternMatchTerm> rt = mt->match( src.c_str(), src.size());
+	std::auto_ptr<strus::CharRegexMatchContextInterface> mt( ptinst->createContext());
+	std::vector<strus::stream::PatternMatchToken> rt = mt->match( src.c_str(), src.size());
 
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::vector<strus::stream::PatternMatchTerm>::const_iterator
+	std::vector<strus::stream::PatternMatchToken>::const_iterator
 		ri = rt.begin(), re = rt.end();
 	for (; ri != re; ++ri)
 	{
@@ -186,15 +186,15 @@ int main( int argc, const char** argv)
 			std::cerr << "too many arguments" << std::endl;
 			return 1;
 		}
-		std::auto_ptr<strus::StreamTermMatchInterface> pt( strus::createStreamTermMatch_standard( g_errorBuffer));
+		std::auto_ptr<strus::CharRegexMatchInterface> pt( strus::createCharRegexMatch_standard( g_errorBuffer));
 		if (!pt.get()) throw std::runtime_error("failed to create regular expression term matcher");
 		std::size_t ti = 0;
 		for (; g_tests[ti].src; ++ti)
 		{
 			std::cerr << "executing test " << ti << ":" << std::endl;
-			strus::StreamTermMatchInterface::Options opt;
+			strus::CharRegexMatchInterface::Options opt;
 			opt("DOTALL");
-			std::auto_ptr<strus::StreamTermMatchInstanceInterface> ptinst( pt->createInstance( opt));
+			std::auto_ptr<strus::CharRegexMatchInstanceInterface> ptinst( pt->createInstance( opt));
 			if (!ptinst.get()) throw std::runtime_error("failed to create regular expression term matcher instance");
 
 			compile( ptinst.get(), g_tests[ti].patterns, g_tests[ti].symbols);
@@ -202,8 +202,8 @@ int main( int argc, const char** argv)
 			{
 				throw std::runtime_error( "error building automaton for test");
 			}
-			std::vector<strus::stream::PatternMatchTerm> result = match( ptinst.get(), g_tests[ti].src);
-			std::vector<strus::stream::PatternMatchTerm>::const_iterator ri = result.begin(), re = result.end();
+			std::vector<strus::stream::PatternMatchToken> result = match( ptinst.get(), g_tests[ti].src);
+			std::vector<strus::stream::PatternMatchToken>::const_iterator ri = result.begin(), re = result.end();
 			std::size_t ridx=0;
 			const ResultDef* expected = g_tests[ti].result;
 			for (; ri != re && expected[ridx].origsize != 0; ++ridx,++ri)

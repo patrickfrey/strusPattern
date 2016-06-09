@@ -5,24 +5,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// \brief Interface for building the automaton for detecting patterns in a document stream
-/// \file "streamPatternMatchInstanceInterface.hpp"
-#ifndef _STRUS_STREAM_PATTERN_MATCH_INSTANCE_INTERFACE_HPP_INCLUDED
-#define _STRUS_STREAM_PATTERN_MATCH_INSTANCE_INTERFACE_HPP_INCLUDED
+/// \brief Interface for building the automaton for detecting patterns of tokens in a document stream
+/// \file "tokenPatternMatchInstanceInterface.hpp"
+#ifndef _STRUS_STREAM_TOKEN_PATTERN_MATCH_INSTANCE_INTERFACE_HPP_INCLUDED
+#define _STRUS_STREAM_TOKEN_PATTERN_MATCH_INSTANCE_INTERFACE_HPP_INCLUDED
+#include "strus/stream/tokenPatternMatchOptimizeOptions.hpp"
 #include <string>
 
 namespace strus
 {
 
 /// \brief Forward declaration
-class StreamPatternMatchContextInterface;
+class TokenPatternMatchContextInterface;
 
-/// \brief Interface for building the automaton for detecting patterns in a document stream
-class StreamPatternMatchInstanceInterface
+/// \brief Interface for building the automaton for detecting patterns of tokens in a document stream
+class TokenPatternMatchInstanceInterface
 {
 public:
 	/// \brief Destructor
-	virtual ~StreamPatternMatchInstanceInterface(){}
+	virtual ~TokenPatternMatchInstanceInterface(){}
 
 	/// \brief Define a relative document term frequency used for optimization of the automaton
 	/// \param[in] termid term identifier
@@ -69,30 +70,14 @@ public:
 	/// \param[in] visible true, if the pattern result should be exported (be visible in the final result)
 	virtual void closePattern( const std::string& name, bool visible)=0;
 
-	/// \brief Structure with options for optimization of the pattern evaluation program
-	struct OptimizeOptions
-	{
-		float stopwordOccurrenceFactor;		///< The bias for the factor number of programs with a specific keyword divided by the number of programs defined that decides wheter we try to find another key event for the program.
-		float weightFactor;			///< factor of weight an alternative key event of a pattern must exceed to be considered as alternative.
-		uint32_t maxRange;			///< Maximum proximity range a program must have in order to be triggered by an alternative key event.
-
-		///\brief Constructor
-		OptimizeOptions()
-			:stopwordOccurrenceFactor(0.01f),weightFactor(10.0f),maxRange(5){}
-		OptimizeOptions( float stopwordOccurrenceFactor_, float weightFactor_, uint32_t maxRange_)
-			:stopwordOccurrenceFactor(stopwordOccurrenceFactor_),weightFactor(weightFactor_),maxRange(maxRange_){}
-		///\brief Copy constructor
-		OptimizeOptions( const OptimizeOptions& o)
-			:stopwordOccurrenceFactor(o.stopwordOccurrenceFactor),weightFactor(o.weightFactor),maxRange(o.maxRange){}
-	};
 	/// \brief Try to optimize the program if possible by setting initial key events of the programs to events that are relative rare
 	/// \param[in] opt optimization options
-	virtual void optimize( const OptimizeOptions& opt)=0;
+	virtual void optimize( const stream::TokenPatternMatchOptimizeOptions& opt)=0;
 
 	/// \brief Create the context to process a document with the pattern matcher
 	/// \return the pattern matcher context
 	/// \remark The context cannot be reset. So the context has to be recreated for every processed unit (document)
-	virtual StreamPatternMatchContextInterface* createContext() const=0;
+	virtual TokenPatternMatchContextInterface* createContext() const=0;
 };
 
 } //namespace

@@ -5,28 +5,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// \brief Structure describing a token in the source of pattern matching
-/// \file "patternMatchTerm.hpp"
-#ifndef _STRUS_STREAM_PATTERN_MATCH_TERM_HPP_INCLUDED
-#define _STRUS_STREAM_PATTERN_MATCH_TERM_HPP_INCLUDED
+/// \brief Structure describing a token (an output item of char regex matching and an input item for token pattern matching)
+/// \file "patternMatchToken.hpp"
+#ifndef _STRUS_STREAM_PATTERN_MATCH_TOKEN_HPP_INCLUDED
+#define _STRUS_STREAM_PATTERN_MATCH_TOKEN_HPP_INCLUDED
 #include <cstddef>
-
 
 namespace strus {
 namespace stream {
 
-/// \brief Structure describing a token in the source of pattern matching
-class PatternMatchTerm
+/// \brief Structure describing a token
+/// \note A token is an output item of char regex matching and it is an input item for token pattern matching
+class PatternMatchToken
 {
 public:
 	/// \brief Constructor
-	PatternMatchTerm( unsigned int id_, unsigned int ordpos_, std::size_t origpos_, std::size_t origsize_)
+	PatternMatchToken( unsigned int id_, unsigned int ordpos_, std::size_t origpos_, std::size_t origsize_)
 		:m_id(id_),m_ordpos(ordpos_),m_origpos(origpos_),m_origsize(origsize_){}
 	/// \brief Copy constructor
-	PatternMatchTerm( const PatternMatchTerm& o)
+	PatternMatchToken( const PatternMatchToken& o)
 		:m_id(o.m_id),m_ordpos(o.m_ordpos),m_origpos(o.m_origpos),m_origsize(o.m_origsize){}
 	/// \brief Destructor
-	~PatternMatchTerm(){}
+	~PatternMatchToken(){}
 
 	/// \brief Internal identifier of the term
 	unsigned int id() const				{return m_id;}

@@ -15,14 +15,14 @@
 namespace strus {
 
 /// \brief Forward declaration
-class StreamTermMatchInterface;
+class CharRegexMatchInterface;
 /// \brief Forward declaration
-class StreamPatternMatchInterface;
+class TokenPatternMatchInterface;
 /// \brief Forward declaration
 class ErrorBufferInterface;
 
-StreamTermMatchInterface* createStreamTermMatch_standard( ErrorBufferInterface* errorhnd);
-StreamPatternMatchInterface* createStreamPatternMatch_standard( ErrorBufferInterface* errorhnd);
+CharRegexMatchInterface* createCharRegexMatch_standard( ErrorBufferInterface* errorhnd);
+TokenPatternMatchInterface* createTokenPatternMatch_standard( ErrorBufferInterface* errorhnd);
 
 }//namespace
 #endif

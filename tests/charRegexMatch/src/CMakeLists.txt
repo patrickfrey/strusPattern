@@ -12,6 +12,6 @@ link_directories(
 	"${strusbase_LIBRARY_DIRS}"
 )
 
-add_executable( testRegexTermMatch testRegexTermMatch.cpp )
-target_link_libraries( testRegexTermMatch strus_error strus_base strus_stream ${Boost_LIBRARIES} "${Intl_LIBRARIES}"  )
+add_executable( testCharRegexMatch testCharRegexMatch.cpp )
+target_link_libraries( testCharRegexMatch strus_error strus_base strus_stream ${Boost_LIBRARIES} "${Intl_LIBRARIES}"  )
 

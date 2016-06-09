@@ -5,17 +5,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// \brief Object descriping the statistics of a pattern match run for runtime analysis
-/// \file "patternMatchStatistics.hpp"
-#ifndef _STRUS_STREAM_PATTERN_MATCH_STATISTICS_HPP_INCLUDED
-#define _STRUS_STREAM_PATTERN_MATCH_STATISTICS_HPP_INCLUDED
+/// \brief Object descriping the statistics of a token pattern match run for runtime analysis
+/// \file "tokenPatternMatchStatistics.hpp"
+#ifndef _STRUS_STREAM_TOKEN_PATTERN_MATCH_STATISTICS_HPP_INCLUDED
+#define _STRUS_STREAM_TOKEN_PATTERN_MATCH_STATISTICS_HPP_INCLUDED
 #include <vector>
 
 namespace strus {
 namespace stream {
 
-/// \brief Some statistics for global pattern matching analysis
-class PatternMatchStatistics
+/// \brief Object descriping the statistics of a token pattern match run for runtime analysis
+class TokenPatternMatchStatistics
 {
 public:
 	/// \brief Statistics item
@@ -41,9 +41,9 @@ public:
 		double m_value;
 	};
 	/// \brief Constructor
-	PatternMatchStatistics(){}
+	TokenPatternMatchStatistics(){}
 	/// \brief Copy constructor
-	PatternMatchStatistics( const PatternMatchStatistics& o)
+	TokenPatternMatchStatistics( const TokenPatternMatchStatistics& o)
 		:m_items(o.m_items){}
 
 	/// \brief Define statistics item

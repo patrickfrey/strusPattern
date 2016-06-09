@@ -5,27 +5,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// \brief Result item structure of a pattern match result
-/// \file "patternMatchResultItem.hpp"
-#ifndef _STRUS_STREAM_PATTERN_MATCH_RESULT_ITEM_HPP_INCLUDED
-#define _STRUS_STREAM_PATTERN_MATCH_RESULT_ITEM_HPP_INCLUDED
+/// \brief Structure desribing a result item of a token pattern matcher
+/// \file "tokenPatternMatchResultItem.hpp"
+#ifndef _STRUS_STREAM_TOKEN_PATTERN_MATCH_RESULT_ITEM_HPP_INCLUDED
+#define _STRUS_STREAM_TOKEN_PATTERN_MATCH_RESULT_ITEM_HPP_INCLUDED
 #include <string>
 
 namespace strus {
 namespace stream {
 
 /// \brief Result item structure of a pattern match result
-class PatternMatchResultItem
+class TokenPatternMatchResultItem
 {
 public:
 	/// \brief Constructor
-	PatternMatchResultItem( const char* name_, unsigned int ordpos_, std::size_t origpos_, std::size_t origsize_, float weight_)
+	TokenPatternMatchResultItem( const char* name_, unsigned int ordpos_, std::size_t origpos_, std::size_t origsize_, float weight_)
 		:m_name(name_),m_ordpos(ordpos_),m_origpos(origpos_),m_origsize(origsize_),m_weight(weight_){}
 	/// \brief Copy constructor
-	PatternMatchResultItem( const PatternMatchResultItem& o)
+	TokenPatternMatchResultItem( const TokenPatternMatchResultItem& o)
 		:m_name(o.m_name),m_ordpos(o.m_ordpos),m_origpos(o.m_origpos),m_origsize(o.m_origsize),m_weight(o.m_weight){}
 	/// \brief Destructor
-	~PatternMatchResultItem(){}
+	~TokenPatternMatchResultItem(){}
 
 	/// \brief Name of the item, defined by the variable assigned to the match
 	const char* name() const			{return m_name;}

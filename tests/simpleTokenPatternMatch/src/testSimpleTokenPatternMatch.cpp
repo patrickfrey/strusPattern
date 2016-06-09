@@ -9,10 +9,10 @@
 #include "strus/lib/stream.hpp"
 #include "strus/lib/error.hpp"
 #include "strus/errorBufferInterface.hpp"
-#include "strus/streamPatternMatchInterface.hpp"
-#include "strus/streamPatternMatchInstanceInterface.hpp"
-#include "strus/streamPatternMatchContextInterface.hpp"
-#include "strus/stream/patternMatchTerm.hpp"
+#include "strus/tokenPatternMatchInterface.hpp"
+#include "strus/tokenPatternMatchInstanceInterface.hpp"
+#include "strus/tokenPatternMatchContextInterface.hpp"
+#include "strus/stream/patternMatchToken.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
@@ -81,7 +81,7 @@ static Document createDocument( unsigned int no, unsigned int size)
 	return rt;
 }
 
-typedef strus::StreamPatternMatchInstanceInterface::JoinOperation JoinOperation;
+typedef strus::TokenPatternMatchInstanceInterface::JoinOperation JoinOperation;
 struct Operation
 {
 	enum Type {None,Term,Expression};
@@ -100,7 +100,7 @@ struct Pattern
 	Operation operations[32];
 };
 
-static void createPattern( strus::StreamPatternMatchInstanceInterface* ptinst, const char* ptname, const Operation* oplist)
+static void createPattern( strus::TokenPatternMatchInstanceInterface* ptinst, const char* ptname, const Operation* oplist)
 {
 	std::size_t oi = 0;
 	for (; oplist[oi].type != Operation::None; ++oi)
@@ -127,7 +127,7 @@ static void createPattern( strus::StreamPatternMatchInstanceInterface* ptinst, c
 	ptinst->closePattern( ptname, ptname[0] != '_');
 }
 
-static void createPatterns( strus::StreamPatternMatchInstanceInterface* ptinst, const Pattern* patterns)
+static void createPatterns( strus::TokenPatternMatchInstanceInterface* ptinst, const Pattern* patterns)
 {
 	unsigned int pi=0;
 	for (; patterns[pi].name; ++pi)
@@ -136,26 +136,26 @@ static void createPatterns( strus::StreamPatternMatchInstanceInterface* ptinst, 
 	}
 }
 
-static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptinst, const Document& doc)
+static unsigned int matchRules( strus::TokenPatternMatchInstanceInterface* ptinst, const Document& doc)
 {
-	std::auto_ptr<strus::StreamPatternMatchContextInterface> mt( ptinst->createContext());
+	std::auto_ptr<strus::TokenPatternMatchContextInterface> mt( ptinst->createContext());
 	std::vector<DocumentItem>::const_iterator di = doc.itemar.begin(), de = doc.itemar.end();
 	unsigned int didx = 0;
 	for (; di != de; ++di,++didx)
 	{
-		mt->putInput( strus::stream::PatternMatchTerm( di->termid, di->pos, didx, 1));
+		mt->putInput( strus::stream::PatternMatchToken( di->termid, di->pos, didx, 1));
 		if (g_errorBuffer->hasError()) throw std::runtime_error("error matching rules");
 	}
-	std::vector<strus::stream::PatternMatchResult> results = mt->fetchResults();
+	std::vector<strus::stream::TokenPatternMatchResult> results = mt->fetchResults();
 	unsigned int nofMatches = results.size();
 
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::vector<strus::stream::PatternMatchResult>::const_iterator
+	std::vector<strus::stream::TokenPatternMatchResult>::const_iterator
 		ri = results.begin(), re = results.end();
 	for (; ri != re; ++ri)
 	{
 		std::cout << "match '" << ri->name() << "':";
-		std::vector<strus::stream::PatternMatchResultItem>::const_iterator
+		std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
 			ei = ri->itemlist().begin(), ee = ri->itemlist().end();
 	
 		for (; ei != ee; ++ei)
@@ -165,9 +165,9 @@ static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptin
 		}
 		std::cout << std::endl;
 	}
-	strus::StreamPatternMatchContextInterface::Statistics stats = mt->getStatistics();
+	strus::TokenPatternMatchContextInterface::Statistics stats = mt->getStatistics();
 	std::cout << "nof matches " << nofMatches;
-	std::vector<strus::StreamPatternMatchContextInterface::Statistics::Item>::const_iterator
+	std::vector<strus::TokenPatternMatchContextInterface::Statistics::Item>::const_iterator
 		li = stats.items().begin(), le = stats.items().end();
 	for (; li != le; ++li)
 	{
@@ -178,7 +178,7 @@ static unsigned int matchRules( strus::StreamPatternMatchInstanceInterface* ptin
 	return nofMatches;
 }
 
-typedef strus::StreamPatternMatchInstanceInterface PT;
+typedef strus::TokenPatternMatchInstanceInterface PT;
 static const Pattern testPatterns[32] =
 {
 	{"seq[3]_1_2",
@@ -226,12 +226,12 @@ int main( int argc, const char** argv)
 		}
 		unsigned int documentSize = 100;
 
-		std::auto_ptr<strus::StreamPatternMatchInterface> pt( strus::createStreamPatternMatch_standard( g_errorBuffer));
+		std::auto_ptr<strus::TokenPatternMatchInterface> pt( strus::createTokenPatternMatch_standard( g_errorBuffer));
 		if (!pt.get()) throw std::runtime_error("failed to create pattern matcher");
-		std::auto_ptr<strus::StreamPatternMatchInstanceInterface> ptinst( pt->createInstance());
+		std::auto_ptr<strus::TokenPatternMatchInstanceInterface> ptinst( pt->createInstance());
 		if (!ptinst.get()) throw std::runtime_error("failed to create pattern matcher instance");
 		createPatterns( ptinst.get(), testPatterns);
-		ptinst->optimize( strus::StreamPatternMatchInstanceInterface::OptimizeOptions(0.5f,1.1f,5));
+		ptinst->optimize( strus::stream::TokenPatternMatchOptimizeOptions(0.5f,1.1f,5));
 
 		if (g_errorBuffer->hasError())
 		{

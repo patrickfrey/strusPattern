@@ -8,8 +8,8 @@ set( source_files
 	internationalization.cpp
 	ruleMatcherAutomaton.cpp
 	symbolTable.cpp
-	streamPatternMatch.cpp
-	streamTermMatch.cpp
+	tokenPatternMatch.cpp
+	charRegexMatch.cpp
 )
 
 include_directories(
