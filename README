@@ -1,4 +1,4 @@
-* Pattern match stream processing of documents with Strus.
+StrusStream provides efficient pattern matching over event or text streams.
 
 Licenced as MPLv2 (Mozilla Public License, Version 2 - https://www.mozilla.org/en-US/MPL/2.0)
 
@@ -16,6 +16,4 @@ Binary packages available.
 * Contributors welcome
 * Open for sharing ideas
 * Open for interesting projects
-
-
 
