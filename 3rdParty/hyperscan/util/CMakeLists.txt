@@ -19,7 +19,9 @@ set(expressionutil_SRCS
     ExpressionParser.cpp
     )
 add_library(expressionutil STATIC ${expressionutil_SRCS})
+IF (WITH_RAGEL STREQUAL "YES")
 add_dependencies(expressionutil ragel_ExpressionParser)
+ENDIF (WITH_RAGEL STREQUAL "YES")
 
 SET(corpusomatic_SRCS
     ng_corpus_editor.h
