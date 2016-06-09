@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// \brief Structure with options for optimization of a token pattern match automaton
+/// \brief StrusStream structure with options for optimization of a token pattern match automaton
 /// \file "tokenPatternMatchOptimizeOptions.hpp"
 #ifndef _STRUS_STREAM_TOKEN_PATTERN_MATCH_OPTIMIZATION_OPTIONS_HPP_INCLUDED
 #define _STRUS_STREAM_TOKEN_PATTERN_MATCH_OPTIMIZATION_OPTIONS_HPP_INCLUDED

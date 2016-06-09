@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// \brief Object descriping the statistics of a token pattern match run for runtime analysis
+/// \brief StrusStream Object descriping the statistics of a token pattern match run for runtime analysis
 /// \file "tokenPatternMatchStatistics.hpp"
 #ifndef _STRUS_STREAM_TOKEN_PATTERN_MATCH_STATISTICS_HPP_INCLUDED
 #define _STRUS_STREAM_TOKEN_PATTERN_MATCH_STATISTICS_HPP_INCLUDED

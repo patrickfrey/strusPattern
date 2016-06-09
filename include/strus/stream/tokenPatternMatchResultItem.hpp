@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// \brief Structure desribing a result item of a token pattern matcher
+/// \brief StrusStream structure desribing a result item of a token pattern matcher
 /// \file "tokenPatternMatchResultItem.hpp"
 #ifndef _STRUS_STREAM_TOKEN_PATTERN_MATCH_RESULT_ITEM_HPP_INCLUDED
 #define _STRUS_STREAM_TOKEN_PATTERN_MATCH_RESULT_ITEM_HPP_INCLUDED

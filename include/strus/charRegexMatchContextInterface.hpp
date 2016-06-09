@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// \brief Interface for detecting terms defined as regular expressions
+/// \brief StrusStream interface for detecting terms defined as regular expressions
 /// \file "charRegexMatchContextInterface.hpp"
 #ifndef _STRUS_STREAM_CHAR_REGEX_MATCH_CONTEXT_INTERFACE_HPP_INCLUDED
 #define _STRUS_STREAM_CHAR_REGEX_MATCH_CONTEXT_INTERFACE_HPP_INCLUDED

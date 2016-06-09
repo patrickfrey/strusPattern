@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// \brief Interface for creating an automaton for detecting tokens defined as regular expressions in text
+/// \brief StrusStream interface for creating an automaton for detecting tokens defined as regular expressions in text
 /// \file "charRegexMatchInterface.hpp"
 #ifndef _STRUS_STREAM_CHAR_REGEX_MATCH_INTERFACE_HPP_INCLUDED
 #define _STRUS_STREAM_CHAR_REGEX_MATCH_INTERFACE_HPP_INCLUDED
