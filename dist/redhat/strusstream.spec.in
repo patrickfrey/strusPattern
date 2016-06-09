@@ -277,6 +277,8 @@ make test
 %{_includedir}/strus/*.hpp
 %dir %{_includedir}/strus/lib
 %{_includedir}/strus/lib/*.hpp
+%dir %{_includedir}/strus/base
+%{_includedir}/strus/base/*.hpp
 
 %changelog
 * Mon May 16 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.9.0-0.1
