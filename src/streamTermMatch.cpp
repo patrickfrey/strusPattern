@@ -9,7 +9,6 @@
 /// \file "streamTermMatch.hpp"
 #include "streamTermMatch.hpp"
 #include "strus/stream/patternMatchTerm.hpp"
-#include "strus/stream/patternMatchToken.hpp"
 #include "strus/streamTermMatchInstanceInterface.hpp"
 #include "strus/streamTermMatchContextInterface.hpp"
 #include "strus/errorBufferInterface.hpp"

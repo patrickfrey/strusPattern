@@ -9,7 +9,6 @@
 /// \file "streamTermMatchContextInterface.hpp"
 #ifndef _STRUS_STREAM_TERM_MATCH_CONTEXT_INTERFACE_HPP_INCLUDED
 #define _STRUS_STREAM_TERM_MATCH_CONTEXT_INTERFACE_HPP_INCLUDED
-#include "strus/stream/patternMatchToken.hpp"
 #include "strus/stream/patternMatchTerm.hpp"
 #include <vector>
 
