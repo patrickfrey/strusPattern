@@ -2,12 +2,10 @@ StrusStream provides efficient pattern matching over event or text streams.
 
 Licenced as MPLv2 (Mozilla Public License, Version 2 - https://www.mozilla.org/en-US/MPL/2.0)
 
-StrusStream uses the high-performance multiple regex matching library "Hyperscan" by Intel 
-(https://01.org/hyperscan) for extracting the basic tokens, the "terminals" of the pattern matching grammar.
+StrusStream uses the high-performance multiple regex matching library "Hyperscan" by Intel (https://01.org/hyperscan) for extracting the basic tokens, the "terminals" of the pattern matching grammar.
 Hyperscan is licensed under the BSD License (Copyright (c) 2015, Intel Corporation).
 
-StrusStream allows you to define arbitrary complex patterns represented as tree with nodes of the form
-find '[Hh][Ee][Ll][Ll][Oo]' and '[Ww][Oo][Rr][Ll][Dd]' within a range of 10 (tokens) in the same sentence.
+StrusStream allows you to define arbitrary complex patterns represented as tree with nodes of the form "find '[Hh][Ee][Ll][Ll][Oo]' and '[Ww][Oo][Rr][Ll][Dd]' within a range of 10 (tokens) in the same sentence".
 It is able to process millions of such nodes on input documents at a time.
 
 Strus project homepage at http://project-strus.net with articles, links, documentation.
