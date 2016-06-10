@@ -83,16 +83,16 @@ endif()
 
 
 # -- make this work? set(python_ADDITIONAL_VERSIONS 2.7 2.6)
-find_package(PythonInterp)
 IF (WITH_RAGEL STREQUAL "YES")
+find_package(PythonInterp)
 find_program(RAGEL ragel)
-ENDIF (WITH_RAGEL STREQUAL "YES")
 
 if(PYTHONINTERP_FOUND)
     set(PYTHON ${PYTHON_EXECUTABLE})
 else()
     message(FATAL_ERROR "No python interpreter found")
 endif()
+ENDIF (WITH_RAGEL STREQUAL "YES")
 
 IF (WITH_RAGEL STREQUAL "YES")
 if(${RAGEL} STREQUAL "RAGEL-NOTFOUND")
