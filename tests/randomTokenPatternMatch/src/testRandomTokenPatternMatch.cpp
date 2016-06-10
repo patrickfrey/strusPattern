@@ -179,7 +179,7 @@ static void createTermOpPattern( strus::TokenPatternMatchInstanceInterface* ptin
 		rulename.append( strbuf);
 	}
 	createTermOpRule( ptinst, operation, range, cardinality, param, paramsize);
-	ptinst->closePattern( rulename, true);
+	ptinst->definePattern( rulename, true);
 }
 
 static void createRules( strus::TokenPatternMatchInstanceInterface* ptinst, const char* joinop, unsigned int nofFeatures, unsigned int nofRules)
@@ -435,7 +435,7 @@ int main( int argc, const char** argv)
 		createRules( ptinst.get(), joinop, nofFeatures, nofPatterns);
 		if (doOpimize)
 		{
-			ptinst->optimize( strus::stream::TokenPatternMatchOptimizeOptions(0.01f,5,5));
+			ptinst->compile( strus::stream::TokenPatternMatchOptions());
 		}
 		if (g_errorBuffer->hasError())
 		{

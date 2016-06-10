@@ -311,7 +311,7 @@ public:
 		CATCH_ERROR_MAP( "failed to attach variable to top element of the pattern match expression stack: %s", *m_errorhnd);
 	}
 
-	virtual void closePattern( const std::string& name, bool visible)
+	virtual void definePattern( const std::string& name, bool visible)
 	{
 		try
 		{
@@ -367,7 +367,7 @@ public:
 	}
 #endif
 
-	virtual void optimize( const TokenPatternMatchOptimizeOptions& opt)
+	virtual bool compile( const stream::TokenPatternMatchOptions& opt)
 	{
 		try
 		{
@@ -376,17 +376,35 @@ public:
 			printAutomatonStatistics();
 #endif
 			ProgramTable::OptimizeOptions popt;
-			popt.stopwordOccurrenceFactor = opt.stopwordOccurrenceFactor;
-			popt.weightFactor = opt.weightFactor;
-			popt.maxRange = opt.maxRange;
+			stream::TokenPatternMatchOptions::const_iterator oi = opt.begin(), oe = opt.end();
+			for (; oi != oe; ++oi)
+			{
+				if (utils::caseInsensitiveEquals( oi->first, "stopwordOccurrenceFactor"))
+				{
+					popt.stopwordOccurrenceFactor = oi->second;
+				}
+				else if (utils::caseInsensitiveEquals( oi->first, "weightFactor"))
+				{
+					popt.weightFactor = oi->second;
+				}
+				else if (utils::caseInsensitiveEquals( oi->first, "maxRange"))
+				{
+					popt.maxRange = (unsigned int)(oi->second + std::numeric_limits<double>::epsilon());
+				}
+				else
+				{
+					throw strus::runtime_error(_TXT("unknown token pattern match option: '%s'"), oi->first.c_str());
+				}
+			}
 			m_data.programTable.optimize( popt);
 
 #ifdef STRUS_LOWLEVEL_DEBUG
 			std::cout << "automaton statistics after otimization:" << std::endl;
 			printAutomatonStatistics();
 #endif
+			return true;
 		}
-		CATCH_ERROR_MAP( "failed to optimize pattern matching automaton: %s", *m_errorhnd);
+		CATCH_ERROR_MAP_RETURN( "failed to compile (optimize) pattern matching automaton: %s", *m_errorhnd, false);
 	}
 
 private:

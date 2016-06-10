@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Patrick P. Frey
+ * Copyright (c) 2016 Patrick P. Frey
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,6 +9,7 @@
 /// \file "charRegexMatchInstanceInterface.hpp"
 #ifndef _STRUS_STREAM_CHAR_REGEX_MATCH_INSTANCE_INTERFACE_HPP_INCLUDED
 #define _STRUS_STREAM_CHAR_REGEX_MATCH_INSTANCE_INTERFACE_HPP_INCLUDED
+#include "strus/stream/charRegexMatchOptions.hpp"
 #include <string>
 
 namespace strus
@@ -59,7 +60,7 @@ public:
 	/// \brief Compile all patterns and symbols defined
 	/// \return true on success, false on error (error reported in error buffer)
 	/// \remark This function has to be called in order to make the patterns active, resp. before calling 'createContext()'
-	virtual bool compile()=0;
+	virtual bool compile( const stream::CharRegexMatchOptions& opts)=0;
 
 	/// \brief Create the context to process a chunk of text with this text matcher
 	/// \return the term matcher context

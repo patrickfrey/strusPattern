@@ -124,7 +124,7 @@ static void createPattern( strus::TokenPatternMatchInstanceInterface* ptinst, co
 			ptinst->attachVariable( variablename, 1.0f);
 		}
 	}
-	ptinst->closePattern( ptname, ptname[0] != '_');
+	ptinst->definePattern( ptname, ptname[0] != '_');
 }
 
 static void createPatterns( strus::TokenPatternMatchInstanceInterface* ptinst, const Pattern* patterns)
@@ -231,7 +231,7 @@ int main( int argc, const char** argv)
 		std::auto_ptr<strus::TokenPatternMatchInstanceInterface> ptinst( pt->createInstance());
 		if (!ptinst.get()) throw std::runtime_error("failed to create pattern matcher instance");
 		createPatterns( ptinst.get(), testPatterns);
-		ptinst->optimize( strus::stream::TokenPatternMatchOptimizeOptions(0.5f,1.1f,5));
+		ptinst->compile( strus::stream::TokenPatternMatchOptions());
 
 		if (g_errorBuffer->hasError())
 		{

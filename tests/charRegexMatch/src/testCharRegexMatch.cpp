@@ -64,7 +64,7 @@ struct TestDef
 	ResultDef result[128];
 };
 
-static void compile( strus::CharRegexMatchInstanceInterface* ptinst, const PatternDef* par, const SymbolDef* sar)
+static void compile( strus::CharRegexMatchInstanceInterface* ptinst, const PatternDef* par, const SymbolDef* sar, const strus::stream::CharRegexMatchOptions& opt)
 {
 	std::size_t pi = 0;
 	for (; par[pi].expression; ++pi)
@@ -78,7 +78,7 @@ static void compile( strus::CharRegexMatchInstanceInterface* ptinst, const Patte
 	{
 		ptinst->defineSymbol( sar[pi].id, sar[pi].patternid, sar[pi].name);
 	}
-	if (!ptinst->compile())
+	if (!ptinst->compile( opt))
 	{
 		throw std::runtime_error("error building term match automaton");
 	}
@@ -192,12 +192,12 @@ int main( int argc, const char** argv)
 		for (; g_tests[ti].src; ++ti)
 		{
 			std::cerr << "executing test " << ti << ":" << std::endl;
-			strus::CharRegexMatchInterface::Options opt;
-			opt("DOTALL");
-			std::auto_ptr<strus::CharRegexMatchInstanceInterface> ptinst( pt->createInstance( opt));
+			std::auto_ptr<strus::CharRegexMatchInstanceInterface> ptinst( pt->createInstance());
 			if (!ptinst.get()) throw std::runtime_error("failed to create regular expression term matcher instance");
 
-			compile( ptinst.get(), g_tests[ti].patterns, g_tests[ti].symbols);
+			strus::stream::CharRegexMatchOptions opt;
+			opt("DOTALL");
+			compile( ptinst.get(), g_tests[ti].patterns, g_tests[ti].symbols, opt);
 			if (g_errorBuffer->hasError())
 			{
 				throw std::runtime_error( "error building automaton for test");

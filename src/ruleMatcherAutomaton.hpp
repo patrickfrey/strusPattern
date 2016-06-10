@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Patrick P. Frey
+ * Copyright (c) 2016 Patrick P. Frey
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -353,7 +353,7 @@ public:
 		float weightFactor;
 		uint32_t maxRange;
 	
-		OptimizeOptions()
+		OptimizeOptions()		
 			:stopwordOccurrenceFactor(0.01f),weightFactor(10.0f),maxRange(5){}
 		OptimizeOptions( const OptimizeOptions& o)
 			:stopwordOccurrenceFactor(o.stopwordOccurrenceFactor),weightFactor(o.weightFactor),maxRange(o.maxRange){}

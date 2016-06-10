@@ -168,8 +168,7 @@ public:
 class PatternTable
 {
 public:
-	explicit PatternTable( unsigned int options_)
-		:m_options(options_){}
+	PatternTable(){}
 
 	void definePattern(
 			unsigned int id,
@@ -238,7 +237,8 @@ public:
 		return m_defar[ id-1];
 	}
 
-	void complete( HsPatternTable& hspt)
+	///\param[in] options options to stear matching
+	void complete( HsPatternTable& hspt, unsigned int options)
 	{
 		hspt.init( m_defar.size());
 		std::vector<PatternDef>::iterator di = m_defar.begin(), de = m_defar.end();
@@ -251,7 +251,7 @@ public:
 			}
 			hspt.patternar[ didx] = di->expression().c_str();
 			hspt.idar[ didx] = di->id();
-			hspt.flagar[ didx] = m_options | HS_FLAG_UTF8 | HS_FLAG_SOM_LEFTMOST;
+			hspt.flagar[ didx] = options | HS_FLAG_UTF8 | HS_FLAG_SOM_LEFTMOST;
 		}
 		hspt.patternar[ m_defar.size()] = 0;
 		hspt.idar[ m_defar.size()] = 0;
@@ -303,7 +303,6 @@ private:
 	typedef std::map<uint32_t,uint8_t> IdSymTabMap;
 	IdSymTabMap m_idsymtabmap;				///< map pattern id -> index in m_symtabmap == PatternDef::symtabref
 	std::vector<SubExpressionReference> m_subexprmap;	///< single regular expression patterns for extracting subexpressions if they are referenced.
-	unsigned int m_options;					///< options to stear matching
 };
 
 
@@ -312,8 +311,8 @@ struct TermMatchData
 	PatternTable patternTable;
 	hs_database_t* patterndb;
 
-	explicit TermMatchData( unsigned int options)
-		:patternTable(options),patterndb(0){}
+	TermMatchData()
+		:patternTable(),patterndb(0){}
 	~TermMatchData()
 	{
 		if (patterndb) hs_free_database(patterndb);
@@ -554,8 +553,8 @@ class CharRegexMatchInstance
 	:public CharRegexMatchInstanceInterface
 {
 public:
-	explicit CharRegexMatchInstance( unsigned int options, ErrorBufferInterface* errorhnd_)
-		:m_errorhnd(errorhnd_),m_data(options),m_state(DefinitionPhase)
+	explicit CharRegexMatchInstance( ErrorBufferInterface* errorhnd_)
+		:m_errorhnd(errorhnd_),m_data(),m_state(DefinitionPhase)
 	{}
 
 	virtual ~CharRegexMatchInstance(){}
@@ -591,7 +590,7 @@ public:
 		CATCH_ERROR_MAP( "failed to define term match regular expression pattern: %s", *m_errorhnd);
 	}
 
-	virtual bool compile()
+	virtual bool compile( const CharRegexMatchOptions& opts)
 	{
 		try
 		{
@@ -599,7 +598,7 @@ public:
 			m_data.patterndb = 0;
 
 			HsPatternTable hspt;
-			m_data.patternTable.complete( hspt);
+			m_data.patternTable.complete( hspt, getFlags( opts));
 
 			hs_platform_info_t platform;
 			std::memset( &platform, 0, sizeof(platform));
@@ -651,6 +650,42 @@ public:
 		}
 		CATCH_ERROR_MAP_RETURN( "failed to create term match context: %s", *m_errorhnd, 0);
 	}
+
+private:
+	static unsigned int getFlags( const CharRegexMatchOptions& opts)
+	{
+		unsigned int rt = 0;
+		CharRegexMatchOptions::const_iterator ai = opts.begin(), ae = opts.end();
+		for (; ai != ae; ++ai)
+		{
+			if (utils::caseInsensitiveEquals( *ai, "CASELESS"))
+			{
+				rt |= HS_FLAG_CASELESS;
+			}
+			else if (utils::caseInsensitiveEquals( *ai, "DOTALL"))
+			{
+				rt |= HS_FLAG_DOTALL;
+			}
+			else if (utils::caseInsensitiveEquals( *ai, "MULTILINE"))
+			{
+				rt |= HS_FLAG_MULTILINE;
+			}
+			else if (utils::caseInsensitiveEquals( *ai, "ALLOWEMPTY"))
+			{
+				rt |= HS_FLAG_ALLOWEMPTY;
+			}
+			else if (utils::caseInsensitiveEquals( *ai, "UCP"))
+			{
+				rt |= HS_FLAG_UCP;
+			}
+			else
+			{
+				throw strus::runtime_error(_TXT("unknown option '%s'"), ai->c_str());
+			}
+		}
+		return rt;
+	}
+
 private:
 	ErrorBufferInterface* m_errorhnd;
 	TermMatchData m_data;
@@ -658,46 +693,11 @@ private:
 	State m_state;
 };
 
-static unsigned int getFlags( const CharRegexMatchInterface::Options& opts)
-{
-	unsigned int rt = 0;
-	CharRegexMatchInterface::Options::const_iterator ai = opts.begin(), ae = opts.end();
-	for (; ai != ae; ++ai)
-	{
-		if (utils::caseInsensitiveEquals( *ai, "CASELESS"))
-		{
-			rt |= HS_FLAG_CASELESS;
-		}
-		else if (utils::caseInsensitiveEquals( *ai, "DOTALL"))
-		{
-			rt |= HS_FLAG_DOTALL;
-		}
-		else if (utils::caseInsensitiveEquals( *ai, "MULTILINE"))
-		{
-			rt |= HS_FLAG_MULTILINE;
-		}
-		else if (utils::caseInsensitiveEquals( *ai, "ALLOWEMPTY"))
-		{
-			rt |= HS_FLAG_ALLOWEMPTY;
-		}
-		else if (utils::caseInsensitiveEquals( *ai, "UCP"))
-		{
-			rt |= HS_FLAG_UCP;
-		}
-		else
-		{
-			throw strus::runtime_error(_TXT("unknown option '%s'"), ai->c_str());
-		}
-	}
-	return rt;
-}
-
-CharRegexMatchInstanceInterface* CharRegexMatch::createInstance( const Options& opts) const
+CharRegexMatchInstanceInterface* CharRegexMatch::createInstance() const
 {
 	try
 	{
-		unsigned int options = getFlags( opts);
-		return new CharRegexMatchInstance( options, m_errorhnd);
+		return new CharRegexMatchInstance( m_errorhnd);
 	}
 	CATCH_ERROR_MAP_RETURN( "failed to create term match instance: %s", *m_errorhnd, 0);
 }

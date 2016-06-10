@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Patrick P. Frey
+ * Copyright (c) 2016 Patrick P. Frey
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,7 +9,7 @@
 /// \file "tokenPatternMatchInstanceInterface.hpp"
 #ifndef _STRUS_STREAM_TOKEN_PATTERN_MATCH_INSTANCE_INTERFACE_HPP_INCLUDED
 #define _STRUS_STREAM_TOKEN_PATTERN_MATCH_INSTANCE_INTERFACE_HPP_INCLUDED
-#include "strus/stream/tokenPatternMatchOptimizeOptions.hpp"
+#include "strus/stream/tokenPatternMatchOptions.hpp"
 #include <string>
 
 namespace strus
@@ -68,11 +68,12 @@ public:
 	/// \brief Create a pattern that can be referenced by the given name and can be declared as part of the result
 	/// \param[in] name name of the pattern and the result if declared as visible
 	/// \param[in] visible true, if the pattern result should be exported (be visible in the final result)
-	virtual void closePattern( const std::string& name, bool visible)=0;
+	virtual void definePattern( const std::string& name, bool visible)=0;
 
-	/// \brief Try to optimize the program if possible by setting initial key events of the programs to events that are relative rare
+	/// \brief Compile all patterns defined
 	/// \param[in] opt optimization options
-	virtual void optimize( const stream::TokenPatternMatchOptimizeOptions& opt)=0;
+	/// \note Tries to optimize the program if possible by setting initial key events of the programs to events that are relative rare
+	virtual bool compile( const stream::TokenPatternMatchOptions& opt)=0;
 
 	/// \brief Create the context to process a document with the pattern matcher
 	/// \return the pattern matcher context
@@ -82,4 +83,5 @@ public:
 
 } //namespace
 #endif
+
 

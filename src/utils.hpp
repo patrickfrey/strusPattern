@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Patrick P. Frey
+ * Copyright (c) 2016 Patrick P. Frey
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -33,6 +33,19 @@ public:
 	UnorderedMap(){}
 	UnorderedMap( const UnorderedMap& o)
 		:boost::unordered_map<Key,Elem>(){}
+};
+
+template <class X>
+class SharedPtr
+	:public boost::shared_ptr<X>
+{
+public:
+	SharedPtr( X* ptr)
+		:boost::shared_ptr<X>(ptr){}
+	SharedPtr( const SharedPtr& o)
+		:boost::shared_ptr<X>(o){}
+	SharedPtr()
+		:boost::shared_ptr<X>(){}
 };
 
 }} //namespace
