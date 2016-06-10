@@ -19,6 +19,7 @@ include_directories(
 	"${PROJECT_SOURCE_DIR}/3rdParty/compactNodeTrie/include"
 	"${PROJECT_SOURCE_DIR}/3rdParty/textwolf/include"
 	"${PROJECT_SOURCE_DIR}/3rdParty/hyperscan/src"
+	"${PROJECT_SOURCE_DIR}/3rdParty/hyperscan"
 	"${strusbase_INCLUDE_DIRS}"
 )
 
@@ -33,11 +34,11 @@ link_directories(
 # -------------------------------------------
 # STRUS TRACE LIBRARIES
 # -------------------------------------------
-add_library( rulematch STATIC ${source_files} )
-target_link_libraries( rulematch strus_base compactnodetrie_static hs ${Boost_LIBRARIES} ${Intl_LIBRARIES} )
+add_library( local_rulematch STATIC ${source_files} )
+target_link_libraries( local_rulematch strus_base compactnodetrie_static hs ${Boost_LIBRARIES} ${Intl_LIBRARIES} )
 
 add_library( strus_stream SHARED libstrus_stream.cpp )
-target_link_libraries( strus_stream rulematch strus_base  )
+target_link_libraries( strus_stream local_rulematch strus_base  )
 
 set_target_properties(
     strus_stream
@@ -46,9 +47,18 @@ set_target_properties(
     SOVERSION "${STRUS_MAJOR_VERSION}.${STRUS_MINOR_VERSION}"
     VERSION ${STRUS_VERSION} )
 
+# -------------------------------------------
+# STRUS TRACE PROGRAMS
+# -------------------------------------------
+add_executable( strusPatternMatch  strusPatternMatch.cpp )
+target_link_libraries( strusPatternMatch  local_rulematch strus_base strus_error ${Boost_LIBRARIES} ${Intl_LIBRARIES})
+
 # ------------------------------
 # INSTALLATION
 # ------------------------------
 install( TARGETS strus_stream
            LIBRARY DESTINATION ${LIB_INSTALL_DIR}/strus )
+
+install( TARGETS strusPatternMatch
+	   RUNTIME DESTINATION bin )
 

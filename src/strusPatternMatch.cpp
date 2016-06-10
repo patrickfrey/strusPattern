@@ -149,6 +149,13 @@ int main( int argc, const char* argv[])
 		std::string rulefile( argv[ argi+0]);
 		std::string inputpath( argv[ argi+1]);
 
+		std::string rulesrc;
+		unsigned int ec = strus::readFile( rulefile, rulesrc);
+		if (ec)
+		{
+			throw strus::runtime_error(_TXT("error (%u) reading rule file: %s"), ec, ::strerror(ec));
+		}
+		
 		if (g_errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("error in initialization"));
