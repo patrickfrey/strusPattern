@@ -158,9 +158,9 @@ public:
 
 	void clear()
 	{
-		if (patternar) std::free(patternar); patternar = 0;
-		if (idar) std::free(idar); idar = 0;
-		if (flagar) std::free(flagar); flagar = 0;
+		if (patternar) {std::free(patternar); patternar = 0;}
+		if (idar) {std::free(idar); idar = 0;}
+		if (flagar) {std::free(flagar); flagar = 0;}
 	}
 };
 

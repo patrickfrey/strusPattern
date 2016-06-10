@@ -30,6 +30,7 @@
 testSimpleTokenPatternMatch
 testRandomTokenPatternMatch
 testCharRegexMatch
+strusPatternMatch
 
 # CMake generated files
 CMakeCache.txt
