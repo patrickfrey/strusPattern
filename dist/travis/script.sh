@@ -4,7 +4,7 @@ set -e
 
 OS=$(uname -s)
 
-PROJECT=strusAnalyzer
+PROJECT=strusStream
 
 # set up environment
 case $OS in
