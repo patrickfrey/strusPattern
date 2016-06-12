@@ -46,6 +46,9 @@ public:
 	virtual bool load( const std::string& source);
 	virtual bool compile();
 
+	virtual const CharRegexMatchInstanceInterface* getCharRegexMatchInstance() const;
+	virtual const TokenPatternMatchInstanceInterface* getTokenPatternMatchInstance() const;
+
 private:
 	void loadOption( char const*& si);
 	void loadExpression( char const*& si);

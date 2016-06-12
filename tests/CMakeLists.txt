@@ -4,5 +4,6 @@ cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
 add_subdirectory( simpleTokenPatternMatch )
 add_subdirectory( randomTokenPatternMatch )
 add_subdirectory( charRegexMatch )
+add_subdirectory( programLoader )
 
 

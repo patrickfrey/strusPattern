@@ -13,6 +13,11 @@
 
 namespace strus {
 
+/// \brief Forward declaration
+class CharRegexMatchInstanceInterface;
+/// \brief Forward declaration
+class TokenPatternMatchInstanceInterface;
+
 /// \brief StrusStream interface to load pattern definitions from source
 class PatternMatchProgramInstanceInterface
 {
@@ -27,6 +32,14 @@ public:
 	/// \brief Check for unresolved symbols and compile the automatons defined by the sources loaded
 	/// \return true on success, false on failure
 	virtual bool compile()=0;
+
+	/// \brief Get a const reference to this instance of a character regular expression matcher
+	/// \return this character regular expression matcher instance
+	virtual const CharRegexMatchInstanceInterface* getCharRegexMatchInstance() const=0;
+
+	/// \brief Get a const reference to this instance of a character token pattern matcher
+	/// \return this token pattern match instance
+	virtual const TokenPatternMatchInstanceInterface* getTokenPatternMatchInstance() const=0;
 };
 
 } //namespace

@@ -417,6 +417,16 @@ bool PatternMatchProgramInstance::compile()
 	CATCH_ERROR_MAP_RETURN( _TXT("failed to compile pattern match program source: %s"), *m_errorhnd, false);
 }
 
+const CharRegexMatchInstanceInterface* PatternMatchProgramInstance::getCharRegexMatchInstance() const
+{
+	return m_charRegexMatch.get();
+}
+
+const TokenPatternMatchInstanceInterface* PatternMatchProgramInstance::getTokenPatternMatchInstance() const
+{
+	return m_tokenPatternMatch.get();
+}
+
 PatternMatchProgramInstanceInterface* PatternMatchProgram::createInstance() const
 {
 	try

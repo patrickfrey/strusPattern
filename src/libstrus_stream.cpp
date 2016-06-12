@@ -47,7 +47,7 @@ DLL_PUBLIC CharRegexMatchInterface* strus::createCharRegexMatch_standard( ErrorB
 	CATCH_ERROR_MAP_RETURN( _TXT("error creating char regex match interface: %s"), *errorhnd, 0);
 }
 
-DLL_PUBLIC PatternMatchProgramInterface* createPatternMatchProgram_standard(
+DLL_PUBLIC PatternMatchProgramInterface* strus::createPatternMatchProgram_standard(
 		const TokenPatternMatchInterface* tpm,
 		const CharRegexMatchInterface* crm,
 		ErrorBufferInterface* errorhnd)
