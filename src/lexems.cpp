@@ -79,11 +79,11 @@ std::string parser::parse_STRING( char const*& src)
 	char eb = *src++;
 	while (*src != eb)
 	{
-		if (*src == '\0' || *src == '\n') throw strus::runtime_error(_TXT("unterminated string"));
+		if (*src == '\0' || *src == '\n') throw strus::runtime_error(_TXT("unterminated string %c...%c"), eb, eb);
 		if (*src == '\\')
 		{
 			src++;
-			if (*src == '\0' || *src == '\n') throw strus::runtime_error(_TXT("unterminated string"));
+			if (*src == '\0' || *src == '\n') throw strus::runtime_error(_TXT("unterminated string %c...%c"), eb, eb);
 		}
 		rt.push_back( *src++);
 	}

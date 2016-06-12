@@ -37,7 +37,7 @@ struct SourcePosition
 	std::size_t column;
 
 	SourcePosition()
-		:line(0),column(1){}
+		:line(1),column(1){}
 	SourcePosition( std::size_t line_, std::size_t column_)
 		:line(line_),column(column_){}
 	SourcePosition( const SourcePosition& o)
@@ -255,7 +255,6 @@ bool PatternMatchProgramInstance::load( const std::string& source)
 	{
 		while (*si)
 		{
-			bool visible = true;
 			if (isPercent(*si))
 			{
 				//... we got a char regex match option or a token pattern match option
@@ -263,6 +262,7 @@ bool PatternMatchProgramInstance::load( const std::string& source)
 				loadOption( si);
 				continue;
 			}
+			bool visible = true;
 			if (isDot(*si))
 			{
 				//... declare rule as invisible (private)
@@ -272,6 +272,14 @@ bool PatternMatchProgramInstance::load( const std::string& source)
 			if (isAlpha(*si))
 			{
 				std::string name = parse_IDENTIFIER( si);
+				unsigned int level = 0;
+				bool has_level = false;
+				if (isExp(*si))
+				{
+					(void)parse_OPERATOR(si);
+					level = parse_UNSIGNED( si);
+					has_level = true;
+				}
 				if (isColon( *si))
 				{
 					//... char regex expression declaration
@@ -279,19 +287,13 @@ bool PatternMatchProgramInstance::load( const std::string& source)
 					{
 						throw strus::runtime_error(_TXT("unexpected colon ':' after dot '.' followed by an identifier, that starts an token pattern declaration marked as private (invisible in output)"));
 					}
-					(void)parse_OPERATOR(si);
 					unsigned int nameid = m_regexNameSymbolTab.getOrCreate( name);
 					std::string regex;
-					unsigned int toplevel = 0;
-					if (isExp(*si))
-					{
-						(void)parse_OPERATOR(si);
-						toplevel = parse_UNSIGNED( si);
-					}
 					do
 					{
-						//... Regex pattern def -> name : regex ;
 						(void)parse_OPERATOR(si);
+
+						//... Regex pattern def -> name : regex ;
 						if (isStringQuote(*si) || isSlash(*si))
 						{
 							regex = parse_STRING( si);
@@ -301,7 +303,6 @@ bool PatternMatchProgramInstance::load( const std::string& source)
 							throw strus::runtime_error(_TXT("regular expression definition (string inside single (') or double (\") quotes or inside slashes '/') expected after colon ':'"));
 						}
 						unsigned int resultIndex = 0;
-						unsigned int level = toplevel;
 						if (isOpenSquareBracket(*si))
 						{
 							(void)parse_OPERATOR(si);
@@ -311,11 +312,6 @@ bool PatternMatchProgramInstance::load( const std::string& source)
 								throw strus::runtime_error(_TXT("close square bracket ']' expected at end of result index definition"));
 							}
 							(void)parse_OPERATOR(si);
-						}
-						if (isExp(*si))
-						{
-							(void)parse_OPERATOR(si);
-							level = parse_UNSIGNED( si);
 						}
 						CharRegexMatchInstanceInterface::PositionBind posbind = CharRegexMatchInstanceInterface::BindContent;
 						if (isLeftArrow(si))
@@ -337,6 +333,10 @@ bool PatternMatchProgramInstance::load( const std::string& source)
 				}
 				else if (isAssign(*si))
 				{
+					if (has_level)
+					{
+						throw strus::runtime_error(_TXT("unsupported definition of level \"^N\" in token pattern definition"));
+					}
 					//... token pattern expression declaration
 					unsigned int nameid = m_patternNameSymbolTab.getOrCreate( name);
 					do
@@ -361,6 +361,7 @@ bool PatternMatchProgramInstance::load( const std::string& source)
 				{
 					throw strus::runtime_error(_TXT("semicolon ';' expected at end of rule"));
 				}
+				(void)parse_OPERATOR(si);
 			}
 			else
 			{
@@ -377,8 +378,16 @@ bool PatternMatchProgramInstance::load( const std::string& source)
 		char snippet[ MaxErrorSnippetLen+1];
 		std::memcpy( snippet, si, snippetSize);
 		snippet[ snippetSize] = 0;
+		std::size_t ii=0;
+		for (; snippet[ii]; ++ii)
+		{
+			if ((unsigned char)snippet[ii] < 32)
+			{
+				snippet[ii] = ' ';
+			}
+		}
 		SourcePosition errpos = getSourcePosition( source, si);
-		m_errorhnd->report( _TXT("error in pattern match program at line %u, column %u: '%s' [at '%s']"), errpos.line, errpos.column, err.what(), snippet);
+		m_errorhnd->report( _TXT("error in pattern match program at line %u, column %u: \"%s\" [at '%s']"), errpos.line, errpos.column, err.what(), snippet);
 		return false;
 	}
 	catch (const std::bad_alloc&)
