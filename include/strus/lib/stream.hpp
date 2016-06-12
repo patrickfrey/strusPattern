@@ -19,10 +19,23 @@ class CharRegexMatchInterface;
 /// \brief Forward declaration
 class TokenPatternMatchInterface;
 /// \brief Forward declaration
+class PatternMatchProgramInterface;
+/// \brief Forward declaration
 class ErrorBufferInterface;
 
-CharRegexMatchInterface* createCharRegexMatch_standard( ErrorBufferInterface* errorhnd);
-TokenPatternMatchInterface* createTokenPatternMatch_standard( ErrorBufferInterface* errorhnd);
+/// \brief Create the interface for regular expression matching on text
+CharRegexMatchInterface* createCharRegexMatch_standard(
+		ErrorBufferInterface* errorhnd);
+
+/// \brief Create the interface for pattern matching on a stream of tokens
+TokenPatternMatchInterface* createTokenPatternMatch_standard(
+		ErrorBufferInterface* errorhnd);
+
+/// \brief Create the interface for loading programs from source that define patterns to match
+PatternMatchProgramInterface* createPatternMatchProgram_standard(
+		const TokenPatternMatchInterface* tpm,
+		const CharRegexMatchInterface* crm,
+		ErrorBufferInterface* errorhnd);
 
 }//namespace
 #endif

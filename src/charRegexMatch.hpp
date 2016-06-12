@@ -27,6 +27,7 @@ public:
 
 	virtual ~CharRegexMatch(){}
 
+	virtual std::vector<std::string> getCompileOptions() const;
 	virtual CharRegexMatchInstanceInterface* createInstance() const;
 
 private:

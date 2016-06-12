@@ -9,6 +9,8 @@
 /// \file "tokenPatternMatchInterface.hpp"
 #ifndef _STRUS_STREAM_TOKEN_PATTERN_MATCH_INTERFACE_HPP_INCLUDED
 #define _STRUS_STREAM_TOKEN_PATTERN_MATCH_INTERFACE_HPP_INCLUDED
+#include <vector>
+#include <string>
 
 namespace strus
 {
@@ -21,6 +23,10 @@ class TokenPatternMatchInterface
 public:
 	/// \brief Destructor
 	virtual ~TokenPatternMatchInterface(){}
+
+	/// \brief Get the list of option names you can pass to TokenPatternMatchInstanceInterface::compile
+	/// \return NULL terminated array of strings
+	virtual std::vector<std::string> getCompileOptions() const=0;
 
 	/// \brief Create an instance to build the rules of a pattern matcher
 	/// \return the pattern matcher instance

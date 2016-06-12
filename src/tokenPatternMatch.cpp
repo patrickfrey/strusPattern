@@ -76,7 +76,7 @@ public:
 			m_statemachine.doTransition( eventid, data);
 			++m_nofEvents;
 		}
-		CATCH_ERROR_MAP( "failed to feed input to pattern matcher: %s", *m_errorhnd);
+		CATCH_ERROR_MAP( _TXT("failed to feed input to pattern matcher: %s"), *m_errorhnd);
 	}
 
 	void gatherResultItems( std::vector<TokenPatternMatchResultItem>& resitemlist, uint32_t dataref) const
@@ -116,7 +116,7 @@ public:
 			}
 			return rt;
 		}
-		CATCH_ERROR_MAP_RETURN( "failed to fetch pattern match result: %s", *m_errorhnd, std::vector<stream::TokenPatternMatchResult>());
+		CATCH_ERROR_MAP_RETURN( _TXT("failed to fetch pattern match result: %s"), *m_errorhnd, std::vector<stream::TokenPatternMatchResult>());
 	}
 
 	virtual TokenPatternMatchStatistics getStatistics() const
@@ -130,7 +130,7 @@ public:
 			stats.define( "nofTriggersAvgActive", m_statemachine.nofOpenPatterns() / m_nofEvents);
 			return stats;
 		}
-		CATCH_ERROR_MAP_RETURN( "failed to get pattern match statistics: %s", *m_errorhnd, TokenPatternMatchStatistics());
+		CATCH_ERROR_MAP_RETURN( _TXT("failed to get pattern match statistics: %s"), *m_errorhnd, TokenPatternMatchStatistics());
 	}
 
 private:
@@ -163,7 +163,7 @@ public:
 			uint32_t eventid = eventHandle( TermEvent, termid);
 			m_stack.push_back( StackElement( eventid));
 		}
-		CATCH_ERROR_MAP( "failed to push term on the pattern match expression stack: %s", *m_errorhnd);
+		CATCH_ERROR_MAP( _TXT("failed to push term on the pattern match expression stack: %s"), *m_errorhnd);
 	}
 
 	virtual void pushExpression(
@@ -279,7 +279,7 @@ public:
 			m_stack.resize( m_stack.size() - argc);
 			m_stack.push_back( StackElement( slot_event, program));
 		}
-		CATCH_ERROR_MAP( "failed to push expression on the pattern match expression stack: %s", *m_errorhnd);
+		CATCH_ERROR_MAP( _TXT("failed to push expression on the pattern match expression stack: %s"), *m_errorhnd);
 	}
 
 	virtual void pushPattern( const std::string& name)
@@ -289,7 +289,7 @@ public:
 			uint32_t eventid = eventHandle( ReferenceEvent, m_data.patternMap.getOrCreate( name));
 			m_stack.push_back( StackElement( eventid));
 		}
-		CATCH_ERROR_MAP( "failed to push pattern reference on the pattern match expression stack: %s", *m_errorhnd);
+		CATCH_ERROR_MAP( _TXT("failed to push pattern reference on the pattern match expression stack: %s"), *m_errorhnd);
 	}
 
 	virtual void attachVariable( const std::string& name, float weight)
@@ -308,7 +308,7 @@ public:
 			elem.variable = m_data.variableMap.getOrCreate( name);
 			elem.weight = weight;
 		}
-		CATCH_ERROR_MAP( "failed to attach variable to top element of the pattern match expression stack: %s", *m_errorhnd);
+		CATCH_ERROR_MAP( _TXT("failed to attach variable to top element of the pattern match expression stack: %s"), *m_errorhnd);
 	}
 
 	virtual void definePattern( const std::string& name, bool visible)
@@ -334,7 +334,7 @@ public:
 			}
 			m_data.programTable.defineProgramResult( program, resultEvent, visible?resultHandle:0);
 		}
-		CATCH_ERROR_MAP( "failed to close pattern definition on the pattern match expression stack: %s", *m_errorhnd);
+		CATCH_ERROR_MAP( _TXT("failed to close pattern definition on the pattern match expression stack: %s"), *m_errorhnd);
 	}
 
 	virtual TokenPatternMatchContextInterface* createContext() const
@@ -343,7 +343,7 @@ public:
 		{
 			return new TokenPatternMatchContext( &m_data, m_errorhnd);
 		}
-		CATCH_ERROR_MAP_RETURN( "failed to create pattern match context: %s", *m_errorhnd, 0);
+		CATCH_ERROR_MAP_RETURN( _TXT("failed to create pattern match context: %s"), *m_errorhnd, 0);
 	}
 
 #ifdef STRUS_LOWLEVEL_DEBUG
@@ -404,7 +404,7 @@ public:
 #endif
 			return true;
 		}
-		CATCH_ERROR_MAP_RETURN( "failed to compile (optimize) pattern matching automaton: %s", *m_errorhnd, false);
+		CATCH_ERROR_MAP_RETURN( _TXT("failed to compile (optimize) pattern matching automaton: %s"), *m_errorhnd, false);
 	}
 
 private:
@@ -431,12 +431,23 @@ private:
 };
 
 
+std::vector<std::string> TokenPatternMatch::getCompileOptions() const
+{
+	std::vector<std::string> rt;
+	static const char* ar[] = {"stopwordOccurrenceFactor","weightFactor","maxRange",0};
+	for (std::size_t ai=0; ar[ai]; ++ai)
+	{
+		rt.push_back( ar[ ai]);
+	}
+	return rt;
+}
+
 TokenPatternMatchInstanceInterface* TokenPatternMatch::createInstance() const
 {
 	try
 	{
 		return new TokenPatternMatchInstance( m_errorhnd);
 	}
-	CATCH_ERROR_MAP_RETURN( "failed to create pattern match instance: %s", *m_errorhnd, 0);
+	CATCH_ERROR_MAP_RETURN( _TXT("failed to create pattern match instance: %s"), *m_errorhnd, 0);
 }
 

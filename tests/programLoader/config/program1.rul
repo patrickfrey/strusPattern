@@ -1,0 +1,16 @@
+DOT:	^1 /[.]/;
+ABBREV: ^2 /\b[aA]bbr[\.]\b/ | /\b[aA]d[cjv][\.]\b/ | /\b[oO]bj[\.]\b/ | /\b[pP]seud[\.]\b/
+	|  /\b[tT]rans[\.]\b/ | /\b[A-Za-z][\.][a-z][\.]?\b/ | /\betc[\.]\b/ | /\bca[\.]\b/
+	| /\b[mM]rs[\.]\b/ | /\b[pP]rof[\.]\b/ | /\b[rR]ev[\.]\b/ | /\b[hH]on[\.]\b/ | /\b[hH]rs[\.]\b/
+	| /\b[A-Za-z][btlsr][\.]\b/ | /\b[gG]en[\.]\b/ | /\b[sS]ing[\.]\b/ | /\b[sS]yn[\.]\b/
+	| /\b[aA]ve[\.]\b/ | /\b[d]dD]ept[\.]\b/ | /\b[eE]st[\.]\b/ | /\b[fF]ig[\.]\b/ | /\b[iI]nc[\.]\b/
+	| /\b[oO]z[\.]\b/ | /\b[nN]o[\.]\b/ | /\b[sS]q[\.]\b/ | /\b[aA]ssn[\.]\b/ | /\b[tT]rans[\.]\b/;
+ABBREV: ^3 /\bet\sal[\.]\b/| /\b[rR][\.][iI][\.][pP]\b/;
+URL: ^4 /\b(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?\b/;
+EMAIL: ^5 /\b([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})\b/;
+CAPWORD: ^1 /\b\p{Lu}\p{Ll}+\b;
+
+Name = sequence( firstname=[0.75]CAPWORD, surname=CAPWORD | 2 );
+Contact sequence_struct( Name, email=EMAIL | 10 );
+
+

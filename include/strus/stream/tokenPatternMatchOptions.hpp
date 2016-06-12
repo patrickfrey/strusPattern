@@ -30,7 +30,7 @@ public:
 	///		"stopwordOccurrenceFactor"	: what fraction of the whole collection a word must occurr (df) to be considered a stopword
 	///		"weightFactor"			: what weight factor an alternative event must have to be considered as alernative key event triggering the detection of the rule
 	///		"maxRange"			: maximum proximity range a rule can reach before not considered anymore for a rule rewriting (alternative key event)
-	TokenPatternMatchOptions& operator()( const char* opt, double value)
+	TokenPatternMatchOptions& operator()( const std::string& opt, double value)
 	{
 		m_opts.push_back( OptionDef( opt, value));
 		return *this;

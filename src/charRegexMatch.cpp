@@ -429,7 +429,7 @@ public:
 			}
 			return 0;
 		}
-		CATCH_ERROR_MAP_RETURN( "error calling hyperscan match event handler: %s", *THIS->m_errorhnd, -1);
+		CATCH_ERROR_MAP_RETURN( _TXT("error calling hyperscan match event handler: %s"), *THIS->m_errorhnd, -1);
 	}
 
 	static const char* hsErrorName( int ec)
@@ -538,7 +538,7 @@ public:
 			m_matchEventAr.clear();
 			return rt;
 		}
-		CATCH_ERROR_MAP_RETURN( "failed to run pattern matching terms with regular expressions: %s", *m_errorhnd, std::vector<stream::PatternMatchToken>());
+		CATCH_ERROR_MAP_RETURN( _TXT("failed to run pattern matching terms with regular expressions: %s"), *m_errorhnd, std::vector<stream::PatternMatchToken>());
 	}
 
 private:
@@ -574,7 +574,7 @@ public:
 			}
 			m_data.patternTable.definePattern( id, expression, resultIndex, level, posbind);
 		}
-		CATCH_ERROR_MAP( "failed to define term match regular expression pattern: %s", *m_errorhnd);
+		CATCH_ERROR_MAP( _TXT("failed to define term match regular expression pattern: %s"), *m_errorhnd);
 	}
 
 	virtual void defineSymbol( unsigned int symbolid, unsigned int patternid, const std::string& name)
@@ -587,7 +587,7 @@ public:
 			}
 			m_data.patternTable.defineSymbol( symbolid, patternid, name);
 		}
-		CATCH_ERROR_MAP( "failed to define term match regular expression pattern: %s", *m_errorhnd);
+		CATCH_ERROR_MAP( _TXT("failed to define term match regular expression pattern: %s"), *m_errorhnd);
 	}
 
 	virtual bool compile( const CharRegexMatchOptions& opts)
@@ -635,7 +635,7 @@ public:
 			m_state = MatchPhase;
 			return true;
 		}
-		CATCH_ERROR_MAP_RETURN( "failed to compile regular expression patterns: %s", *m_errorhnd, false);
+		CATCH_ERROR_MAP_RETURN( _TXT("failed to compile regular expression patterns: %s"), *m_errorhnd, false);
 	}
 
 	virtual CharRegexMatchContextInterface* createContext() const
@@ -648,7 +648,7 @@ public:
 			}
 			return new CharRegexMatchContext( &m_data, m_errorhnd);
 		}
-		CATCH_ERROR_MAP_RETURN( "failed to create term match context: %s", *m_errorhnd, 0);
+		CATCH_ERROR_MAP_RETURN( _TXT("failed to create term match context: %s"), *m_errorhnd, 0);
 	}
 
 private:
@@ -693,13 +693,25 @@ private:
 	State m_state;
 };
 
+
+std::vector<std::string> CharRegexMatch::getCompileOptions() const
+{
+	std::vector<std::string> rt;
+	static const char* ar[] = {"CASELESS", "DOTALL", "MULTILINE", "ALLOWEMPTY", "UCP", 0};
+	for (std::size_t ai=0; ar[ai]; ++ai)
+	{
+		rt.push_back( ar[ ai]);
+	}
+	return rt;
+}
+
 CharRegexMatchInstanceInterface* CharRegexMatch::createInstance() const
 {
 	try
 	{
 		return new CharRegexMatchInstance( m_errorhnd);
 	}
-	CATCH_ERROR_MAP_RETURN( "failed to create term match instance: %s", *m_errorhnd, 0);
+	CATCH_ERROR_MAP_RETURN( _TXT("failed to create term match instance: %s"), *m_errorhnd, 0);
 }
 
 

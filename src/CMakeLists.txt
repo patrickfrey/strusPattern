@@ -10,6 +10,8 @@ set( source_files
 	symbolTable.cpp
 	tokenPatternMatch.cpp
 	charRegexMatch.cpp
+	patternMatchProgram.cpp
+	lexems.cpp
 )
 
 include_directories(

@@ -30,7 +30,7 @@ public:
 		:m_opts(o.m_opts){}
 
 	/// \brief Add an option definition
-	CharRegexMatchOptions& operator()( const char* opt)
+	CharRegexMatchOptions& operator()( const std::string& opt)
 	{
 		m_opts.push_back( opt);
 		return *this;
