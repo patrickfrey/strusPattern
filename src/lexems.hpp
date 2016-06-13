@@ -139,6 +139,7 @@ bool isEqual( const std::string& id, const char* idstr);
 std::string parse_IDENTIFIER( char const*& src);
 std::string parse_TEXTWORD( char const*& src);
 std::string parse_STRING( char const*& src);
+std::string parse_STRING_nonesc( char const*& src);
 std::string parse_REGEX( char const*& src);
 unsigned int parse_UNSIGNED( char const*& src);
 unsigned int parse_UNSIGNED1( char const*& src);

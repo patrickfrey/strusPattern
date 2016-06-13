@@ -24,7 +24,7 @@
 #include <cstring>
 #include <iostream>
 
-#undef STRUS_LOWLEVEL_DEBUG
+#define STRUS_LOWLEVEL_DEBUG
 
 using namespace strus;
 using namespace strus::stream;
@@ -112,7 +112,7 @@ public:
 				{
 					gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
 				}
-				rt.push_back( TokenPatternMatchResult( resultName, rtitemlist));
+				rt.push_back( TokenPatternMatchResult( resultName, result.ordpos, result.origpos, rtitemlist));
 			}
 			return rt;
 		}
@@ -127,7 +127,10 @@ public:
 			stats.define( "nofProgramsInstalled", m_statemachine.nofProgramsInstalled());
 			stats.define( "nofAltKeyProgramsInstalled", m_statemachine.nofAltKeyProgramsInstalled());
 			stats.define( "nofTriggersFired", m_statemachine.nofTriggersFired());
-			stats.define( "nofTriggersAvgActive", m_statemachine.nofOpenPatterns() / m_nofEvents);
+			if (m_nofEvents)
+			{
+				stats.define( "nofTriggersAvgActive", m_statemachine.nofOpenPatterns() / m_nofEvents);
+			}
 			return stats;
 		}
 		CATCH_ERROR_MAP_RETURN( _TXT("failed to get pattern match statistics: %s"), *m_errorhnd, TokenPatternMatchStatistics());
@@ -160,6 +163,9 @@ public:
 	{
 		try
 		{
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cout << "ATM push term " << (int)termid << std::endl;
+#endif
 			uint32_t eventid = eventHandle( TermEvent, termid);
 			m_stack.push_back( StackElement( eventid));
 		}
@@ -172,6 +178,9 @@ public:
 	{
 		try
 		{
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cout << "ATM push expression " << (int)joinop << ", args " << argc << ", range " << range << ", cardinality " << cardinality << std::endl;
+#endif
 			if (range > std::numeric_limits<uint32_t>::max())
 			{
 				throw strus::runtime_error(_TXT("proximity range value out of range or negative"));
@@ -286,6 +295,9 @@ public:
 	{
 		try
 		{
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cout << "ATM push pattern '" << name << "'" << std::endl;
+#endif
 			uint32_t eventid = eventHandle( ReferenceEvent, m_data.patternMap.getOrCreate( name));
 			m_stack.push_back( StackElement( eventid));
 		}
@@ -296,6 +308,9 @@ public:
 	{
 		try
 		{
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cout << "ATM attach variable '" << name << "' [" << weight << "]" << std::endl;
+#endif
 			if (m_stack.empty())
 			{
 				throw strus::runtime_error(_TXT( "illegal operation attach variable when no node on the stack"));
@@ -315,6 +330,9 @@ public:
 	{
 		try
 		{
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cout << "ATM define token pattern '" << name << "'" << (visible?" (visible)":"") << std::endl;
+#endif
 			if (m_stack.empty())
 			{
 				throw strus::runtime_error(_TXT("illegal operation close pattern when no node on the stack"));
@@ -331,6 +349,10 @@ public:
 				m_data.programTable.createTrigger(
 					program, elem.eventid, true/*isKeyEvent*/, Trigger::SigAny, 0, elem.variable, elem.weight);
 				m_data.programTable.doneProgram( program);
+			}
+			else if (elem.variable)
+			{
+				throw strus::runtime_error(_TXT("variable assignments only allowed to subexpressions of pattern"));
 			}
 			m_data.programTable.defineProgramResult( program, resultEvent, visible?resultHandle:0);
 		}

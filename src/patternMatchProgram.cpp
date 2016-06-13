@@ -102,6 +102,7 @@ void PatternMatchProgramInstance::loadExpressionNode( const std::string& name, c
 		{
 			(void)parse_OPERATOR( si);
 			loadExpression( si);
+			++nofArguments;
 			if (isOr( *si) || isExp( *si))
 			{
 				unsigned int mask = 0;
@@ -294,13 +295,13 @@ bool PatternMatchProgramInstance::load( const std::string& source)
 						(void)parse_OPERATOR(si);
 
 						//... Regex pattern def -> name : regex ;
-						if (isStringQuote(*si) || isSlash(*si))
+						if ((unsigned char)*si > 32)
 						{
-							regex = parse_STRING( si);
+							regex = parse_REGEX( si);
 						}
 						else
 						{
-							throw strus::runtime_error(_TXT("regular expression definition (string inside single (') or double (\") quotes or inside slashes '/') expected after colon ':'"));
+							throw strus::runtime_error(_TXT("regular expression definition (inside chosen characters) expected after colon ':'"));
 						}
 						unsigned int resultIndex = 0;
 						if (isOpenSquareBracket(*si))

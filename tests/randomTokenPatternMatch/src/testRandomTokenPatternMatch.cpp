@@ -271,7 +271,7 @@ static unsigned int matchRules( const strus::TokenPatternMatchInstanceInterface*
 	{
 		std::cout << "match '" << ri->name() << "':";
 		std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
-			ei = ri->itemlist().begin(), ee = ri->itemlist().end();
+			ei = ri->items().begin(), ee = ri->items().end();
 	
 		for (; ei != ee; ++ei)
 		{

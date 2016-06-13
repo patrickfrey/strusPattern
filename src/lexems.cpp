@@ -92,6 +92,25 @@ std::string parser::parse_STRING( char const*& src)
 	return rt;
 }
 
+std::string parser::parse_REGEX( char const*& src)
+{
+	std::string rt;
+	char eb = *src++;
+	while (*src != eb)
+	{
+		if (*src == '\0' || *src == '\n') throw strus::runtime_error(_TXT("unterminated string %c...%c"), eb, eb);
+		if (*src == '\\')
+		{
+			rt.push_back( *src++);
+			if (*src == '\0' || *src == '\n') throw strus::runtime_error(_TXT("unterminated string %c...%c"), eb, eb);
+		}
+		rt.push_back( *src++);
+	}
+	++src;
+	skipSpaces( src);
+	return rt;
+}
+
 unsigned int parser::parse_UNSIGNED( char const*& src)
 {
 	unsigned int rt = 0;

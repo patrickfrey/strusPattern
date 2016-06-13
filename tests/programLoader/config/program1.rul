@@ -1,16 +1,16 @@
 DOT ^1		:/[.]/;
-ABBREV ^2	: /\b[aA]bbr[\.]\b/ | /\b[aA]d[cjv][\.]\b/ | /\b[oO]bj[\.]\b/ | /\b[pP]seud[\.]\b/
-		|  /\b[tT]rans[\.]\b/ | /\b[A-Za-z][\.][a-z][\.]?\b/ | /\betc[\.]\b/ | /\bca[\.]\b/
-		| /\b[mM]rs[\.]\b/ | /\b[pP]rof[\.]\b/ | /\b[rR]ev[\.]\b/ | /\b[hH]on[\.]\b/ | /\b[hH]rs[\.]\b/
-		| /\b[A-Za-z][btlsr][\.]\b/ | /\b[gG]en[\.]\b/ | /\b[sS]ing[\.]\b/ | /\b[sS]yn[\.]\b/
-		| /\b[aA]ve[\.]\b/ | /\b[d]dD]ept[\.]\b/ | /\b[eE]st[\.]\b/ | /\b[fF]ig[\.]\b/ | /\b[iI]nc[\.]\b/
-		| /\b[oO]z[\.]\b/ | /\b[nN]o[\.]\b/ | /\b[sS]q[\.]\b/ | /\b[aA]ssn[\.]\b/ | /\b[tT]rans[\.]\b/;
-ABBREV ^3	: /\bet\sal[\.]\b/| /\b[rR][\.][iI][\.][pP]\b/;
-URL ^4		: /\b(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?\b/;
-EMAIL ^5	: /\b([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})\b/;
+ABBREV ^2	: /\b[aA]bbr[\.]/ | /\b[aA]d[cjv][\.]/ | /\b[oO]bj[\.]/ | /\b[pP]seud[\.]/
+		|  /\b[tT]rans[\.]/ | /\b[A-Za-z][\.][a-z][\.]/ | /\betc[\.]/ | /\bca[\.]/
+		| /\b[mM]rs[\.]/ | /\b[pP]rof[\.]/ | /\b[rR]ev[\.]/ | /\b[hH]on[\.]/ | /\b[hH]rs[\.]/
+		| /\b[A-Za-z][btlsr][\.]/ | /\b[gG]en[\.]/ | /\b[sS]ing[\.]/ | /\b[sS]yn[\.]/
+		| /\b[aA]ve[\.]/ | /\b[d]dD]ept[\.]/ | /\b[eE]st[\.]/ | /\b[fF]ig[\.]/ | /\b[iI]nc[\.]/
+		| /\b[oO]z[\.]/ | /\b[nN]o[\.]/ | /\b[sS]q[\.]/ | /\b[aA]ssn[\.]/ | /\b[tT]rans[\.]/;
+ABBREV ^3	: /\bet\sal[\.]/ | /\b[rR][\.][iI][\.][pP]\b/;
+URL ^4		: @([^\s/?\.#-][^\s/?\.#-]+\.)(aero|asia|biz|cat|com|coop|edu|gov|info|int|jobs|mil|mobi|museum|name|net|org|pro|tel|travel|ac|ad|ae|af|ag|ai|al|am|an|ao|aq|ar|as|at|au|aw|ax|az|ba|bb|bd|be|bf|bg|bh|bi|bj|bm|bn|bo|br|bs|bt|bv|bw|by|bz|ca|cc|cd|cf|cg|ch|ci|ck|cl|cm|cn|co|cr|cu|cv|cx|cy|cz|cz|de|dj|dk|dm|do|dz|ec|ee|eg|er|es|et|eu|fi|fj|fk|fm|fo|fr|ga|gb|gd|ge|gf|gg|gh|gi|gl|gm|gn|gp|gq|gr|gs|gt|gu|gw|gy|hk|hm|hn|hr|ht|hu|id|ie|il|im|in|io|iq|ir|is|it|je|jm|jo|jp|ke|kg|kh|ki|km|kn|kp|kr|kw|ky|kz|la|lb|lc|li|lk|lr|ls|lt|lu|lv|ly|ma|mc|md|me|mg|mh|mk|ml|mn|mn|mo|mp|mr|ms|mt|mu|mv|mw|mx|my|mz|na|nc|ne|nf|ng|ni|nl|no|np|nr|nu|nz|nom|pa|pe|pf|pg|ph|pk|pl|pm|pn|pr|ps|pt|pw|py|qa|re|ra|rs|ru|rw|sa|sb|sc|sd|se|sg|sh|si|sj|sj|sk|sl|sm|sn|so|sr|st|su|sv|sy|sz|tc|td|tf|tg|th|tj|tk|tl|tm|tn|to|tp|tr|tt|tv|tw|tz|ua|ug|uk|us|uy|uz|va|vc|ve|vg|vi|vn|vu|wf|ws|xyz|ye|yt|yu|za|zm|zw|arpa)@;
+URL ^5		: @\b(https?://|ftp://)?([^\s/?\.#-]+\.)([^\s/?\.#-]+\.)([a-z]{2,6})(/[^\s]*)?@;
+EMAIL ^6	: /\b([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})\b/;
 CAPWORD ^1	: /\b\p{Lu}\p{Ll}+\b/;
 
 Name		= sequence( firstname=[0.75]CAPWORD, surname=CAPWORD | 2 );
-Contact		= sequence_struct( Name, email=EMAIL | 10 );
 
 

@@ -49,6 +49,11 @@ public:
 	virtual const CharRegexMatchInstanceInterface* getCharRegexMatchInstance() const;
 	virtual const TokenPatternMatchInstanceInterface* getTokenPatternMatchInstance() const;
 
+	virtual const char* tokenName( unsigned int id) const
+	{
+		return m_regexNameSymbolTab.key( id);
+	}
+
 private:
 	void loadOption( char const*& si);
 	void loadExpression( char const*& si);

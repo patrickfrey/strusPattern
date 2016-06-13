@@ -40,6 +40,11 @@ public:
 	/// \brief Get a const reference to this instance of a character token pattern matcher
 	/// \return this token pattern match instance
 	virtual const TokenPatternMatchInstanceInterface* getTokenPatternMatchInstance() const=0;
+
+	/// \brief Get the name of the token from its id
+	/// \param[in] id of the token
+	/// \return name of the token, or 0 if not defined
+	virtual const char* tokenName( unsigned int id) const=0;
 };
 
 } //namespace

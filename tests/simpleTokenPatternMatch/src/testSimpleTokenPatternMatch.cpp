@@ -19,6 +19,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 #include <memory>
@@ -28,7 +29,7 @@
 #include <cstring>
 #include <iomanip>
 
-#undef STRUS_LOWLEVEL_DEBUG
+#define STRUS_LOWLEVEL_DEBUG
 #define RANDINT(MIN,MAX) ((std::rand()%(MAX-MIN))+MIN)
 
 strus::ErrorBufferInterface* g_errorBuffer = 0;
@@ -78,6 +79,8 @@ static Document createDocument( unsigned int no, unsigned int size)
 			rt.itemar.push_back( DocumentItem( ii+2, termId( SentenceDelim, 0)));
 		}
 	}
+	rt.itemar.push_back( DocumentItem( ++ii, termId( Token, 1)));
+	rt.itemar.push_back( DocumentItem( ++ii, termId( Token, 1)));
 	return rt;
 }
 
@@ -87,17 +90,18 @@ struct Operation
 	enum Type {None,Term,Expression};
 	Type type;
 	unsigned int termid;
+	unsigned int variable;
 	JoinOperation joinop;
 	unsigned int range;
 	unsigned int cardinality;
 	unsigned int argc;
-	unsigned int variable;
 };
 
 struct Pattern
 {
 	const char* name;
 	Operation operations[32];
+	unsigned int results[32];
 };
 
 static void createPattern( strus::TokenPatternMatchInstanceInterface* ptinst, const char* ptname, const Operation* oplist)
@@ -136,8 +140,10 @@ static void createPatterns( strus::TokenPatternMatchInstanceInterface* ptinst, c
 	}
 }
 
-static unsigned int matchRules( strus::TokenPatternMatchInstanceInterface* ptinst, const Document& doc)
+static std::vector<strus::stream::TokenPatternMatchResult>
+	matchRules( strus::TokenPatternMatchInstanceInterface* ptinst, const Document& doc)
 {
+	std::vector<strus::stream::TokenPatternMatchResult> results;
 	std::auto_ptr<strus::TokenPatternMatchContextInterface> mt( ptinst->createContext());
 	std::vector<DocumentItem>::const_iterator di = doc.itemar.begin(), de = doc.itemar.end();
 	unsigned int didx = 0;
@@ -146,18 +152,17 @@ static unsigned int matchRules( strus::TokenPatternMatchInstanceInterface* ptins
 		mt->putInput( strus::stream::PatternMatchToken( di->termid, di->pos, didx, 1));
 		if (g_errorBuffer->hasError()) throw std::runtime_error("error matching rules");
 	}
-	std::vector<strus::stream::TokenPatternMatchResult> results = mt->fetchResults();
-	unsigned int nofMatches = results.size();
+	results = mt->fetchResults();
 
 #ifdef STRUS_LOWLEVEL_DEBUG
 	std::vector<strus::stream::TokenPatternMatchResult>::const_iterator
 		ri = results.begin(), re = results.end();
 	for (; ri != re; ++ri)
 	{
-		std::cout << "match '" << ri->name() << "':";
+		std::cout << "match '" << ri->name() << " at " << ri->ordpos() << "':";
 		std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
-			ei = ri->itemlist().begin(), ee = ri->itemlist().end();
-	
+			ei = ri->items().begin(), ee = ri->items().end();
+
 		for (; ei != ee; ++ei)
 		{
 			std::cout << " " << ei->name() << " [" << ei->ordpos()
@@ -165,9 +170,9 @@ static unsigned int matchRules( strus::TokenPatternMatchInstanceInterface* ptins
 		}
 		std::cout << std::endl;
 	}
-	strus::TokenPatternMatchContextInterface::Statistics stats = mt->getStatistics();
-	std::cout << "nof matches " << nofMatches;
-	std::vector<strus::TokenPatternMatchContextInterface::Statistics::Item>::const_iterator
+	strus::stream::TokenPatternMatchStatistics stats = mt->getStatistics();
+	std::cout << "nof matches " << results.size();
+	std::vector<strus::stream::TokenPatternMatchStatistics::Item>::const_iterator
 		li = stats.items().begin(), le = stats.items().end();
 	for (; li != le; ++li)
 	{
@@ -175,36 +180,47 @@ static unsigned int matchRules( strus::TokenPatternMatchInstanceInterface* ptins
 	}
 	std::cout << std::endl;
 #endif
-	return nofMatches;
+	return results;
 }
 
 typedef strus::TokenPatternMatchInstanceInterface PT;
 static const Pattern testPatterns[32] =
 {
 	{"seq[3]_1_2",
-		{{Operation::Term,TOKEN(1)},
-		 {Operation::Term,TOKEN(2)},
-		 {Operation::Expression,0,PT::OpSequence,3,0,2,1}}
+		{{Operation::Term,TOKEN(1),1},
+		 {Operation::Term,TOKEN(2),2},
+		 {Operation::Expression,0,0,PT::OpSequence,3,0,2}},
+		{1,0}
 	},
 	{"seq[2]_1_2",
-		{{Operation::Term,TOKEN(1)},
-		 {Operation::Term,TOKEN(2)},
-		 {Operation::Expression,0,PT::OpSequence,2,0,2,1}}
+		{{Operation::Term,TOKEN(1),1},
+		 {Operation::Term,TOKEN(2),2},
+		 {Operation::Expression,0,0,PT::OpSequence,2,0,2}},
+		{1,0}
 	},
 	{"seq[1]_1_2",
-		{{Operation::Term,TOKEN(1)},
-		 {Operation::Term,TOKEN(2)},
-		 {Operation::Expression,0,PT::OpSequence,1,0,2,1}}
+		{{Operation::Term,TOKEN(1),1},
+		 {Operation::Term,TOKEN(2),2},
+		 {Operation::Expression,0,0,PT::OpSequence,1,0,2}},
+		{1,0}
 	},
 	{"seq[2]_1_3",
-		{{Operation::Term,TOKEN(1)},
-		 {Operation::Term,TOKEN(3)},
-		 {Operation::Expression,0,PT::OpSequence,2,0,2,1}}
+		{{Operation::Term,TOKEN(1),1},
+		 {Operation::Term,TOKEN(3),2},
+		 {Operation::Expression,0,0,PT::OpSequence,2,0,2}},
+		{1,0}
 	},
 	{"seq[1]_1_3",
-		{{Operation::Term,TOKEN(1)},
-		 {Operation::Term,TOKEN(3)},
-		 {Operation::Expression,0,PT::OpSequence,1,0,2,1}}
+		{{Operation::Term,TOKEN(1),1},
+		 {Operation::Term,TOKEN(3),2},
+		 {Operation::Expression,0,0,PT::OpSequence,1,0,2}},
+		{0}
+	},
+	{"seq[1]_1_1",
+		{{Operation::Term,TOKEN(1),1},
+		 {Operation::Term,TOKEN(1),2},
+		 {Operation::Expression,0,0,PT::OpSequence,1,0,2}},
+		{101,0}
 	},
 	{0,{Operation::None}}
 };
@@ -238,11 +254,51 @@ int main( int argc, const char** argv)
 			throw std::runtime_error( "error creating automaton for evaluating rules");
 		}
 		Document doc = createDocument( 1, documentSize);
-		unsigned int totalNofmatches = 0;
 		std::cerr << "starting rule evaluation ..." << std::endl;
 
-		unsigned int nofmatches = matchRules( ptinst.get(), doc);
-		totalNofmatches += nofmatches;
+		// Evaluate results:
+		std::vector<strus::stream::TokenPatternMatchResult> 
+			results = matchRules( ptinst.get(), doc);
+
+		// Verify results:
+		std::vector<strus::stream::TokenPatternMatchResult>::const_iterator
+			ri = results.begin(), re = results.end();
+
+		typedef std::pair<std::string,unsigned int> Match;
+		std::set<Match> matches;
+		for (;ri != re; ++ri)
+		{
+			matches.insert( Match( ri->name(), ri->ordpos()));
+		}
+		unsigned int ti=0;
+		for (; testPatterns[ti].name; ++ti)
+		{
+			unsigned int ei=0;
+			for (; testPatterns[ti].results[ei]; ++ei)
+			{
+				std::set<Match>::iterator
+					mi = matches.find( Match( testPatterns[ti].name, testPatterns[ti].results[ei]));
+				if (mi == matches.end())
+				{
+					char numbuf[ 64];
+					::snprintf( numbuf, sizeof(numbuf), "%u", testPatterns[ti].results[ei]);
+					throw std::runtime_error( std::string("expected match not found '") + testPatterns[ti].name + "' at ordpos " + numbuf);
+				}
+				else
+				{
+					matches.erase( mi);
+				}
+			}
+		}
+		if (!matches.empty())
+		{
+			std::set<Match>::const_iterator mi = matches.begin(), me = matches.end();
+			for (; mi != me; ++mi)
+			{
+				std::cerr << "unexpected match of '" << mi->first << "' at ordpos " << mi->second << std::endl;
+			}
+			throw std::runtime_error( "more matches found than expected");
+		}
 		if (g_errorBuffer->hasError())
 		{
 			throw std::runtime_error("error matching rule");
