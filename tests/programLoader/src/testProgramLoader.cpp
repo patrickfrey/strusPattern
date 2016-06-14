@@ -141,7 +141,7 @@ int main( int argc, const char** argv)
 			ri = results.begin(), re = results.end();
 		for (; ri != re; ++ri)
 		{
-			std::cout << "result " << ri->name() << ":" << std::endl;
+			std::cout << "result " << ri->name() << " at " << ri->ordpos() << ":" << std::endl;
 			std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
 				ti = ri->items().begin(), te = ri->items().end();
 			for (; ti != te; ++ti)

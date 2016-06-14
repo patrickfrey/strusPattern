@@ -28,7 +28,7 @@
 #include <cstring>
 #include <iomanip>
 
-#define STRUS_LOWLEVEL_DEBUG
+#undef STRUS_LOWLEVEL_DEBUG
 
 strus::ErrorBufferInterface* g_errorBuffer = 0;
 

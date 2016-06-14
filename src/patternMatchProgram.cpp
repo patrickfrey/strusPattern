@@ -76,7 +76,7 @@ static JoinOperation joinOperation( const std::string& name)
 	std::size_t ai = 0;
 	for (; ar[ai]; ++ai)
 	{
-		if (0 == utils::caseInsensitiveEquals( name, ar[ai]))
+		if (utils::caseInsensitiveEquals( name, ar[ai]))
 		{
 			return (JoinOperation)ai;
 		}

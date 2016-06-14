@@ -28,7 +28,7 @@
 #include <iostream>
 #include <boost/regex.hpp>
 
-#define STRUS_LOWLEVEL_DEBUG
+#undef STRUS_LOWLEVEL_DEBUG
 
 using namespace strus;
 using namespace strus::stream;
@@ -187,7 +187,12 @@ public:
 			subexpref = m_subexprmap.size();
 		}
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cout << "define pattern " << id << " index " << (m_defar.size()+1) << " '" << expression << "', subexp " << subexpref << ", lv " << level << ", posbind " << ((int)(posbind+1) % 3 - 1) << std::endl;
+		std::cout << "define pattern " << id << " index " << (m_defar.size()+1)
+				<< " '" << expression;
+		if (subexpref) std::cout << "', select part " << subexpref;
+		std::cout << ", level " << level;
+		std::cout << ", posbind " << ((int)(posbind+1) % 3 - 1);
+		std::cout << std::endl;
 #endif
 		m_defar.push_back( PatternDef( expression, subexpref, id, posbind, level));
 		if (m_defar.size() > std::numeric_limits<uint32_t>::max())

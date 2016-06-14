@@ -29,7 +29,7 @@
 #include <cstring>
 #include <iomanip>
 
-#define STRUS_LOWLEVEL_DEBUG
+#undef STRUS_LOWLEVEL_DEBUG
 #define RANDINT(MIN,MAX) ((std::rand()%(MAX-MIN))+MIN)
 
 strus::ErrorBufferInterface* g_errorBuffer = 0;
