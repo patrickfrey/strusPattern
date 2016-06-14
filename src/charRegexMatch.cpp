@@ -25,7 +25,10 @@
 #include <cstring>
 #include <stdexcept>
 #include <limits>
+#include <iostream>
 #include <boost/regex.hpp>
+
+#undef STRUS_LOWLEVEL_DEBUG
 
 using namespace strus;
 using namespace strus::stream;
@@ -183,6 +186,14 @@ public:
 			m_subexprmap.push_back( SubExpressionReference( expression, resultIndex));
 			subexpref = m_subexprmap.size();
 		}
+#ifdef STRUS_LOWLEVEL_DEBUG
+		std::cout << "define pattern " << id << " index " << (m_defar.size()+1)
+				<< " '" << expression;
+		if (subexpref) std::cout << "', select part " << subexpref;
+		std::cout << ", level " << level;
+		std::cout << ", posbind " << ((int)(posbind+1) % 3 - 1);
+		std::cout << std::endl;
+#endif
 		m_defar.push_back( PatternDef( expression, subexpref, id, posbind, level));
 		if (m_defar.size() > std::numeric_limits<uint32_t>::max())
 		{
@@ -215,6 +226,9 @@ public:
 		{
 			throw strus::runtime_error(_TXT("symbol defined twice: '%s'"), name.c_str());
 		}
+#ifdef STRUS_LOWLEVEL_DEBUG
+		std::cout << "define symbol " << patternid << " as " << symbolid << " name '" << name << "'" << std::endl;
+#endif
 		m_symidmap.push_back( symbolid);
 	}
 
@@ -250,7 +264,7 @@ public:
 				di->setSymtabref( ti->second);
 			}
 			hspt.patternar[ didx] = di->expression().c_str();
-			hspt.idar[ didx] = di->id();
+			hspt.idar[ didx] = didx+1;
 			hspt.flagar[ didx] = options | HS_FLAG_UTF8 | HS_FLAG_SOM_LEFTMOST;
 		}
 		hspt.patternar[ m_defar.size()] = 0;
@@ -354,7 +368,7 @@ public:
 		hs_free_scratch( m_hs_scratch);
 	}
 
-	static int match_event_handler( unsigned int id, unsigned_long_long from, unsigned_long_long to, unsigned int, void *context)
+	static int match_event_handler( unsigned int patternIdx, unsigned_long_long from, unsigned_long_long to, unsigned int, void *context)
 	{
 		CharRegexMatchContext* THIS = (CharRegexMatchContext*)context;
 		try
@@ -363,7 +377,7 @@ public:
 			{
 				throw strus::runtime_error( "size of matched term out of range");
 			}
-			const PatternDef& patternDef = THIS->m_data->patternTable.patternDef(id);
+			const PatternDef& patternDef = THIS->m_data->patternTable.patternDef( patternIdx);
 			if (patternDef.subexpref())
 			{
 				if (!THIS->m_data->patternTable.matchSubExpression( patternDef.subexpref(), THIS->m_src, from, to))
@@ -371,7 +385,7 @@ public:
 					return 0;
 				}
 			}
-			MatchEvent matchEvent( (uint32_t)id, patternDef.level(), patternDef.posbind(), (uint32_t)from, (uint32_t)(to-from));
+			MatchEvent matchEvent( patternDef.id(), patternDef.level(), patternDef.posbind(), (uint32_t)from, (uint32_t)(to-from));
 			if (THIS->m_matchEventAr.empty())
 			{
 				THIS->m_matchEventAr.push_back( matchEvent);
@@ -386,8 +400,8 @@ public:
 					me = THIS->m_matchEventAr.rend();
 				for (; mi != me && mi->origpos >= matchEvent.origpos; ++mi)
 				{
-					if (mi->level < matchEvent.level
-					&&  mi->origpos + mi->origsize <= matchLastPos)
+					if ((matchEvent.id == mi->id && mi->origpos == matchEvent.origpos && mi->level == matchEvent.level)
+					|| (mi->level < matchEvent.level && mi->origpos + mi->origsize <= matchLastPos))
 					{
 						// ... an old element is overwritten because it is completely covered by one element with a higher level already in the list
 						std::vector<MatchEvent>::iterator oi = mi.base()-1;
@@ -429,7 +443,7 @@ public:
 			}
 			return 0;
 		}
-		CATCH_ERROR_MAP_RETURN( "error calling hyperscan match event handler: %s", *THIS->m_errorhnd, -1);
+		CATCH_ERROR_MAP_RETURN( _TXT("error calling hyperscan match event handler: %s"), *THIS->m_errorhnd, -1);
 	}
 
 	static const char* hsErrorName( int ec)
@@ -538,7 +552,7 @@ public:
 			m_matchEventAr.clear();
 			return rt;
 		}
-		CATCH_ERROR_MAP_RETURN( "failed to run pattern matching terms with regular expressions: %s", *m_errorhnd, std::vector<stream::PatternMatchToken>());
+		CATCH_ERROR_MAP_RETURN( _TXT("failed to run pattern matching terms with regular expressions: %s"), *m_errorhnd, std::vector<stream::PatternMatchToken>());
 	}
 
 private:
@@ -574,7 +588,7 @@ public:
 			}
 			m_data.patternTable.definePattern( id, expression, resultIndex, level, posbind);
 		}
-		CATCH_ERROR_MAP( "failed to define term match regular expression pattern: %s", *m_errorhnd);
+		CATCH_ERROR_MAP( _TXT("failed to define term match regular expression pattern: %s"), *m_errorhnd);
 	}
 
 	virtual void defineSymbol( unsigned int symbolid, unsigned int patternid, const std::string& name)
@@ -587,7 +601,7 @@ public:
 			}
 			m_data.patternTable.defineSymbol( symbolid, patternid, name);
 		}
-		CATCH_ERROR_MAP( "failed to define term match regular expression pattern: %s", *m_errorhnd);
+		CATCH_ERROR_MAP( _TXT("failed to define term match regular expression pattern: %s"), *m_errorhnd);
 	}
 
 	virtual bool compile( const CharRegexMatchOptions& opts)
@@ -635,7 +649,7 @@ public:
 			m_state = MatchPhase;
 			return true;
 		}
-		CATCH_ERROR_MAP_RETURN( "failed to compile regular expression patterns: %s", *m_errorhnd, false);
+		CATCH_ERROR_MAP_RETURN( _TXT("failed to compile regular expression patterns: %s"), *m_errorhnd, false);
 	}
 
 	virtual CharRegexMatchContextInterface* createContext() const
@@ -648,7 +662,7 @@ public:
 			}
 			return new CharRegexMatchContext( &m_data, m_errorhnd);
 		}
-		CATCH_ERROR_MAP_RETURN( "failed to create term match context: %s", *m_errorhnd, 0);
+		CATCH_ERROR_MAP_RETURN( _TXT("failed to create term match context: %s"), *m_errorhnd, 0);
 	}
 
 private:
@@ -693,13 +707,25 @@ private:
 	State m_state;
 };
 
+
+std::vector<std::string> CharRegexMatch::getCompileOptions() const
+{
+	std::vector<std::string> rt;
+	static const char* ar[] = {"CASELESS", "DOTALL", "MULTILINE", "ALLOWEMPTY", "UCP", 0};
+	for (std::size_t ai=0; ar[ai]; ++ai)
+	{
+		rt.push_back( ar[ ai]);
+	}
+	return rt;
+}
+
 CharRegexMatchInstanceInterface* CharRegexMatch::createInstance() const
 {
 	try
 	{
 		return new CharRegexMatchInstance( m_errorhnd);
 	}
-	CATCH_ERROR_MAP_RETURN( "failed to create term match instance: %s", *m_errorhnd, 0);
+	CATCH_ERROR_MAP_RETURN( _TXT("failed to create term match instance: %s"), *m_errorhnd, 0);
 }
 
 

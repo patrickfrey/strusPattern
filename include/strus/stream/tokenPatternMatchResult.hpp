@@ -23,21 +23,27 @@ public:
 	typedef TokenPatternMatchResultItem Item;
 
 	/// \brief Constructor
-	TokenPatternMatchResult( const char* name_, const std::vector<Item>& itemlist_)
-		:m_name(name_),m_itemlist(itemlist_){}
+	TokenPatternMatchResult( const char* name_, unsigned int ordpos_, std::size_t origpos_, const std::vector<Item>& itemlist_)
+		:m_name(name_),m_ordpos(ordpos_),m_origpos(origpos_),m_itemlist(itemlist_){}
 	/// \brief Copy constructor
 	TokenPatternMatchResult( const TokenPatternMatchResult& o)
-		:m_name(o.m_name),m_itemlist(o.m_itemlist){}
+		:m_name(o.m_name),m_ordpos(o.m_ordpos),m_origpos(o.m_origpos),m_itemlist(o.m_itemlist){}
 	/// \brief Destructor
 	~TokenPatternMatchResult(){}
 
 	/// \brief Name of the result, defined by the name of the pattern of the match
 	const char* name() const			{return m_name;}
+	/// \brief Ordinal (counting) position of the match (resp. the first term of the match)
+	unsigned int ordpos() const			{return m_ordpos;}
+	/// \brief Original position of the match in the source
+	std::size_t origpos() const			{return m_origpos;}
 	/// \brief List of result items defined by variables assigned to nodes of the pattern of the match
-	const std::vector<Item>& itemlist() const	{return m_itemlist;}
+	const std::vector<Item>& items() const		{return m_itemlist;}
 
 private:
 	const char* m_name;
+	unsigned int m_ordpos;
+	std::size_t m_origpos;
 	std::vector<Item> m_itemlist;
 };
 

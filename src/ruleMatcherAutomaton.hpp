@@ -264,11 +264,13 @@ struct Result
 {
 	uint32_t resultHandle;
 	uint32_t eventDataReferenceIdx;
+	uint32_t ordpos;
+	uint32_t origpos;
 
-	Result( uint32_t resultHandle_, uint32_t eventDataReferenceIdx_)
-		:resultHandle(resultHandle_),eventDataReferenceIdx(eventDataReferenceIdx_){}
+	Result( uint32_t resultHandle_, uint32_t eventDataReferenceIdx_, uint32_t ordpos_, uint32_t origpos_)
+		:resultHandle(resultHandle_),eventDataReferenceIdx(eventDataReferenceIdx_),ordpos(ordpos_),origpos(origpos_){}
 	Result( const Result& o)
-		:resultHandle(o.resultHandle),eventDataReferenceIdx(o.eventDataReferenceIdx){}
+		:resultHandle(o.resultHandle),eventDataReferenceIdx(o.eventDataReferenceIdx),ordpos(o.ordpos),origpos(o.origpos){}
 };
 
 struct ActionSlotDef

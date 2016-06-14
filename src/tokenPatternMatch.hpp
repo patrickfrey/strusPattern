@@ -27,6 +27,7 @@ public:
 		:m_errorhnd(errorhnd_){}
 	virtual ~TokenPatternMatch(){}
 
+	virtual std::vector<std::string> getCompileOptions() const;
 	virtual TokenPatternMatchInstanceInterface* createInstance() const;
 
 private:

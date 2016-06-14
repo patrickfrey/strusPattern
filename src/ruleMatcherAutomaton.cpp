@@ -17,7 +17,7 @@
 #include <emmintrin.h>
 #define STRUS_USE_SSE_SCAN_TRIGGERS
 #endif
-#undef STRUS_LOWLEVEL_DEBUG
+#define STRUS_LOWLEVEL_DEBUG
 
 using namespace strus;
 
@@ -763,7 +763,7 @@ void StateMachine::fireTrigger(
 			}
 			if (slot.resultHandle)
 			{
-				m_results.add( Result( slot.resultHandle, rule.eventDataReferenceIdx));
+				m_results.add( Result( slot.resultHandle, rule.eventDataReferenceIdx, slot.start_ordpos, slot.start_origpos));
 				if (rule.eventDataReferenceIdx)
 				{
 					referenceEventData( rule.eventDataReferenceIdx);
@@ -850,7 +850,7 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 		}
 	}
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::cout << "current state after transition [" << followList.size() << "]: nof rules used " << m_ruleTable.used_size() << ", nof active triggers " << m_eventTriggerTable.size() << std::endl;
+	std::cout << "current state after transition [" << followList.size() << "]: nof rules used " << m_ruleTable.used_size() << ", nof active triggers " << m_eventTriggerTable.nofTriggers() << std::endl;
 #endif
 }
 
@@ -918,7 +918,7 @@ void StateMachine::setCurrentPos( uint32_t pos)
 		}
 	}
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::cout << "set current position " << pos << ", rules deleted " << disposeCount << ", nof rules used " << m_ruleTable.used_size() << ", nof active triggers " << m_eventTriggerTable.size() << std::endl;
+	std::cout << "set current position " << pos << ", rules deleted " << disposeCount << ", nof rules used " << m_ruleTable.used_size() << ", nof active triggers " << m_eventTriggerTable.nofTriggers() << std::endl;
 #endif
 }
 
@@ -937,7 +937,7 @@ void StateMachine::installEventPrograms( uint32_t event, const EventData& data, 
 #endif
 	}
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::cout << "programs installed " << icnt << ", nof rules used " << m_ruleTable.used_size() << ", triggers active " << m_eventTriggerTable.size() << std::endl;
+	std::cout << "programs installed " << icnt << ", nof rules used " << m_ruleTable.used_size() << ", triggers active " << m_eventTriggerTable.nofTriggers() << std::endl;
 #endif
 }
 

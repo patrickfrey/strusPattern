@@ -11,6 +11,7 @@
 #include "strus/errorBufferInterface.hpp"
 #include "tokenPatternMatch.hpp"
 #include "charRegexMatch.hpp"
+#include "patternMatchProgram.hpp"
 #include "strus/base/dll_tags.hpp"
 #include "internationalization.hpp"
 #include "errorUtils.hpp"
@@ -45,4 +46,22 @@ DLL_PUBLIC CharRegexMatchInterface* strus::createCharRegexMatch_standard( ErrorB
 	}
 	CATCH_ERROR_MAP_RETURN( _TXT("error creating char regex match interface: %s"), *errorhnd, 0);
 }
+
+DLL_PUBLIC PatternMatchProgramInterface* strus::createPatternMatchProgram_standard(
+		const TokenPatternMatchInterface* tpm,
+		const CharRegexMatchInterface* crm,
+		ErrorBufferInterface* errorhnd)
+{
+	try
+	{
+		if (!g_intl_initialized)
+		{
+			strus::initMessageTextDomain();
+			g_intl_initialized = true;
+		}
+		return new PatternMatchProgram( tpm, crm, errorhnd);
+	}
+	CATCH_ERROR_MAP_RETURN( _TXT("error creating the standard pattern match program interface: %s"), *errorhnd, 0);
+}
+
 

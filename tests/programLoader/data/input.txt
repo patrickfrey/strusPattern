@@ -1,0 +1,2 @@
+This is an example document about Prof. John Doe, contact mail@etc.com, or visit www.etc.ch.
+He is responsible for development, etc..
