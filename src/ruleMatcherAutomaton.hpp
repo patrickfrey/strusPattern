@@ -439,12 +439,12 @@ public:
 public://getStatistics
 	unsigned int nofProgramsInstalled() const	{return m_nofProgramsInstalled;}
 	unsigned int nofAltKeyProgramsInstalled() const	{return m_nofAltKeyProgramsInstalled;}
-	unsigned int nofTriggersFired() const		{return m_nofTriggersFired;}
+	unsigned int nofSignalsFired() const		{return m_nofSignalsFired;}
 	double nofOpenPatterns() const			{return m_nofOpenPatterns;}
 
 private:
 	typedef PodStructArrayBase<uint32_t,std::size_t,BaseAddrDisposeRuleList> DisposeRuleList;
-	void fireTrigger( ActionSlot& slot, const Trigger& trigger, const EventData& data,
+	void fireSignal( ActionSlot& slot, const Trigger& trigger, const EventData& data,
 				DisposeRuleList& disposeRuleList, EventStructList& followList);
 	uint32_t createRule( uint32_t positionRange);
 	void disposeRule( uint32_t rule);
@@ -477,7 +477,7 @@ private:
 	std::map<uint32_t,EventLog> m_stopWordsEventLogMap;
 	unsigned int m_nofProgramsInstalled;
 	unsigned int m_nofAltKeyProgramsInstalled;
-	unsigned int m_nofTriggersFired;
+	unsigned int m_nofSignalsFired;
 	double m_nofOpenPatterns;
 	unsigned int m_timestmp;
 };

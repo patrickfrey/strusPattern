@@ -126,7 +126,7 @@ public:
 			TokenPatternMatchStatistics stats;
 			stats.define( "nofProgramsInstalled", m_statemachine.nofProgramsInstalled());
 			stats.define( "nofAltKeyProgramsInstalled", m_statemachine.nofAltKeyProgramsInstalled());
-			stats.define( "nofTriggersFired", m_statemachine.nofTriggersFired());
+			stats.define( "nofSignalsFired", m_statemachine.nofSignalsFired());
 			if (m_nofEvents)
 			{
 				stats.define( "nofTriggersAvgActive", m_statemachine.nofOpenPatterns() / m_nofEvents);

@@ -515,7 +515,7 @@ StateMachine::StateMachine( const ProgramTable* programTable_)
 	,m_curpos(0)
 	,m_nofProgramsInstalled(0)
 	,m_nofAltKeyProgramsInstalled(0)
-	,m_nofTriggersFired(0)
+	,m_nofSignalsFired(0)
 	,m_nofOpenPatterns(0.0)
 	,m_timestmp(0)
 {
@@ -538,7 +538,7 @@ StateMachine::StateMachine( const StateMachine& o)
 	,m_stopWordsEventLogMap(o.m_stopWordsEventLogMap)
 	,m_nofProgramsInstalled(o.m_nofProgramsInstalled)
 	,m_nofAltKeyProgramsInstalled(o.m_nofAltKeyProgramsInstalled)
-	,m_nofTriggersFired(o.m_nofTriggersFired)
+	,m_nofSignalsFired(o.m_nofSignalsFired)
 	,m_nofOpenPatterns(o.m_nofOpenPatterns)
 	,m_timestmp(o.m_timestmp)
 {
@@ -645,7 +645,7 @@ void StateMachine::joinEventData( uint32_t eventdataref_dest, uint32_t eventdata
 	}
 }
 
-void StateMachine::fireTrigger(
+void StateMachine::fireSignal(
 	ActionSlot& slot, const Trigger& trigger, const EventData& data,
 	DisposeRuleList& disposeRuleList, EventStructList& followList)
 {
@@ -653,7 +653,7 @@ void StateMachine::fireTrigger(
 	bool match = false;
 	bool takeEventData = false;
 	bool finished = false;
-	++m_nofTriggersFired;
+	++m_nofSignalsFired;
 
 #ifdef STRUS_LOWLEVEL_DEBUG
 	std::cout << "rule " << slot.rule << " fire sig " << Trigger::sigTypeName( trigger.sigtype()) << "(" << trigger.sigval() << ") at " << slot.value << "#" << slot.count;
@@ -689,7 +689,8 @@ void StateMachine::fireTrigger(
 			break;
 		case Trigger::SigWithin:
 		{
-			if ((trigger.sigval() & slot.value) != 0)
+			slot.end_ordpos = data.ordpos;
+			if ((trigger.sigval() & slot.value) != 0 && slot.end_ordpos < data.ordpos)
 			{
 				slot.value &= ~trigger.sigval();
 				if (slot.count > 0)
@@ -824,7 +825,7 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 			const Trigger& trigger = **ti;
 			ActionSlot& slot = m_actionSlotTable[ trigger.slot()];
 
-			fireTrigger( slot, trigger, follow.data, disposeRuleList, followList);
+			fireSignal( slot, trigger, follow.data, disposeRuleList, followList);
 		}
 		// Install triggered programs:
 		installEventPrograms( follow.eventid, follow.data, followList, disposeRuleList);
@@ -1004,7 +1005,7 @@ void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& prog
 		Trigger keyTrigger( rule.actionSlotIdx-1, 
 				(Trigger::SigType)keyTriggerDef->sigtype, keyTriggerDef->sigval,
 				keyTriggerDef->variable, keyTriggerDef->weight);
-		fireTrigger( slot, keyTrigger, data, disposeRuleList, followList);
+		fireSignal( slot, keyTrigger, data, disposeRuleList, followList);
 	}
 }
 
@@ -1039,7 +1040,7 @@ void StateMachine::replayPastEvent( uint32_t eventid, const Rule& rule, uint32_t
 			}
 			if (eventid == trigger_eventid)
 			{
-				fireTrigger( slot, *tp, ei->second.data, disposeRuleList, followList);
+				fireSignal( slot, *tp, ei->second.data, disposeRuleList, followList);
 			}
 		}
 		if (delEventList.size())
