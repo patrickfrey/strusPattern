@@ -4,7 +4,7 @@
 	<link rel="icon" type="image/ico" href="images/strus.ico" />
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="Strus stream, a library for high performance document stream processing for Strus." />
+	<meta name="description" content="Strus stream, a library for fast document stream processing for Strus." />
 	<meta name="keywords" content="high performance document stream processing pattern matching C++" />
 	<meta name="author" content="Patrick Frey &lt;patrickpfrey (a) yahoo (dt) com&gt;" />
 	<link rel="stylesheet" type="text/css" href="text-profile.css" title="Text Profile" media="all" />
@@ -16,7 +16,7 @@
 <div id="content">
 	<h1>Strus Stream</h1>
 	<h2>Description</h2>
-	<p id="description"><i>StrusStream</i> is a high performance pattern detection library, suitable for processing large sets of rules.
+	<p id="description"><i>StrusStream</i> is a pattern detection library with a competitive performance, suitable for processing large sets of rules.
 	It can be used for detecting multipart entities in text. In a bigger context it can support NLP and entity recognition,
 	wheter you use the large set of patterns to detect entities directly or as hint for a system learning entities.
 	The patterns that can be recognized are describable as expression trees with basic tokens as leafs, that are recognized with 
@@ -27,11 +27,11 @@
 	pattern matching, but not in this form in the query evaluation:
 	<h4>Token pattern matching operators</h4>
 	<ol>
-	<li><b>any</b>: Matches is any of the argument subexpressions or tokens matches.</li>
-	<li><b>sequence</b>: Matches if the argument subexpressions or tokens appear in the order as the arguments withing a proximity range specified.</li>
-	<li><b>sequence_struct</b>: Matches if the argument subexpressions or tokens appear in the order as the arguments withing a proximity range specified without a structure delimiter (e.g. end of sentence token) specified as first argument in between.</li>
-	<li><b>within</b>: Matches if the argument subexpressions or tokens appear withing a proximity range specified. The argument expression spans may overlap, whereas in the case of <i>sequence</i> or <i>sequence_struct</i> they must not.</li>
-	<li><b>within_struct</b>: Matches if the argument subexpressions or tokens appear withing a proximity range specified without a structure delimiter (e.g. end of sentence token) specified as first argument in between.</li>
+	<li><b>any</b>: Matches if any of the argument subexpressions or tokens matches.</li>
+	<li><b>sequence</b>: Matches if the argument subexpressions or tokens appear in the order as the arguments withing a proximity range of ordinal positions specified.</li>
+	<li><b>sequence_struct</b>: Matches if the argument subexpressions or tokens appear in the order as the arguments withing a proximity range of ordinal positions specified without a structure delimiter (e.g. end of sentence token), specified as first argument, within the span of a match.</li>
+	<li><b>within</b>: Matches if the argument subexpressions or tokens appear withing a proximity range of ordinal positions specified. The argument expression spans may overlap, whereas in the case of <i>sequence</i> or <i>sequence_struct</i> they must not.</li>
+	<li><b>within_struct</b>: Matches if the argument subexpressions or tokens appear withing a proximity range of ordinal positions specified without a structure delimiter (e.g. end of sentence token), specified as first argument, within the span of a match.</li>
 	</ol>
 	</p>
 
@@ -144,9 +144,10 @@ result Contact at 8:
 	<p id="description">The following runs show the behaviour of the <i>StrusStream</i> pattern matching without tokenization. We just use random documents represented as Zipf distributed random numbers, assuming 30'000 different terms in the whole collection. Each document contains 1000 such terms.
 	The patterns are sequences of two random terms (Zipf distribution applied here too) within a proximity range of 1 to 10 with smaller proximity being much more likely than larger proximity conditions.
 	We start 4 threads with the same rule set with different input documents and test with 10 to 10'000'000 patterns evaluated.
-	This test does not help to estimate the performance of the system solving a real world problems. But it can help to estimate its behaviour when confronted with real world problems, if you look at the numbers in detail, like how many rules where triggered, how many rules matched, etc.. Leaving the regular expression matching out in this test is not a problem since you can assume, that the ultra fast <i>hyperscan</i> library from Intel will not be a bottleneck.
+	This test does not help to estimate the performance of the system solving a real world problems. But it can help to estimate its behaviour when confronted with real world problems, if you look at the numbers in detail, like how many patterns were activated or how many patterns matched, etc.. Leaving the regular expression matching out in this test is not a problem since you can for sure assume, that the ultra fast <i>hyperscan</i> library from Intel will not be a bottleneck.
 	For real world problems, you also have to take into account, that rules get more complicated, with subexpressions, more complex operators than a simple sequence and variables assigned for items, you want to be part of the result. The numbers here are just representing the numbers for a set of the simplest type of rule possible. If you measure the performance for rule nodes detecting sequences of terms or subexpressions within the same sentence sentence, you will roughly double the execution time. Same for nodes detecting the appearance of two features in whatever order compared with a simple sequence.
-	If you have more complex rules, consisting of many nodes, you have to count every node as unit and you have to take into account that every sub expression matched produces an event that gets part of the input processed.
+	If you have more complex rules, e.g. expression trees with many nodes, you have to count every node as unit and you have to take into account that every sub expression matched produces an event that gets part of the input processed.
+	The tests were run on an Intel NUC (<a href="http://www.newegg.com/Product/Product.aspx?Item=N82E16856102145">NUC6i3SYK</a>), a system with 4 GB RAM is enough for processing the test with 10'000'000 rules.
 	</p>
 	<pre>
 for dd in 10 100 1000 10000 100000 1000000 10000000; do
@@ -159,7 +160,7 @@ statistiscs:
 	nofAltKeyProgramsInstalled: 0
 	nofProgramsInstalled: 491
 	nofTriggersAvgActive: 0
-	nofTriggersFired: 491
+	nofSignalsFired: 491
 
 starting 4 threads for rule evaluation ...
 OK
@@ -168,7 +169,7 @@ statistiscs:
 	nofAltKeyProgramsInstalled: 0
 	nofProgramsInstalled: 33967
 	nofTriggersAvgActive: 1
-	nofTriggersFired: 33984
+	nofSignalsFired: 33984
 
 starting 4 threads for rule evaluation ...
 OK
@@ -177,7 +178,7 @@ statistiscs:
 	nofAltKeyProgramsInstalled: 2035
 	nofProgramsInstalled: 169880
 	nofTriggersAvgActive: 6
-	nofTriggersFired: 174716
+	nofSignalsFired: 174716
 
 starting 4 threads for rule evaluation ...
 OK
@@ -186,7 +187,7 @@ statistiscs:
 	nofAltKeyProgramsInstalled: 30437
 	nofProgramsInstalled: 1987366
 	nofTriggersAvgActive: 84
-	nofTriggersFired: 2023920
+	nofSignalsFired: 2023920
 
 starting 4 threads for rule evaluation ...
 OK
@@ -195,7 +196,7 @@ statistiscs:
 	nofAltKeyProgramsInstalled: 360835
 	nofProgramsInstalled: 20092579
 	nofTriggersAvgActive: 848
-	nofTriggersFired: 20545764
+	nofSignalsFired: 20545764
 
 starting 4 threads for rule evaluation ...
 OK
@@ -204,7 +205,7 @@ statistiscs:
 	nofAltKeyProgramsInstalled: 4194327
 	nofProgramsInstalled: 198949620
 	nofTriggersAvgActive: 8465
-	nofTriggersFired: 202923433
+	nofSignalsFired: 202923433
 
 starting 4 threads for rule evaluation ...
 OK
@@ -213,7 +214,7 @@ statistiscs:
 	nofAltKeyProgramsInstalled: 42381393
 	nofProgramsInstalled: 1990633664
 	nofTriggersAvgActive: 84649
-	nofTriggersFired: 2028410811
+	nofSignalsFired: 2028410811
 	</pre>
 </div>
 </div>
