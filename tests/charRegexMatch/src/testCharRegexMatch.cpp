@@ -191,7 +191,7 @@ int main( int argc, const char** argv)
 		std::size_t ti = 0;
 		for (; g_tests[ti].src; ++ti)
 		{
-			std::cerr << "executing test " << ti << ":" << std::endl;
+			std::cerr << "executing test " << (ti+1) << std::endl;
 			std::auto_ptr<strus::CharRegexMatchInstanceInterface> ptinst( pt->createInstance());
 			if (!ptinst.get()) throw std::runtime_error("failed to create regular expression term matcher instance");
 
