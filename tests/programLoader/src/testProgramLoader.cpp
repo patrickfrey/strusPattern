@@ -44,6 +44,23 @@ static void printUsage( int argc, const char* argv[])
 	std::cerr << "<inputfile> = input file to process" << std::endl;
 }
 
+static bool diffContent( const std::string& res, const std::string& exp)
+{
+	std::string::const_iterator ri = res.begin(), re = res.end();
+	std::string::const_iterator ei = exp.begin(), ee = exp.end();
+	while (ei != ee && ri != re)
+	{
+		while (ei != ee && (*ei == '\n' || *ei == '\r')) ++ei;
+		while (ri != re && (*ri == '\n' || *ri == '\r')) ++ri;
+		if (ei == ee || ri == re || *ei != *ri) break;
+		++ei;
+		++ri;
+	}
+	while (ei != ee && (*ei == '\n' || *ei == '\r')) ++ei;
+	while (ri != re && (*ri == '\n' || *ri == '\r')) ++ri;
+	return (ei == ee && ri == re);
+}
+
 int main( int argc, const char** argv)
 {
 	try
@@ -84,7 +101,7 @@ int main( int argc, const char** argv)
 		if (ec)
 		{
 			char errmsg[ 256];
-			::snprintf( errmsg, sizeof(errmsg), "error (%u) reading program source: %s", ec, ::strerror(ec));
+			::snprintf( errmsg, sizeof(errmsg), "error (%u) reading program source '%s': %s", ec, programfile.c_str(), ::strerror(ec));
 			throw std::runtime_error( errmsg);
 		}
 		if (!pii->load( programsrc))
@@ -103,7 +120,33 @@ int main( int argc, const char** argv)
 		if (ec)
 		{
 			char errmsg[ 256];
-			::snprintf( errmsg, sizeof(errmsg), "error (%u) reading input file: %s", ec, ::strerror(ec));
+			::snprintf( errmsg, sizeof(errmsg), "error (%u) reading input file '%s': %s", ec, inputfile.c_str(), ::strerror(ec));
+			throw std::runtime_error( errmsg);
+		}
+
+		// Load expected output:
+		char const* argv2ext = std::strchr( argv[ 2], '.');
+		if (argv2ext)
+		{
+			char const* aa = std::strchr( argv2ext+1, '.');
+			while (aa)
+			{
+				argv2ext = aa;
+				aa = std::strchr( argv2ext+1, '.');
+			}
+		}
+		else
+		{
+			argv2ext = std::strchr( argv[ 2], '\0');
+		}
+		std::string expectedfile( argv[ 2], argv2ext - argv[ 2]);
+		expectedfile.append( ".res");
+		std::string expectedsrc;
+		ec = strus::readFile( expectedfile, expectedsrc);
+		if (ec)
+		{
+			char errmsg[ 256];
+			::snprintf( errmsg, sizeof(errmsg), "error (%u) reading expected file '%s': %s", ec, expectedfile.c_str(), ::strerror(ec));
 			throw std::runtime_error( errmsg);
 		}
 
@@ -116,8 +159,9 @@ int main( int argc, const char** argv)
 		{
 			throw std::runtime_error( "failed to scan for tokens with char regex match automaton");
 		}
+		std::ostringstream resultstrbuf;
 
-		// Scan tokens with token pattern match automaton:
+		// Scan tokens with token pattern match automaton and print results:
 		const strus::TokenPatternMatchInstanceInterface* ptinst = pii->getTokenPatternMatchInstance();
 		std::auto_ptr<strus::TokenPatternMatchContextInterface> ptctx( ptinst->createContext());
 		std::vector<strus::stream::PatternMatchToken>::const_iterator
@@ -125,7 +169,7 @@ int main( int argc, const char** argv)
 		for (; ci != ce; ++ci)
 		{
 			std::string tokstr( std::string( inputsrc.c_str() + ci->origpos(), ci->origsize()));
-			std::cout << "token " << pii->tokenName(ci->id()) << "(" << ci->id() << ") at " << ci->ordpos() 
+			resultstrbuf << "token " << pii->tokenName(ci->id()) << "(" << ci->id() << ") at " << ci->ordpos() 
 					<< "[" << ci->origpos() << ":" << ci->origsize() << "] '"
 					<< tokstr << "'" << std::endl;
 			ptctx->putInput( *ci);
@@ -136,34 +180,43 @@ int main( int argc, const char** argv)
 			throw std::runtime_error( "failed to scan for patterns with token pattern match automaton");
 		}
 
-		// Print and verify result:
+		// Print result:
 		std::vector<strus::stream::TokenPatternMatchResult>::const_iterator
 			ri = results.begin(), re = results.end();
 		for (; ri != re; ++ri)
 		{
-			std::cout << "result " << ri->name() << " at " << ri->ordpos() << ":" << std::endl;
+			resultstrbuf << "result " << ri->name() << " at " << ri->ordpos() << ":" << std::endl;
 			std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
 				ti = ri->items().begin(), te = ri->items().end();
 			for (; ti != te; ++ti)
 			{
 				std::string itemstr( std::string( inputsrc.c_str() + ti->origpos(), ti->origsize()));
-				std::cout << "\titem " << ti->name()
+				resultstrbuf << "\titem " << ti->name()
 						<< " at " << ti->ordpos()
 						<< " [" << ti->origpos() << ":" << ti->origsize() << "] "
 						<< ti->weight() << " '" << itemstr.c_str() << "'" << std::endl;
 			}
-			std::cout << std::endl;
+			resultstrbuf << std::endl;
 		}
 
-		// Print and verify statistics:
-		std::cerr << "Statistics:" << std::endl;
+		// Print statistics:
+		resultstrbuf << "Statistics:" << std::endl;
 		strus::stream::TokenPatternMatchStatistics stats = ptctx->getStatistics();
 		std::vector<strus::stream::TokenPatternMatchStatistics::Item>::const_iterator
 			si = stats.items().begin(), se = stats.items().end();
 		for (; si != se; ++si)
 		{
-			std::cerr << std::fixed << si->name() << " = " << si->value() << std::endl;
+			resultstrbuf << std::fixed << si->name() << " = " << si->value() << std::endl;
 		}
+
+		// Print result to stdout and verify result by comparing it with the expected output:
+		std::string resultstr = resultstrbuf.str();
+		std::cout << resultstr << std::endl;
+		if (!diffContent( expectedsrc, resultstr))
+		{
+			throw std::runtime_error( "output and expected result differ");
+		}
+
 		if (g_errorBuffer->hasError())
 		{
 			throw std::runtime_error( "uncaught error");
