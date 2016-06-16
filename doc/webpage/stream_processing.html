@@ -16,7 +16,7 @@
 <div id="content">
 	<h1>Strus Stream</h1>
 	<h2>Description</h2>
-	<p id="description"><i>StrusStream</i> is a pattern detection library with a competitive performance, suitable for processing large sets of rules.
+	<p id="description"><i>StrusStream</i> is a pattern detection library for document stream processing with a competitive performance, suitable for processing large sets of rules.
 	It can be used for detecting multipart entities or structures in text. In a bigger context it can support NLP and entity recognition,
 	wheter you use the large set of patterns to detect entities directly or as hint for a system learning entities.
 	The patterns that can be recognized are describable as expression trees with basic tokens as leafs, that are recognized with 
@@ -64,8 +64,8 @@
 	<h3>Example patterns defined</h3>
 	<h4>Define the patterns with in a configuration file</h4>
 	<p id="description">We define the example rules defined in the following listing.
-	The declarations with an identifier followed by a ':' specify the tokens defined by regular expressions. The counting of the different token start positions defines the ordinal positions of the tokens. The number following a '^' after the name of the token defines its level, a sort of priorization (tokens covered completely by a token of a higher level are not part of the output and for ordinal position assignments).
-	The declarations with an identifier followed by a '=' specify the patterns defined on tokens with the ordinal position as position reference for proximity range specifications.
+	The declarations with an identifier followed by a ':' specify the tokens defined by regular expressions. The counting of the different token start positions defines the ordinal positions of the tokens. The number following a '^' after the name of the token defines its level, a sort of priorization. Tokens covered completely by a token of a higher level are not part of the output and for ordinal position assignments. We use the possibiliy to superseed rules in our example to define a hierarchy SENT (end of sentence) < ABBREV (abbreviation) < URL < EMAIL. It means that a dot is an end of sentence marker if not part of an abbreviation, URL or email address. An abbreviation is not recognized as such, if part of an URL. An URL is not an URL, if part of an email address, etc.
+	<br/>The declarations with an identifier followed by a '=' specify the patterns defined on tokens with the ordinal position as position reference for proximity range specifications.
 	</p>
 	<pre>
 WORD ^1		:/\b\w+\b/;
@@ -85,6 +85,14 @@ CAPWORD ^1	: /\b\p{Lu}\p{Ll}+\b/;
 Name		= sequence( firstname=[0.75]CAPWORD, surname=CAPWORD | 2 );
 Contact		= sequence_struct( SENT, Name, email=EMAIL | 10 );
 	</pre>
+	<p id="description">
+	A "Name" is defined as a sequence of two words with capitalized first letter in a proximity distance of 2
+	In this example the variable assignment of firstname gets the weight 0.75 assigned. Weigths are not
+	interpreted or used by strusStream. They are there for the user if part or the interpretation of the result.
+	<br/>
+	A "Contact" is defined as sequence of a name as we defined it and an email address in in a proximity
+	distance of maximum 10 tokens, without an end of sentence marker appearing in between a candidate match.
+	</p>
 	<h4>Define the patterns in C++</h4>
 	<p id="description"> ... </p>
 	<h4>Define the patterns in Python</h4>
@@ -217,6 +225,22 @@ statistiscs:
 	nofTriggersAvgActive: 84649
 	nofSignalsFired: 2028410811
 	</pre>
+
+<h4>Interpretation</h4>
+<p id="description">
+<ol>
+<li>processed <b>N</b> patterns on 100 documents with total <b>X</b> matches in <b>T</b> milliseconds:
+<ul>
+<li><b>N</b>: Number of patterns, sequences of two tokens in a ordinal position distance of 1 to 10 (possibly with unspecified tokens appearing in between) defined</li>
+<li><b>X</b>: Total number of matching token sequences in 100 documents</li>
+<li><b>T</b>: Execution time for processing all 100 documents</li>
+</ul>
+<li><b>nofAltKeyProgramsInstalled</b>: Tells how many optimized patterns with an alternative key event were triggered for execution by a key event during the whole processing of the 100 documents. A pattern is optimized, if an initial token, triggering the evaluation of the pattern, is statistically appearing too often. In this case a valable alternative token, if it exists, is chosen, and the initial token event is replayed for the pattern to match. The intention of this optimization is to reduce the number or hits and the following processing of rules that may not match. As example consider a rule like "The world", that is triggered with every appearance of "the". Triggering the rule with "world" is better in english text.</li>
+<li><b>nofProgramsInstalled</b>: Tells how many patterns were triggered for execution by a key event during the whole processing of the 100 documents.</li>
+<li><b>nofTriggersAvgActive</b>: Tells how many patterns were active in average for every input token processed.</li>
+<li><b>nofSignalsFired</b>: Tells how many signals were fired during the whole processing of the 100 documents. An active pattern listens for signals fired on a slot. The pattern matches on a completion condition on the slot.</li>
+</ol>
+</p>
 </div>
 </div>
 <h4>Performance measurement plot</h4>
@@ -224,6 +248,20 @@ statistiscs:
 rule nodes evaluated.
 </p>
 <img src="perfplot.png" width="500" alt="performance plot" />
+
+<h2>Resume</h2>
+<p id="description"><i>StrusStream</i> provides token pattern matching in a competitive performance for
+large sets of rules sutable for <a href="https://en.wikipedia.org/wiki/Named-entity_recognition">NER</a>,
+<a href="https://en.wikipedia.org/wiki/Natural_language_processing">NLP</a> and other structured entity 
+detection on text.
+The implementation is maybe not optimal in numbers of reads and writes of memory and in 
+numbers of branching instructions, but it is software with a good "flow". With a good "flow"
+I mean that it has simple operations on local (near) memory, that can event use SIMD capabilities
+of modern CPUs and it accesses new (far) memory mainly for feeding the system.
+<br/>
+For users that do not need arbitrary programs for their rules, for users, that can live with 
+the restrictions of the model of <i>StrusStream</i>, the prospect of the performance may be convincing.
+</p>
 </body>
 </html>
 

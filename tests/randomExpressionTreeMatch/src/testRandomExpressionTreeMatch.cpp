@@ -38,6 +38,110 @@
 
 strus::ErrorBufferInterface* g_errorBuffer = 0;
 
+class TreeNode
+{
+public:
+	typedef strus::TokenPatternMatchInstanceInterface::JoinOperation JoinOperation;
+
+	explicit TreeNode( unsigned int term_)
+		:m_term(term_),m_op(0),m_range(0),m_cardinality(){}
+	TreeNode( const JoinOperation& op_, std::vector<TreeNode*> args_, unsigned int range_, unsigned int cardinality_)
+		:m_term(0),m_op(op_),m_args(args_),m_range(range_),m_cardinality(cardinality_){}
+	TreeNode( const TreeNode& o)
+		:m_term(o.m_term),m_op(o.m_op),m_args(o.m_args),m_range(o.m_range),m_cardinality(o.m_cardinality){}
+
+	unsigned int term() const
+	{
+		return m_term;
+	}
+	JoinOperation op() const
+	{
+		return m_op;
+	}
+	const std::vector<TreeNode*>& args() const
+	{
+		return m_args;
+	}
+	unsigned int range() const
+	{
+		return m_range;
+	}
+	unsigned int cardinality() const
+	{
+		return m_cardinality;
+	}
+	static void deleteTree( TreeNode* nd)
+	{
+		std::vector<TreeNode*>::iterator ai = nd->m_args.begin(), ae = nd->m_args.end();
+		for (; ai != ae; ++ai)
+		{
+			destroy( *ai);
+		}
+		delete nd;
+	}
+
+private:
+	unsigned int m_term;
+	JoinOperation m_op;
+	std::vector<TreeNode*> m_args;
+	unsigned int m_range;
+	unsigned int m_cardinality;
+};
+
+class GlobalContext
+{
+public:
+	GlobalContext( unsigned int nofFeatures, unsigned int nofRules)
+		:m_nofRules(nofRules_),m_featdist(nofFeatures, 0.8),m_rangedist(20,1.3),m_selopdist( 5),m_argcdist(5,1.3){}
+
+	unsigned int randomTerm() const
+	{
+		return m_featdist.random();
+	}
+	unsigned int randomRange() const
+	{
+		return m_featdist.random()-1;
+	}
+	TreeNode::JoinOperation randomOp() const
+	{
+		return (TreeNode::JoinOperation)(m_selopdist.random()-1);
+	}
+	unsigned int randomArgc() const
+	{
+		unsigned int rt = m_argcdist.random();
+		if (rt == 1 && RANDINT(1,5)>=2) ++rt;
+		return rt;
+	}
+
+private:
+	unsigned int m_nofRules;
+	strus::utils::ZipfDistribution m_featdist;
+	strus::utils::ZipfDistribution m_rangedist;
+	strus::utils::ZipfDistribution m_selopdist;
+	strus::utils::ZipfDistribution m_argcdist;
+}
+
+static TreeNode* createRandomTree( GlobalContext* ctx, unsigned int depth)
+{
+	if (RANDINT( 1,5-depth) == 1)
+	{
+		return new TreeNode( 0);
+	}
+	else
+	{
+		unsigned int range = ctx->randomRange();
+		unsigned int cardinality = RANDINT( 1,5)>=2?0:RANDINT(1,range);
+		unsigned int argc = ctx->randomArgc();
+		TreeNode::JoinOperation op = ctx->randomOp();
+		std::vector<TreeNode*> args;
+		for (unsigned int ai=0; ai<argc; ++ai)
+		{
+			args.push_back( createRandomTree( ctx), depth+1);
+		}
+		return new TreeNode( op, args, range, cardinality);
+	}
+}
+
 static void createTermOpRule( strus::TokenPatternMatchInstanceInterface* ptinst, const char* joinopstr, unsigned int range, unsigned int cardinality, unsigned int* param, std::size_t paramsize)
 {
 	std::size_t pi = 0, pe = paramsize;
@@ -49,19 +153,19 @@ static void createTermOpRule( strus::TokenPatternMatchInstanceInterface* ptinst,
 	}
 	if (with_delim)
 	{
-		unsigned int delim_termid = strus::utils::termId( strus::utils::SentenceDelim, 0);
+		unsigned int delim_termid = strus::utils::termId( SentenceDelim, 0);
 		ptinst->pushTerm( delim_termid);
 		++paramsize;
 	}
 	for (; pi != pe; ++pi)
 	{
-		unsigned int termid = strus::utils::termId( strus::utils::Token, param[pi]);
+		unsigned int termid = termId( Token, param[pi]);
 		ptinst->pushTerm( termid);
 		char variablename[ 32];
 		snprintf( variablename, sizeof(variablename), "A%u", (unsigned int)pi);
 		ptinst->attachVariable( variablename, 1.0f);
 	}
-	strus::utils::JoinOperation joinop = strus::utils::joinOperation( joinopstr);
+	JoinOperation joinop = strus::utils::joinOperation( joinopstr);
 	ptinst->pushExpression( joinop, paramsize, range, cardinality);
 }
 
@@ -121,7 +225,7 @@ static std::vector<strus::utils::Document> createRandomDocuments( unsigned int c
 
 	for (di=0; di < de; ++di)
 	{
-		strus::utils::Document doc( strus::utils::createRandomDocument( di+1, docSize, nofFeatures));
+		strus::utils::Document doc( createRandomDocument( di+1, docSize, nofFeatures));
 		rt.push_back( doc);
 	}
 	return rt;
