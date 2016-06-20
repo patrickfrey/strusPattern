@@ -17,7 +17,7 @@
 #include <emmintrin.h>
 #define STRUS_USE_SSE_SCAN_TRIGGERS
 #endif
-#undef STRUS_LOWLEVEL_DEBUG
+#define STRUS_LOWLEVEL_DEBUG
 
 using namespace strus;
 
@@ -656,7 +656,7 @@ void StateMachine::fireSignal(
 	++m_nofSignalsFired;
 
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::cout << "rule " << slot.rule << " fire sig " << Trigger::sigTypeName( trigger.sigtype()) << "(" << trigger.sigval() << ") at " << slot.value << "#" << slot.count;
+	std::cout << "rule " << slot.rule << " fire sig " << Trigger::sigTypeName( trigger.sigtype()) << "(" << std::hex << trigger.sigval() << ") at " << slot.value << "#" << std::dec << slot.count;
 #endif
 	switch (trigger.sigtype())
 	{
@@ -689,9 +689,9 @@ void StateMachine::fireSignal(
 			break;
 		case Trigger::SigWithin:
 		{
-			slot.end_ordpos = data.ordpos;
 			if ((trigger.sigval() & slot.value) != 0 && slot.end_ordpos < data.ordpos)
 			{
+				slot.end_ordpos = data.ordpos;
 				slot.value &= ~trigger.sigval();
 				if (slot.count > 0)
 				{
@@ -712,6 +712,9 @@ void StateMachine::fireSignal(
 			slot.count = 0;
 			slot.value = 0;
 			disposeRuleList.add( slot.rule);
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cout << std::endl;
+#endif
 			return;
 		}
 	}
@@ -770,7 +773,7 @@ void StateMachine::fireSignal(
 					referenceEventData( rule.eventDataReferenceIdx);
 				}
 #ifdef STRUS_LOWLEVEL_DEBUG
-			std::cout << ", produces result";
+				std::cout << ", produces result";
 #endif
 			}
 			rule.done = true;
@@ -956,8 +959,9 @@ void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& prog
 	const Program& program = (*m_programTable)[ programTrigger.programidx];
 	uint32_t ruleidx = createRule( program.positionRange);
 	Rule& rule = m_ruleTable[ ruleidx];
-	const TriggerDef* keyTriggerDef = 0;
-
+#ifdef STRUS_LOWLEVEL_DEBUG
+	std::cout << "key event " << keyevent << " install program " << programTrigger.programidx << " as rule " << ruleidx << " at " << data.ordpos << std::endl;
+#endif
 	rule.actionSlotIdx =
 		1+m_actionSlotTable.add(
 			ActionSlot( program.slotDef.initsigval, program.slotDef.initcount,
@@ -966,17 +970,26 @@ void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& prog
 	ActionSlot& slot = m_actionSlotTable[ rule.actionSlotIdx-1];
 	uint32_t program_triggerListItr = program.triggerListIdx;
 	const TriggerDef* triggerDef;
-
+	enum {MaxNofKeyTriggerDefs=32};
+	const TriggerDef* keyTriggerDef[ MaxNofKeyTriggerDefs];
+	std::size_t nofKeyTriggerDef = 0;
 	while (0!=(triggerDef=m_programTable->triggerList().nextptr( program_triggerListItr)))
 	{
 		bool doInstall = false;
-		if (triggerDef->isKeyEvent && keyevent == triggerDef->event)
+		if (keyevent == triggerDef->event && (triggerDef->isKeyEvent || (Trigger::SigType)triggerDef->sigtype == Trigger::SigDel))
 		{
 			if (triggerDefNeedsInstall( *triggerDef, slot))
 			{
 				doInstall = true;
 			}
-			keyTriggerDef = triggerDef;
+			if (nofKeyTriggerDef < MaxNofKeyTriggerDefs)
+			{
+				keyTriggerDef[ nofKeyTriggerDef++] = triggerDef;
+			}
+			else
+			{
+				throw strus::runtime_error(_TXT("pattern with too many (%u) identical key events defined"), (unsigned int)nofKeyTriggerDef);
+			}
 		}
 		else
 		{
@@ -1000,12 +1013,16 @@ void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& prog
 		m_nofAltKeyProgramsInstalled += 1;
 		replayPastEvent( programTrigger.past_eventid, rule, program.positionRange);
 	}
-	if (keyTriggerDef && rule.actionSlotIdx)
+	if (nofKeyTriggerDef && rule.actionSlotIdx)
 	{
-		Trigger keyTrigger( rule.actionSlotIdx-1, 
-				(Trigger::SigType)keyTriggerDef->sigtype, keyTriggerDef->sigval,
-				keyTriggerDef->variable, keyTriggerDef->weight);
-		fireSignal( slot, keyTrigger, data, disposeRuleList, followList);
+		std::size_t ki = 0;
+		for (; ki < nofKeyTriggerDef; ++ki)
+		{
+			Trigger keyTrigger( rule.actionSlotIdx-1, 
+					(Trigger::SigType)keyTriggerDef[ki]->sigtype, keyTriggerDef[ki]->sigval,
+					keyTriggerDef[ki]->variable, keyTriggerDef[ki]->weight);
+			fireSignal( slot, keyTrigger, data, disposeRuleList, followList);
+		}
 	}
 }
 

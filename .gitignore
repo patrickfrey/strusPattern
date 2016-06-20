@@ -27,10 +27,11 @@
 *.exe
 *.out
 *.app
-testSimpleTokenPatternMatch
-testRandomTokenPatternMatch
 testCharRegexMatch
+testRandomTokenPatternMatch
+testRandomExpressionTreeMatch
 testProgramLoader
+testSimpleTokenPatternMatch
 strusPatternMatch
 
 # CMake generated files

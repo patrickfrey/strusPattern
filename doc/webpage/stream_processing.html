@@ -124,7 +124,7 @@ token EMAIL(5) at 11[58:12] 'mail@etc.com'
 token WORD(1) at 12[72:2] 'or'
 token WORD(1) at 13[75:5] 'visit'
 token URL(4) at 14[81:10] 'www.etc.ch'
-token DOT(2) at 15[91:1] '.'
+token SENT(2) at 15[91:1] '.'
 token WORD(1) at 16[93:2] 'He'
 token CAPWORD(6) at 16[93:2] 'He'
 token WORD(1) at 17[96:2] 'is'
@@ -132,7 +132,7 @@ token WORD(1) at 18[99:11] 'responsible'
 token WORD(1) at 19[111:3] 'for'
 token WORD(1) at 20[115:11] 'development'
 token ABBREV(3) at 21[128:4] 'etc.'
-token DOT(2) at 22[132:1] '.'
+token SENT(2) at 22[132:1] '.'
 	</pre>
 
 	<h3>Rule matching</h3>
@@ -156,7 +156,7 @@ result Contact at 8:
 	This test does not help to estimate the performance of the system solving a real world problems. But it can help to estimate its behaviour when confronted with real world problems, if you look at the numbers in detail, like how many patterns were activated or how many patterns matched, etc.. Leaving the regular expression matching out in this test is not a problem since you can for sure assume, that the ultra fast <i>hyperscan</i> library from Intel will not be a bottleneck.
 	For real world problems, you also have to take into account, that rules get more complicated, with subexpressions, more complex operators than a simple sequence and variables assigned for items, you want to be part of the result. The numbers here are just representing the numbers for a set of the simplest type of rule possible. If you measure the performance for rule nodes detecting sequences of terms or subexpressions within the same sentence sentence, you will roughly double the execution time. Same for nodes detecting the appearance of two features in whatever order compared with a simple sequence.
 	If you have more complex rules, e.g. expression trees with many nodes, you have to count every node as unit and you have to take into account that every sub expression matched produces an event that gets part of the input processed.
-	The tests were run on an Intel NUC (<a href="http://www.intel.com/content/www/us/en/nuc/nuc-kit-nuc6i3syk.html">NUC6i3SYK</a>), a system with 4 GB RAM is enough for processing the test with 10'000'000 rules.
+	The tests were run on an Intel NUC (<a href="http://www.intel.com/content/www/us/en/nuc/nuc-kit-nuc6i3syk.html">NUC6i3SYK</a>), a system with 4 GB RAM is enough for processing the test with 10'000'000 rule nodes.
 	</p>
 	<pre>
 for dd in 10 100 1000 10000 100000 1000000 10000000; do
@@ -249,17 +249,31 @@ rule nodes evaluated.
 </p>
 <img src="perfplot.png" width="500" alt="performance plot" />
 
+<h2>Caveats</h2>
+<p id="description"><i>StrusStream</i> handles events immediately when they are seen.
+This can lead to anomalies, when formulating restrictions, e.g. with 'sequence_struct' or 'within_struct'.
+When the last element of a rule is detected without passing over a structure element, that is part of 
+the restriction condition, then the result is emitted, even if a restriction event with the same ordinal position,
+that should overrule the decision, happens thereafter. Another anomaly of this kind can happen, when the 
+restricting element of a rule occurrs with the same position, but before the key event triggering the pattern.
+<br/>
+Practically I do not see too bad consequences of this behaviour, because structure delimiters usually get their
+own position assigned. But it might be needed in the future to treat these cases differently.
+<br/>
+At the moment I just premention the expected behaviour.
+</p>
+
 <h2>Resume</h2>
 <p id="description"><i>StrusStream</i> provides token pattern matching in a competitive performance for
 large sets of rules sutable for <a href="https://en.wikipedia.org/wiki/Named-entity_recognition">NER</a>,
 <a href="https://en.wikipedia.org/wiki/Natural_language_processing">NLP</a> and other structured entity 
 detection on text.
 The implementation is maybe not optimal in numbers of reads and writes of memory and in 
-numbers of branching instructions, but it is software with a good "flow". With a good "flow"
-I mean that it has simple operations on local (near) memory, that can event use SIMD capabilities
-of modern CPUs and it accesses new (far) memory mainly for feeding the system.
+numbers of branching instructions, but it is software with a good flow. It has
+simple operations mainly operating on local (near, on chip) memory, able to use SIMD capabilities
+of modern CPUs and it accesses new (far away) memory mainly for feeding the system.
 <br/>
-For users that do not need arbitrary programs for their rules, for users, that can live with 
+For users that do not need arbitrary programs to define patterns and for users, that can live with 
 the restrictions of the model of <i>StrusStream</i>, the prospect of the performance may be convincing.
 </p>
 </body>

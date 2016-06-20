@@ -6,6 +6,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 #include "testUtils.hpp"
+#include "strus/stream/tokenPatternMatchResultItem.hpp"
+#include <iostream>
+#include <sstream>
 #include <limits>
 #include <cmath>
 #include <cstdlib>
@@ -18,6 +21,20 @@
 
 using namespace strus;
 using namespace strus::utils;
+
+std::string Document::tostring() const
+{
+	std::ostringstream outbuf;
+	outbuf << "docid=" << id << ", items={";
+	std::vector<DocumentItem>::const_iterator ti = itemar.begin(), te = itemar.end();
+	for (int tidx=0; ti != te; ++ti,++tidx)
+	{
+		if (tidx) outbuf << ", ";
+		outbuf << ti->pos << ":" << ti->termid;
+	}
+	outbuf << "}";
+	return outbuf.str();
+}
 
 ZipfDistribution::ZipfDistribution( std::size_t size, double S)
 {
@@ -106,4 +123,37 @@ unsigned int utils::getUintValue( const char* arg)
 	return rt;
 }
 
+void utils::printResults( std::ostream& out, const std::vector<strus::stream::TokenPatternMatchResult>& results, const char* src)
+{
+	std::vector<strus::stream::TokenPatternMatchResult>::const_iterator
+		ri = results.begin(), re = results.end();
+	for (; ri != re; ++ri)
+	{
+		out << "match '" << ri->name() << "' at " << ri->ordpos() << " [" << ri->origpos() << "]:";
+		std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
+			ei = ri->items().begin(), ee = ri->items().end();
+	
+		for (; ei != ee; ++ei)
+		{
+			out << " " << ei->name() << " [" << ei->ordpos()
+					<< ", " << ei->origpos() << ", " << ei->origsize() << "]";
+			if (src)
+			{
+				out << " '" << std::string( src+ei->origpos(), ei->origsize()) << "'";
+			}
+		}
+		out << std::endl;
+	}
+}
+
+void utils::printStatistics( std::ostream& out, const strus::stream::TokenPatternMatchStatistics& stats)
+{
+	out << "Statistics:" << std::endl;
+	std::vector<strus::stream::TokenPatternMatchStatistics::Item>::const_iterator
+		gi = stats.items().begin(), ge = stats.items().end();
+	for (; gi != ge; ++gi)
+	{
+		out << "\t" << gi->name() << ": " << floor( gi->value()+0.5) << std::endl;
+	}
+}
 

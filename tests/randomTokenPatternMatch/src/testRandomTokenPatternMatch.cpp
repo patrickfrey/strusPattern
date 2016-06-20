@@ -34,6 +34,17 @@
 #include "boost/date_time/posix_time/posix_time.hpp"
 
 #undef STRUS_LOWLEVEL_DEBUG
+
+static void initRand()
+{
+	time_t nowtime;
+	struct tm* now;
+
+	::time( &nowtime);
+	now = ::localtime( &nowtime);
+
+	::srand( ((now->tm_year+1) * (now->tm_mon+100) * (now->tm_mday+1)));
+}
 #define RANDINT(MIN,MAX) ((std::rand()%(MAX-MIN))+MIN)
 
 strus::ErrorBufferInterface* g_errorBuffer = 0;
@@ -127,7 +138,7 @@ static std::vector<strus::utils::Document> createRandomDocuments( unsigned int c
 	return rt;
 }
 
-static unsigned int matchRules( const strus::TokenPatternMatchInstanceInterface* ptinst, const strus::utils::Document& doc, std::map<std::string,double>& globalstats)
+static unsigned int processDocument( const strus::TokenPatternMatchInstanceInterface* ptinst, const strus::utils::Document& doc, std::map<std::string,double>& globalstats)
 {
 	std::auto_ptr<strus::TokenPatternMatchContextInterface> mt( ptinst->createContext());
 	std::vector<strus::utils::DocumentItem>::const_iterator di = doc.itemar.begin(), de = doc.itemar.end();
@@ -149,28 +160,10 @@ static unsigned int matchRules( const strus::TokenPatternMatchInstanceInterface*
 	}
 
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::vector<strus::stream::TokenPatternMatchResult>::const_iterator
-		ri = results.begin(), re = results.end();
-	for (; ri != re; ++ri)
-	{
-		std::cout << "match '" << ri->name() << "':";
-		std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
-			ei = ri->items().begin(), ee = ri->items().end();
-	
-		for (; ei != ee; ++ei)
-		{
-			std::cout << " " << ei->name() << " [" << ei->ordpos()
-					<< ", " << ei->origpos() << ", " << ei->origsize() << "]";
-		}
-		std::cout << std::endl;
-	}
-	std::cerr << "document stats:" << std::endl;
-	std::vector<strus::stream::PatternMatchStatistics::Item>::const_iterator
-		gi = stats.items().begin(), ge = stats.items().end();
-	for (; gi != ge; ++gi)
-	{
-		std::cerr << "\t" << gi->name() << ": " << floor( gi->value()+0.5) << std::endl;
-	}
+	strus::utils::printResults( std::cout, results);
+	std::cout << "nof matches " << results.size();
+	strus::stream::TokenPatternMatchStatistics stats = mt->getStatistics();
+	strus::utils::printStatistics( std::cerr, stats);
 #endif
 	return nofMatches;
 }
@@ -186,7 +179,7 @@ static void printUsage( int argc, const char* argv[])
 	std::cerr << "<joinop> = operator to use for patterns (default all)" << std::endl;
 }
 
-static unsigned int runMatching( const strus::TokenPatternMatchInstanceInterface* ptinst, const std::vector<strus::utils::Document>& docs, std::map<std::string,double>& stats)
+static unsigned int processDocuments( const strus::TokenPatternMatchInstanceInterface* ptinst, const std::vector<strus::utils::Document>& docs, std::map<std::string,double>& stats)
 {
 	unsigned int totalNofmatches = 0;
 	std::vector<strus::utils::Document>::const_iterator di = docs.begin(), de = docs.end();
@@ -195,7 +188,7 @@ static unsigned int runMatching( const strus::TokenPatternMatchInstanceInterface
 #ifdef STRUS_LOWLEVEL_DEBUG
 		std::cout << "document " << di->id << ":" << std::endl;
 #endif
-		unsigned int nofmatches = matchRules( ptinst, *di, stats);
+		unsigned int nofmatches = processDocument( ptinst, *di, stats);
 		totalNofmatches += nofmatches;
 		if (g_errorBuffer->hasError())
 		{
@@ -247,7 +240,7 @@ public:
 	void run()
 	{
 		std::map<std::string,double> stats;
-		unsigned int nofMatches = runMatching( m_globals->ptinst, m_docs, stats);
+		unsigned int nofMatches = processDocuments( m_globals->ptinst, m_docs, stats);
 		m_globals->accumulateStats( stats, nofMatches, m_docs.size());
 		if (g_errorBuffer->hasError())
 		{
@@ -300,6 +293,7 @@ int main( int argc, const char** argv)
 			printUsage( argc, argv);
 			return 1;
 		}
+		initRand();
 		g_errorBuffer = strus::createErrorBuffer_standard( 0, 1+nofThreads);
 		if (!g_errorBuffer)
 		{
@@ -363,7 +357,7 @@ int main( int argc, const char** argv)
 			boost::posix_time::ptime start_time = boost::posix_time::microsec_clock::local_time();
 	
 			std::map<std::string,double> stats;
-			globals.totalNofMatches = runMatching( ptinst.get(), docs, globals.stats);
+			globals.totalNofMatches = processDocuments( ptinst.get(), docs, globals.stats);
 			globals.totalNofDocs = docs.size();
 
 			boost::posix_time::ptime end_time = boost::posix_time::microsec_clock::local_time();
