@@ -24,17 +24,11 @@ token WORD(1) at 19[111:3] 'for'
 token WORD(1) at 20[115:11] 'development'
 token ABBREV(3) at 21[128:4] 'etc.'
 token SENT(2) at 22[132:1] '.'
-result Name at 8:
-	item surname at 9 [45:3] 1 'Doe'
-	item firstname at 8 [40:4] 0.75 'John'
-
-result Contact at 8:
-	item email at 11 [58:12] 1 'mail@etc.com'
-	item firstname at 8 [40:4] 0.75 'John'
-	item surname at 9 [45:3] 1 'Doe'
-
+match 'Name': surname [9, 45, 3] 'Doe' firstname [8, 40, 4] 'John'
+match 'Contact': email [11, 58, 12] 'mail@etc.com' firstname [8, 40, 4] 'John' surname [9, 45, 3] 'Doe'
 Statistics:
-nofProgramsInstalled = 5.000000
-nofAltKeyProgramsInstalled = 0.000000
-nofSignalsFired = 7.000000
-nofTriggersAvgActive = 0.461538
+	nofProgramsInstalled: 5
+	nofAltKeyProgramsInstalled: 0
+	nofSignalsFired: 7
+	nofTriggersAvgActive: 0
+

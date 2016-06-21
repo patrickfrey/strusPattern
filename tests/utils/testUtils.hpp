@@ -10,8 +10,11 @@
 #ifndef _STRUS_STREAM_TEST_UTILS_HPP_INCLUDED
 #define _STRUS_STREAM_TEST_UTILS_HPP_INCLUDED
 #include "strus/tokenPatternMatchInstanceInterface.hpp"
+#include "strus/stream/tokenPatternMatchResult.hpp"
+#include "strus/stream/tokenPatternMatchStatistics.hpp"
 #include <vector>
 #include <string>
+#include <iostream>
 
 namespace strus {
 namespace utils {
@@ -36,6 +39,8 @@ struct Document
 		:id(id_){}
 	Document( const Document& o)
 		:id(o.id),itemar(o.itemar){}
+
+	std::string tostring() const;
 };
 
 class ZipfDistribution
@@ -57,6 +62,8 @@ typedef strus::TokenPatternMatchInstanceInterface::JoinOperation JoinOperation;
 JoinOperation joinOperation( const char* joinopstr);
 
 unsigned int getUintValue( const char* arg);
+void printResults( std::ostream& out, const std::vector<strus::stream::TokenPatternMatchResult>& results, const char* src=0);
+void printStatistics( std::ostream& out, const strus::stream::TokenPatternMatchStatistics& stats);
 
 }} //namespace
 #endif

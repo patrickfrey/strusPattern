@@ -24,7 +24,7 @@
 #include <cstring>
 #include <iostream>
 
-#undef STRUS_LOWLEVEL_DEBUG
+#define STRUS_LOWLEVEL_DEBUG
 
 using namespace strus;
 using namespace strus::stream;
@@ -229,7 +229,7 @@ public:
 					break;
 				case OpAny:
 					slot_sigtype = Trigger::SigAny;
-					slot_initcount = 1;
+					slot_initcount = cardinality?(uint32_t)cardinality:(uint32_t)1;
 					break;
 			}
 			ActionSlotDef actionSlotDef( slot_initsigval, slot_initcount, slot_event, slot_resultHandle);
@@ -330,9 +330,6 @@ public:
 	{
 		try
 		{
-#ifdef STRUS_LOWLEVEL_DEBUG
-			std::cout << "ATM define token pattern '" << name << "'" << (visible?" (visible)":"") << std::endl;
-#endif
 			if (m_stack.empty())
 			{
 				throw strus::runtime_error(_TXT("illegal operation close pattern when no node on the stack"));
@@ -344,7 +341,7 @@ public:
 			if (!program)
 			{
 				//... atomic event we have to envelope into a program
-				ActionSlotDef actionSlotDef( 0, 0, resultEvent, resultHandle);
+				ActionSlotDef actionSlotDef( 0/*val*/, 1/*count*/, resultEvent, resultHandle);
 				program = m_data.programTable.createProgram( 0, actionSlotDef);
 				m_data.programTable.createTrigger(
 					program, elem.eventid, true/*isKeyEvent*/, Trigger::SigAny, 0, elem.variable, elem.weight);
@@ -355,6 +352,9 @@ public:
 				throw strus::runtime_error(_TXT("variable assignments only allowed to subexpressions of pattern"));
 			}
 			m_data.programTable.defineProgramResult( program, resultEvent, visible?resultHandle:0);
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cout << "ATM define token pattern '" << name << "'" << (visible?" (visible)":"") << " as program " << program << std::endl;
+#endif
 		}
 		CATCH_ERROR_MAP( _TXT("failed to close pattern definition on the pattern match expression stack: %s"), *m_errorhnd);
 	}

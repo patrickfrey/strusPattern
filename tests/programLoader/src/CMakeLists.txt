@@ -4,14 +4,16 @@ include_directories(
 	"${Boost_INCLUDE_DIRS}"
 	"${Intl_INCLUDE_DIRS}"
 	"${PROJECT_SOURCE_DIR}/include"
+	"${PROJECT_SOURCE_DIR}/tests/utils"
 	"${strusbase_INCLUDE_DIRS}"
 )
 link_directories(
 	"${PROJECT_SOURCE_DIR}/src"
+	"${PROJECT_SOURCE_DIR}/tests/utils"
 	"${Boost_LIBRARY_DIRS}"
 	"${strusbase_LIBRARY_DIRS}"
 )
 
 add_executable( testProgramLoader testProgramLoader.cpp )
-target_link_libraries( testProgramLoader strus_error strus_base strus_stream ${Boost_LIBRARIES} "${Intl_LIBRARIES}"  )
+target_link_libraries( testProgramLoader strus_error strus_base strus_stream local_test_utils ${Boost_LIBRARIES} "${Intl_LIBRARIES}"  )
 

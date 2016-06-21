@@ -23,7 +23,7 @@ public:
 	typedef TokenPatternMatchResultItem Item;
 
 	/// \brief Constructor
-	TokenPatternMatchResult( const char* name_, unsigned int ordpos_, std::size_t origpos_, const std::vector<Item>& itemlist_)
+	TokenPatternMatchResult( const char* name_, unsigned int ordpos_, std::size_t origpos_, const std::vector<Item>& itemlist_=std::vector<Item>())
 		:m_name(name_),m_ordpos(ordpos_),m_origpos(origpos_),m_itemlist(itemlist_){}
 	/// \brief Copy constructor
 	TokenPatternMatchResult( const TokenPatternMatchResult& o)

@@ -30,6 +30,17 @@
 #include <iomanip>
 
 #undef STRUS_LOWLEVEL_DEBUG
+
+static void initRand()
+{
+	time_t nowtime;
+	struct tm* now;
+
+	::time( &nowtime);
+	now = ::localtime( &nowtime);
+
+	::srand( ((now->tm_year+1) * (now->tm_mon+100) * (now->tm_mday+1)));
+}
 #define RANDINT(MIN,MAX) ((std::rand()%(MAX-MIN))+MIN)
 
 strus::ErrorBufferInterface* g_errorBuffer = 0;
@@ -141,7 +152,7 @@ static void createPatterns( strus::TokenPatternMatchInstanceInterface* ptinst, c
 }
 
 static std::vector<strus::stream::TokenPatternMatchResult>
-	matchRules( strus::TokenPatternMatchInstanceInterface* ptinst, const Document& doc)
+	processDocument( strus::TokenPatternMatchInstanceInterface* ptinst, const Document& doc)
 {
 	std::vector<strus::stream::TokenPatternMatchResult> results;
 	std::auto_ptr<strus::TokenPatternMatchContextInterface> mt( ptinst->createContext());
@@ -155,30 +166,10 @@ static std::vector<strus::stream::TokenPatternMatchResult>
 	results = mt->fetchResults();
 
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::vector<strus::stream::TokenPatternMatchResult>::const_iterator
-		ri = results.begin(), re = results.end();
-	for (; ri != re; ++ri)
-	{
-		std::cout << "match '" << ri->name() << " at " << ri->ordpos() << "':";
-		std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
-			ei = ri->items().begin(), ee = ri->items().end();
-
-		for (; ei != ee; ++ei)
-		{
-			std::cout << " " << ei->name() << " [" << ei->ordpos()
-					<< ", " << ei->origpos() << ", " << ei->origsize() << "]";
-		}
-		std::cout << std::endl;
-	}
-	strus::stream::TokenPatternMatchStatistics stats = mt->getStatistics();
+	strus::utils::printResults( std::cout, results);
 	std::cout << "nof matches " << results.size();
-	std::vector<strus::stream::TokenPatternMatchStatistics::Item>::const_iterator
-		li = stats.items().begin(), le = stats.items().end();
-	for (; li != le; ++li)
-	{
-		std::cout << ", " << li->name() << " " << (int)(li->value()+0.5);
-	}
-	std::cout << std::endl;
+	strus::stream::TokenPatternMatchStatistics stats = mt->getStatistics();
+	strus::utils::printStatistics( std::cerr, stats);
 #endif
 	return results;
 }
@@ -229,6 +220,8 @@ int main( int argc, const char** argv)
 {
 	try
 	{
+		initRand();
+
 		g_errorBuffer = strus::createErrorBuffer_standard( 0, 1);
 		if (!g_errorBuffer)
 		{
@@ -258,7 +251,7 @@ int main( int argc, const char** argv)
 
 		// Evaluate results:
 		std::vector<strus::stream::TokenPatternMatchResult> 
-			results = matchRules( ptinst.get(), doc);
+			results = processDocument( ptinst.get(), doc);
 
 		// Verify results:
 		std::vector<strus::stream::TokenPatternMatchResult>::const_iterator

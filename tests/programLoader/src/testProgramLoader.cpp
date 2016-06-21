@@ -21,6 +21,7 @@
 #include "strus/patternMatchProgramInterface.hpp"
 #include "strus/patternMatchProgramInstanceInterface.hpp"
 #include "strus/base/fileio.hpp"
+#include "testUtils.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
@@ -180,34 +181,10 @@ int main( int argc, const char** argv)
 			throw std::runtime_error( "failed to scan for patterns with token pattern match automaton");
 		}
 
-		// Print result:
-		std::vector<strus::stream::TokenPatternMatchResult>::const_iterator
-			ri = results.begin(), re = results.end();
-		for (; ri != re; ++ri)
-		{
-			resultstrbuf << "result " << ri->name() << " at " << ri->ordpos() << ":" << std::endl;
-			std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
-				ti = ri->items().begin(), te = ri->items().end();
-			for (; ti != te; ++ti)
-			{
-				std::string itemstr( std::string( inputsrc.c_str() + ti->origpos(), ti->origsize()));
-				resultstrbuf << "\titem " << ti->name()
-						<< " at " << ti->ordpos()
-						<< " [" << ti->origpos() << ":" << ti->origsize() << "] "
-						<< ti->weight() << " '" << itemstr.c_str() << "'" << std::endl;
-			}
-			resultstrbuf << std::endl;
-		}
-
-		// Print statistics:
-		resultstrbuf << "Statistics:" << std::endl;
+		// Print results to buffer:
+		strus::utils::printResults( resultstrbuf, results, inputsrc.c_str());
 		strus::stream::TokenPatternMatchStatistics stats = ptctx->getStatistics();
-		std::vector<strus::stream::TokenPatternMatchStatistics::Item>::const_iterator
-			si = stats.items().begin(), se = stats.items().end();
-		for (; si != se; ++si)
-		{
-			resultstrbuf << std::fixed << si->name() << " = " << si->value() << std::endl;
-		}
+		strus::utils::printStatistics( resultstrbuf, stats);
 
 		// Print result to stdout and verify result by comparing it with the expected output:
 		std::string resultstr = resultstrbuf.str();
