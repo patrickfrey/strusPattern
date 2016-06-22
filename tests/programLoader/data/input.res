@@ -24,8 +24,8 @@ token WORD(1) at 19[111:3] 'for'
 token WORD(1) at 20[115:11] 'development'
 token ABBREV(3) at 21[128:4] 'etc.'
 token SENT(2) at 22[132:1] '.'
-match 'Name': surname [9, 45, 3] 'Doe' firstname [8, 40, 4] 'John'
-match 'Contact': email [11, 58, 12] 'mail@etc.com' firstname [8, 40, 4] 'John' surname [9, 45, 3] 'Doe'
+match 'Name' at 8 [40]: surname [9, 45, 3] 'Doe' firstname [8, 40, 4] 'John'
+match 'Contact' at 8 [40]: email [11, 58, 12] 'mail@etc.com' firstname [8, 40, 4] 'John' surname [9, 45, 3] 'Doe'
 Statistics:
 	nofProgramsInstalled: 5
 	nofAltKeyProgramsInstalled: 0
