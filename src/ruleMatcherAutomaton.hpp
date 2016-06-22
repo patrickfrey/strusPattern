@@ -446,7 +446,7 @@ private:
 	typedef PodStructArrayBase<uint32_t,std::size_t,BaseAddrDisposeRuleList> DisposeRuleList;
 	void fireSignal( ActionSlot& slot, const Trigger& trigger, const EventData& data,
 				DisposeRuleList& disposeRuleList, EventStructList& followList);
-	uint32_t createRule( uint32_t positionRange);
+	uint32_t createRule( uint32_t expiryOrdpos);
 	void disposeRule( uint32_t rule);
 	void deactivateRule( uint32_t rule);
 	void disposeEventDataReference( uint32_t eventdataref);

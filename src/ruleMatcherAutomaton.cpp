@@ -545,10 +545,10 @@ StateMachine::StateMachine( const StateMachine& o)
 	std::memcpy( m_disposeWindow, o.m_disposeWindow, sizeof(m_disposeWindow));
 }
 
-uint32_t StateMachine::createRule( uint32_t positionRange)
+uint32_t StateMachine::createRule( uint32_t expiryOrdpos)
 {
-	uint32_t rt = m_ruleTable.add( Rule( m_curpos + positionRange));
-	defineDisposeRule( m_curpos + positionRange, rt);
+	uint32_t rt = m_ruleTable.add( Rule( expiryOrdpos));
+	defineDisposeRule( expiryOrdpos, rt);
 	return rt;
 }
 
@@ -672,7 +672,7 @@ void StateMachine::fireSignal(
 		case Trigger::SigSequence:
 			if (trigger.sigval() == slot.value && slot.end_ordpos < data.ordpos)
 			{
-				slot.end_ordpos = data.ordpos;
+				slot.end_ordpos = m_curpos;
 				slot.value = trigger.sigval()-1;
 				if (slot.count > 0)
 				{
@@ -691,7 +691,7 @@ void StateMachine::fireSignal(
 		{
 			if ((trigger.sigval() & slot.value) != 0 && slot.end_ordpos < data.ordpos)
 			{
-				slot.end_ordpos = data.ordpos;
+				slot.end_ordpos = m_curpos;
 				slot.value &= ~trigger.sigval();
 				if (slot.count > 0)
 				{
@@ -957,7 +957,7 @@ static bool triggerDefNeedsInstall( const TriggerDef& triggerDef, const ActionSl
 void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& programTrigger, const EventData& data, EventStructList& followList, DisposeRuleList& disposeRuleList)
 {
 	const Program& program = (*m_programTable)[ programTrigger.programidx];
-	uint32_t ruleidx = createRule( program.positionRange);
+	uint32_t ruleidx = createRule( data.ordpos + program.positionRange);
 	Rule& rule = m_ruleTable[ ruleidx];
 #ifdef STRUS_LOWLEVEL_DEBUG
 	std::cout << "key event " << keyevent << " install program " << programTrigger.programidx << " as rule " << ruleidx << " at " << data.ordpos << std::endl;

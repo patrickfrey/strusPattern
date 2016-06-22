@@ -330,6 +330,11 @@ static std::vector<TreeNode*> createRandomTrees( const GlobalContext* ctx, const
 		TreeNode* tree = createRandomTree( ctx, doc, docitr);
 		if (tree)
 		{
+			if (tree->op() == strus::TokenPatternMatchInstanceInterface::OpAny)
+			{
+				TreeNode::deleteTree( tree);
+				continue;
+			}
 			if (tree->variable())
 			{
 				tree->removeVariable();
@@ -419,7 +424,7 @@ static void createRules( strus::TokenPatternMatchInstanceInterface* ptinst, cons
 	std::vector<TreeNode*>::const_iterator ti = treear.begin(), te = treear.end();
 	for (unsigned int tidx=0; ti != te; ++ti,++tidx)
 	{
-		/*[-]*/if (tidx != 65) continue;
+		/*[-]*/if (tidx != 98) continue;
 		createExpression( ptinst, ctx, *ti);
 		ptinst->definePattern( (*ti)->name(), true);
 	}
@@ -570,106 +575,121 @@ static TreeMatchResult matchTree( const TreeNode* tree, const strus::utils::Docu
 			}
 		}
 	}
-	else switch (tree->op())
+	else
 	{
-		case strus::TokenPatternMatchInstanceInterface::OpSequenceStruct:
+		switch (tree->op())
 		{
-			std::vector<TreeNode*>::const_iterator ai = tree->args().begin(), ae = tree->args().end();
-			for (++ai; ai != ae; ++ai)
+			case strus::TokenPatternMatchInstanceInterface::OpSequenceStruct:
 			{
-				TreeMatchResult a_result = matchTree( *ai, doc, didx, endpos, firstTerm);
-				if (!a_result.valid)
+				std::vector<TreeNode*>::const_iterator ai = tree->args().begin(), ae = tree->args().end();
+				for (++ai; ai != ae; ++ai)
 				{
-					rt = TreeMatchResult();
-					break;
-				}
-				firstTerm = 0;
-				rt.join( a_result);
-				didx = rt.endidx;
-				unsigned int nextpos = a_result.ordpos + a_result.ordsize;
-				for (;didx < doc.itemar.size() && doc.itemar[ didx].pos < nextpos; ++didx){}
-			}
-			if (rt.valid)
-			{
-				if (rt.endidx < doc.itemar.size())
-				{
-					endpos = doc.itemar[ rt.endidx].pos;
-				}
-				TreeMatchResult delim = matchTree( tree->args()[0], doc, rt.startidx, rt.ordpos + rt.ordsize, 0);
-				if (delim.valid && delim.endidx < rt.endidx) return TreeMatchResult();
-			}
-			break;
-		}
-		case strus::TokenPatternMatchInstanceInterface::OpSequence:
-		{
-			std::vector<TreeNode*>::const_iterator ai = tree->args().begin(), ae = tree->args().end();
-			for (; ai != ae; ++ai)
-			{
-				TreeMatchResult a_result = matchTree( *ai, doc, didx, endpos, firstTerm);
-				if (!a_result.valid)
-				{
-					rt = TreeMatchResult();
-					break;
-				}
-				firstTerm = 0;
-				rt.join( a_result);
-				didx = rt.endidx;
-				unsigned int nextpos = a_result.ordpos + a_result.ordsize;
-				for (;didx < doc.itemar.size() && doc.itemar[ didx].pos < nextpos; ++didx){}
-			}
-			break;
-		}
-		case strus::TokenPatternMatchInstanceInterface::OpWithin:
-		case strus::TokenPatternMatchInstanceInterface::OpWithinStruct:
-		{
-			std::size_t aidx;
-			strus::TokenPatternMatchInstanceInterface::JoinOperation seqop;
-			if (tree->op() == strus::TokenPatternMatchInstanceInterface::OpWithin)
-			{
-				aidx = 0;
-				seqop = strus::TokenPatternMatchInstanceInterface::OpSequence;
-			}
-			else
-			{
-				aidx = 1;
-				seqop = strus::TokenPatternMatchInstanceInterface::OpSequenceStruct;
-			}
-			std::vector<IndexTuple> argperm = getIndexPermurations( aidx, tree->args().size());
-			std::vector<IndexTuple>::const_iterator ai = argperm.begin(), ae = argperm.end();
-			for (; ai != ae; ++ai)
-			{
-				std::vector<TreeNode*> pargs;
-				if (tree->op() == strus::TokenPatternMatchInstanceInterface::OpWithinStruct)
-				{
-					pargs.push_back( tree->args()[0]);
-				}
-				IndexTuple::const_iterator xi = ai->begin(), xe = ai->end();
-				for (; xi != xe; ++xi)
-				{
-					pargs.push_back( tree->args()[ *xi]);
-				}
-				TreeNode tree_alt( seqop, pargs, tree->range(), tree->cardinality());
-				
-				TreeMatchResult candidate = matchTree( &tree_alt, doc, didx, endpos, firstTerm);
-				if (candidate.valid)
-				{
-					if (!rt.valid || candidate.endidx < rt.endidx)
+					TreeMatchResult a_result = matchTree( *ai, doc, didx, endpos, firstTerm);
+					if (!a_result.valid)
 					{
-						rt = candidate;
+						rt = TreeMatchResult();
+						break;
+					}
+					if (a_result.ordpos + tree->range() < endpos)
+					{
+						endpos = a_result.ordpos + tree->range();
+					}
+					firstTerm = 0;
+					rt.join( a_result);
+					didx = rt.endidx;
+					unsigned int nextpos = a_result.ordpos + a_result.ordsize;
+					for (;didx < doc.itemar.size() && doc.itemar[ didx].pos < nextpos; ++didx){}
+				}
+				if (rt.valid)
+				{
+					if (rt.endidx < doc.itemar.size())
+					{
+						endpos = doc.itemar[ rt.endidx].pos;
+					}
+					TreeMatchResult delim = matchTree( tree->args()[0], doc, rt.startidx, rt.ordpos + rt.ordsize, 0);
+					if (delim.valid && delim.endidx < rt.endidx) return TreeMatchResult();
+				}
+				break;
+			}
+			case strus::TokenPatternMatchInstanceInterface::OpSequence:
+			{
+				std::vector<TreeNode*>::const_iterator ai = tree->args().begin(), ae = tree->args().end();
+				for (; ai != ae; ++ai)
+				{
+					TreeMatchResult a_result = matchTree( *ai, doc, didx, endpos, firstTerm);
+					if (!a_result.valid)
+					{
+						rt = TreeMatchResult();
+						break;
+					}
+					if (a_result.ordpos + tree->range() < endpos)
+					{
+						endpos = a_result.ordpos + tree->range();
+					}
+					firstTerm = 0;
+					rt.join( a_result);
+					didx = rt.endidx;
+					unsigned int nextpos = a_result.ordpos + a_result.ordsize;
+					for (;didx < doc.itemar.size() && doc.itemar[ didx].pos < nextpos; ++didx){}
+				}
+				break;
+			}
+			case strus::TokenPatternMatchInstanceInterface::OpWithin:
+			case strus::TokenPatternMatchInstanceInterface::OpWithinStruct:
+			{
+				std::size_t aidx;
+				strus::TokenPatternMatchInstanceInterface::JoinOperation seqop;
+				if (tree->op() == strus::TokenPatternMatchInstanceInterface::OpWithin)
+				{
+					aidx = 0;
+					seqop = strus::TokenPatternMatchInstanceInterface::OpSequence;
+				}
+				else
+				{
+					aidx = 1;
+					seqop = strus::TokenPatternMatchInstanceInterface::OpSequenceStruct;
+				}
+				std::vector<IndexTuple> argperm = getIndexPermurations( aidx, tree->args().size());
+				std::vector<IndexTuple>::const_iterator ai = argperm.begin(), ae = argperm.end();
+				for (; ai != ae; ++ai)
+				{
+					std::vector<TreeNode*> pargs;
+					if (tree->op() == strus::TokenPatternMatchInstanceInterface::OpWithinStruct)
+					{
+						pargs.push_back( tree->args()[0]);
+					}
+					IndexTuple::const_iterator xi = ai->begin(), xe = ai->end();
+					for (; xi != xe; ++xi)
+					{
+						pargs.push_back( tree->args()[ *xi]);
+					}
+					TreeNode tree_alt( seqop, pargs, tree->range(), tree->cardinality());
+					
+					TreeMatchResult candidate = matchTree( &tree_alt, doc, didx, endpos, firstTerm);
+					if (candidate.valid)
+					{
+						if (!rt.valid || candidate.endidx < rt.endidx)
+						{
+							rt = candidate;
+						}
 					}
 				}
+				break;
 			}
-			break;
-		}
-		case strus::TokenPatternMatchInstanceInterface::OpAny:
-		{
-			std::vector<TreeNode*>::const_iterator ai = tree->args().begin(), ae = tree->args().end();
-			for (; ai != ae && !rt.valid; ++ai)
+			case strus::TokenPatternMatchInstanceInterface::OpAny:
 			{
-				TreeMatchResult candidate = matchTree( *ai, doc, didx, endpos, firstTerm);
-				rt.join( candidate);
+				std::vector<TreeNode*>::const_iterator ai = tree->args().begin(), ae = tree->args().end();
+				for (; ai != ae && !rt.valid; ++ai)
+				{
+					TreeMatchResult candidate = matchTree( *ai, doc, didx, endpos, firstTerm);
+					if (candidate.valid && candidate.ordpos + tree->range() < endpos)
+					{
+						endpos = candidate.ordpos + tree->range();
+					}
+					rt.join( candidate);
+				}
+				break;
 			}
-			break;
 		}
 	}
 	if (rt.valid && tree->variable())
@@ -698,7 +718,7 @@ static std::vector<strus::stream::TokenPatternMatchResult>
 			prevkey.first = ri->first;
 			prevkey.second = ri->second; //... eliminate dumplicates for redundant keytokens for rules
 
-			/*[-]*/if (ri->second != 65) continue;
+			/*[-]*/if (ri->second != 98) continue;
 			const TreeNode* candidateTree = treear[ ri->second];
 			unsigned int endpos = di->pos + candidateTree->range();
 			TreeMatchResult match = matchTree( candidateTree, doc, didx, endpos, ri->first);
