@@ -2,9 +2,9 @@ set xrange  [10:11000000]
 set yrange  [0.001:1000.0]
 set log x
 set log y
-set xlabel "Number of rules"
-set ylabel "Seconds execution time"
-set title  "Exec time/number of rules for processing 100 documents with 1K terms"
+set xlabel "Number of pattern nodes"
+set ylabel "Seconds execution time for all the input"
+set title  "Time/number of rules for processing 100 documents (1K terms each)"
 set term png	#output terminal and file
 set output "perfplot.png"
 plot "perfplot.txt" using 1:2 with lines notitle
