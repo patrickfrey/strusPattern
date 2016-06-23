@@ -424,7 +424,6 @@ static void createRules( strus::TokenPatternMatchInstanceInterface* ptinst, cons
 	std::vector<TreeNode*>::const_iterator ti = treear.begin(), te = treear.end();
 	for (unsigned int tidx=0; ti != te; ++ti,++tidx)
 	{
-		/*[-]*/if (tidx != 98) continue;
 		createExpression( ptinst, ctx, *ti);
 		ptinst->definePattern( (*ti)->name(), true);
 	}
@@ -678,16 +677,31 @@ static TreeMatchResult matchTree( const TreeNode* tree, const strus::utils::Docu
 			}
 			case strus::TokenPatternMatchInstanceInterface::OpAny:
 			{
+				TreeMatchResult selected;
 				std::vector<TreeNode*>::const_iterator ai = tree->args().begin(), ae = tree->args().end();
 				for (; ai != ae && !rt.valid; ++ai)
 				{
 					TreeMatchResult candidate = matchTree( *ai, doc, didx, endpos, firstTerm);
-					if (candidate.valid && candidate.ordpos + tree->range() < endpos)
+					if (candidate.valid)
 					{
-						endpos = candidate.ordpos + tree->range();
+						if (candidate.ordpos + tree->range() < endpos)
+						{
+							endpos = candidate.ordpos + tree->range();
+						}
+						if (selected.valid)
+						{
+							if (candidate.endidx < selected.endidx)
+							{
+								selected = candidate;
+							}
+						}
+						else
+						{
+							selected = candidate;
+						}
 					}
-					rt.join( candidate);
 				}
+				rt.join( selected);
 				break;
 			}
 		}
@@ -718,7 +732,6 @@ static std::vector<strus::stream::TokenPatternMatchResult>
 			prevkey.first = ri->first;
 			prevkey.second = ri->second; //... eliminate dumplicates for redundant keytokens for rules
 
-			/*[-]*/if (ri->second != 98) continue;
 			const TreeNode* candidateTree = treear[ ri->second];
 			unsigned int endpos = di->pos + candidateTree->range();
 			TreeMatchResult match = matchTree( candidateTree, doc, didx, endpos, ri->first);
@@ -817,7 +830,6 @@ static unsigned int processDocuments( const strus::TokenPatternMatchInstanceInte
 	std::size_t didx = 0;
 	for (; di != de; ++di,++didx)
 	{
-		/*[-]*/if (didx != 0) continue;
 #ifdef STRUS_LOWLEVEL_DEBUG
 		std::cout << "document " << di->tostring() << std::endl;
 #endif

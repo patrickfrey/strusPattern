@@ -973,22 +973,46 @@ void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& prog
 	enum {MaxNofKeyTriggerDefs=32};
 	const TriggerDef* keyTriggerDef[ MaxNofKeyTriggerDefs];
 	std::size_t nofKeyTriggerDef = 0;
+	bool hasKeyEvent = false;
 	while (0!=(triggerDef=m_programTable->triggerList().nextptr( program_triggerListItr)))
 	{
 		bool doInstall = false;
-		if (keyevent == triggerDef->event && (triggerDef->isKeyEvent || (Trigger::SigType)triggerDef->sigtype == Trigger::SigDel))
+		if (keyevent == triggerDef->event)
 		{
-			if (triggerDefNeedsInstall( *triggerDef, slot))
+			if (triggerDef->isKeyEvent && !hasKeyEvent)
 			{
-				doInstall = true;
+				hasKeyEvent = true;
+				if (triggerDefNeedsInstall( *triggerDef, slot))
+				{
+					doInstall = true;
+				}
+				if (nofKeyTriggerDef < MaxNofKeyTriggerDefs)
+				{
+					keyTriggerDef[ nofKeyTriggerDef++] = triggerDef;
+				}
+				else
+				{
+					throw strus::runtime_error(_TXT("pattern with too many (%u) identical key events defined"), (unsigned int)nofKeyTriggerDef);
+				}
 			}
-			if (nofKeyTriggerDef < MaxNofKeyTriggerDefs)
+			else if ((Trigger::SigType)triggerDef->sigtype == Trigger::SigDel)
 			{
-				keyTriggerDef[ nofKeyTriggerDef++] = triggerDef;
+				if (triggerDefNeedsInstall( *triggerDef, slot))
+				{
+					doInstall = true;
+				}
+				if (nofKeyTriggerDef < MaxNofKeyTriggerDefs)
+				{
+					keyTriggerDef[ nofKeyTriggerDef++] = triggerDef;
+				}
+				else
+				{
+					throw strus::runtime_error(_TXT("pattern with too many (%u) identical key events defined"), (unsigned int)nofKeyTriggerDef);
+				}
 			}
 			else
 			{
-				throw strus::runtime_error(_TXT("pattern with too many (%u) identical key events defined"), (unsigned int)nofKeyTriggerDef);
+				doInstall = true;
 			}
 		}
 		else
