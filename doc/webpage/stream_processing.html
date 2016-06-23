@@ -280,6 +280,22 @@ rule nodes evaluated.
 </p>
 <img src="perfplot.png" width="500" alt="performance plot" />
 
+<h2>Open problems and bugs</h2>
+<h4>within and within_struct greediness</h4>
+<p id="description">
+Patterns with the operator <b>within</b> or <b>within_struct</b> currently do not work correctly, if
+accepted sets of subexpressions are not disjunct. This is due to the greediness of the algorithm,
+that does not follow alternative paths or backtrack. To illustrate the problem, have a look at the
+pattern matching the elements "(A B)" and "A" in any order and the source "ABA". The current situation
+is that the pattern matcher recognizes "A" as "A" and does not accept a signal for "AB" anymore at the
+same position for this pattern.
+<br/>
+There are straightforward solutions to this problem, but I did not find yet a good one.
+I am aware of that problem and I know that it cannot be neglected.
+Currently you have to formulate your 'within' rules as all possible permutations of sequences, if you
+have 'within' rules with non disjunct accepted sets. Sequences do not have this problem.
+</p>
+
 <h2>Caveats</h2>
 <p id="description"><i>StrusStream</i> handles events immediately when they are seen.
 This can lead to anomalies, when formulating restrictions, e.g. with 'sequence_struct' or 'within_struct'

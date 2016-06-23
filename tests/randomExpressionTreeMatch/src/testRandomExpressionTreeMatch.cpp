@@ -427,7 +427,6 @@ static void createRules( strus::TokenPatternMatchInstanceInterface* ptinst, cons
 	std::vector<TreeNode*>::const_iterator ti = treear.begin(), te = treear.end();
 	for (unsigned int tidx=0; ti != te; ++ti,++tidx)
 	{
-		/*[-]*/if (tidx != 20) continue;
 		createExpression( ptinst, ctx, *ti);
 		ptinst->definePattern( (*ti)->name(), true);
 	}
@@ -453,7 +452,6 @@ static std::vector<strus::stream::TokenPatternMatchResult> processDocument( cons
 	unsigned int didx = 0;
 	for (; di != de; ++di,++didx)
 	{
-		/*[-]*/if (didx != 0) continue;
 		mt->putInput( strus::stream::PatternMatchToken( di->termid, di->pos, didx, 1));
 		if (g_errorBuffer->hasError()) throw std::runtime_error("error matching rules");
 	}
@@ -733,7 +731,6 @@ static std::vector<strus::stream::TokenPatternMatchResult>
 		std::pair<unsigned int,std::size_t> prevkey( 0,0);
 		for (; ri != re; ++ri)
 		{
-			/*[-]*/if (ri->second != 20) continue;
 			if (ri->first == prevkey.first && ri->second == prevkey.second) continue;
 			prevkey.first = ri->first;
 			prevkey.second = ri->second; //... eliminate dumplicates for redundant keytokens for rules
@@ -817,6 +814,11 @@ static std::vector<strus::stream::TokenPatternMatchResult>
 	return rt;
 }
 
+//
+// We have comparison differences mainly due to non determinism of random generated rules and the fact
+// that StrusStream stops with the first match (non generating all possible solutions).
+//
+#ifdef STRUS_TEST_RANDOM_EXPRESSION_TREE_COMPARE_RES_EXACT
 static bool compareResults( const std::vector<strus::stream::TokenPatternMatchResult>& results, const std::vector<strus::stream::TokenPatternMatchResult>& expectedResults)
 {
 	if (results.size() != expectedResults.size()) return false;
@@ -828,6 +830,37 @@ static bool compareResults( const std::vector<strus::stream::TokenPatternMatchRe
 	}
 	return true;
 }
+#else
+static bool compareResults( const std::vector<strus::stream::TokenPatternMatchResult>& results, const std::vector<strus::stream::TokenPatternMatchResult>& expectedResults)
+{
+	std::vector<strus::stream::TokenPatternMatchResult>::const_iterator ri = results.begin(), re = results.end();
+	std::vector<strus::stream::TokenPatternMatchResult>::const_iterator xi = expectedResults.begin(), xe = expectedResults.end();
+	std::set<std::string> set_res, set_exp;
+	for (; xi != xe; ++xi)
+	{
+		std::ostringstream item;
+		item << xi->name() << "_" << xi->ordpos() << "(" << xi-> origpos() << ")";
+		set_exp.insert( item.str());
+	}
+	for (; ri != re; ++ri)
+	{
+		std::ostringstream item;
+		item << ri->name() << "_" << ri->ordpos() << "(" << ri-> origpos() << ")";
+		set_res.insert( item.str());
+	}
+	std::set<std::string>::const_iterator sri = set_res.begin(), sre = set_res.end();
+	std::set<std::string>::const_iterator sxi = set_exp.begin(), sxe = set_exp.end();
+	for (; sxi != sxe && sri != sre; ++sri,++sxi)
+	{
+		if (*sri != *sxi)
+		{
+			std::cerr << "first diff in result " << *sri << " != " << *sxi << std::endl;
+			return false;
+		}
+	}
+	return sxi == sxe && sri == sre;
+}
+#endif
 
 static unsigned int processDocuments( const strus::TokenPatternMatchInstanceInterface* ptinst, const KeyTokenMap& keytokenmap, const std::vector<TreeNode*> treear, const std::vector<strus::utils::Document>& docs, std::map<std::string,double>& stats)
 {
@@ -850,7 +883,7 @@ static unsigned int processDocuments( const strus::TokenPatternMatchInstanceInte
 			expectedResults = eliminateDuplicates( sortResults( processDocumentAlt( keytokenmap, treear, *di)));
 
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cout << "nof expected matches " << expectedResults.size() << std::endl;
+		std::cout << "number of expected matches " << expectedResults.size() << std::endl;
 		strus::utils::printResults( std::cout, expectedResults);
 #endif
 		if (!compareResults( results, expectedResults))
