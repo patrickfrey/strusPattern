@@ -252,7 +252,10 @@ static TreeNode* createRandomTree( const GlobalContext* ctx, const strus::utils:
 			args.push_back( arg);
 			rangesum += arg->range();
 		}
-		if (argc == 1 && op == strus::TokenPatternMatchInstanceInterface::OpSequenceStruct && args[0]->term() == termId( strus::utils::SentenceDelim, 0))
+		if (argc == 1
+			&& (op == strus::TokenPatternMatchInstanceInterface::OpSequenceStruct
+				|| op == strus::TokenPatternMatchInstanceInterface::OpWithinStruct)
+			&& args[0]->term() == termId( strus::utils::SentenceDelim, 0))
 		{
 			// ... add another node for a sequence of size 1, if we have a sequence of length 1 with a delimiter element only (prevent anomaly)
 			TreeNode* arg = createRandomTree( ctx, doc, docitr, depth+1);
@@ -424,6 +427,7 @@ static void createRules( strus::TokenPatternMatchInstanceInterface* ptinst, cons
 	std::vector<TreeNode*>::const_iterator ti = treear.begin(), te = treear.end();
 	for (unsigned int tidx=0; ti != te; ++ti,++tidx)
 	{
+		/*[-]*/if (tidx != 20) continue;
 		createExpression( ptinst, ctx, *ti);
 		ptinst->definePattern( (*ti)->name(), true);
 	}
@@ -449,6 +453,7 @@ static std::vector<strus::stream::TokenPatternMatchResult> processDocument( cons
 	unsigned int didx = 0;
 	for (; di != de; ++di,++didx)
 	{
+		/*[-]*/if (didx != 0) continue;
 		mt->putInput( strus::stream::PatternMatchToken( di->termid, di->pos, didx, 1));
 		if (g_errorBuffer->hasError()) throw std::runtime_error("error matching rules");
 	}
@@ -728,6 +733,7 @@ static std::vector<strus::stream::TokenPatternMatchResult>
 		std::pair<unsigned int,std::size_t> prevkey( 0,0);
 		for (; ri != re; ++ri)
 		{
+			/*[-]*/if (ri->second != 20) continue;
 			if (ri->first == prevkey.first && ri->second == prevkey.second) continue;
 			prevkey.first = ri->first;
 			prevkey.second = ri->second; //... eliminate dumplicates for redundant keytokens for rules
