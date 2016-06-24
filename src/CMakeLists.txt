@@ -53,7 +53,7 @@ set_target_properties(
 # STRUS TRACE PROGRAMS
 # -------------------------------------------
 add_executable( strusPatternMatch  strusPatternMatch.cpp )
-target_link_libraries( strusPatternMatch  local_rulematch strus_base strus_error ${Boost_LIBRARIES} ${Intl_LIBRARIES})
+target_link_libraries( strusPatternMatch  strus_segmenter_textwolf strus_segmenter_cjson strus_detector_std local_rulematch strus_stream strus_base strus_error ${Boost_LIBRARIES} ${Intl_LIBRARIES})
 
 # ------------------------------
 # INSTALLATION

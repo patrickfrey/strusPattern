@@ -417,11 +417,8 @@ bool PatternMatchProgramInstance::compile()
 			throw strus::runtime_error(_TXT("unresolved pattern references: %s"), unresolvedstr.c_str());
 		}
 		bool rt = true;
-		stream::TokenPatternMatchOptions tpopt;
-		rt &= m_tokenPatternMatch->compile( tpopt);
-		stream::CharRegexMatchOptions cropt;
-		cropt("DOTALL");
-		rt &= m_charRegexMatch->compile( cropt);
+		rt &= m_tokenPatternMatch->compile( m_tokenPatternMatchOptions);
+		rt &= m_charRegexMatch->compile( m_charRegexMatchOptions);
 		return rt;
 	}
 	CATCH_ERROR_MAP_RETURN( _TXT("failed to compile pattern match program source: %s"), *m_errorhnd, false);

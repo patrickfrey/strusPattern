@@ -910,7 +910,7 @@ int main( int argc, const char** argv)
 			return 0;
 		}
 		unsigned int nofThreads = 0;
-		bool doOpimize = false;
+		bool doOptimize = false;
 		int argidx = 1;
 		for (; argidx < argc && argv[argidx][0] == '-'; ++argidx)
 		{
@@ -921,7 +921,7 @@ int main( int argc, const char** argv)
 			}
 			else if (std::strcmp( argv[argidx], "-o") == 0)
 			{
-				doOpimize = true;
+				doOptimize = true;
 			}
 		}
 		if (argc - argidx < 4)
@@ -959,7 +959,7 @@ int main( int argc, const char** argv)
 		KeyTokenMap keyTokenMap;
 		fillKeyTokens( keyTokenMap, treear);
 		createRules( ptinst.get(), &ctx, treear);
-		if (doOpimize)
+		if (doOptimize)
 		{
 			ptinst->compile( strus::stream::TokenPatternMatchOptions());
 		}

@@ -146,7 +146,10 @@ static unsigned int processDocument( const strus::TokenPatternMatchInstanceInter
 	for (; di != de; ++di,++didx)
 	{
 		mt->putInput( strus::stream::PatternMatchToken( di->termid, di->pos, didx, 1));
-		if (g_errorBuffer->hasError()) throw std::runtime_error("error matching rules");
+	}
+	if (g_errorBuffer->hasError())
+	{
+		throw std::runtime_error("error matching rules");
 	}
 	std::vector<strus::stream::TokenPatternMatchResult> results = mt->fetchResults();
 	unsigned int nofMatches = results.size();
