@@ -252,7 +252,10 @@ static TreeNode* createRandomTree( const GlobalContext* ctx, const strus::utils:
 			args.push_back( arg);
 			rangesum += arg->range();
 		}
-		if (argc == 1 && op == strus::TokenPatternMatchInstanceInterface::OpSequenceStruct && args[0]->term() == termId( strus::utils::SentenceDelim, 0))
+		if (argc == 1
+			&& (op == strus::TokenPatternMatchInstanceInterface::OpSequenceStruct
+				|| op == strus::TokenPatternMatchInstanceInterface::OpWithinStruct)
+			&& args[0]->term() == termId( strus::utils::SentenceDelim, 0))
 		{
 			// ... add another node for a sequence of size 1, if we have a sequence of length 1 with a delimiter element only (prevent anomaly)
 			TreeNode* arg = createRandomTree( ctx, doc, docitr, depth+1);
@@ -811,6 +814,11 @@ static std::vector<strus::stream::TokenPatternMatchResult>
 	return rt;
 }
 
+//
+// We have comparison differences mainly due to non determinism of random generated rules and the fact
+// that StrusStream stops with the first match (non generating all possible solutions).
+//
+#ifdef STRUS_TEST_RANDOM_EXPRESSION_TREE_COMPARE_RES_EXACT
 static bool compareResults( const std::vector<strus::stream::TokenPatternMatchResult>& results, const std::vector<strus::stream::TokenPatternMatchResult>& expectedResults)
 {
 	if (results.size() != expectedResults.size()) return false;
@@ -822,6 +830,37 @@ static bool compareResults( const std::vector<strus::stream::TokenPatternMatchRe
 	}
 	return true;
 }
+#else
+static bool compareResults( const std::vector<strus::stream::TokenPatternMatchResult>& results, const std::vector<strus::stream::TokenPatternMatchResult>& expectedResults)
+{
+	std::vector<strus::stream::TokenPatternMatchResult>::const_iterator ri = results.begin(), re = results.end();
+	std::vector<strus::stream::TokenPatternMatchResult>::const_iterator xi = expectedResults.begin(), xe = expectedResults.end();
+	std::set<std::string> set_res, set_exp;
+	for (; xi != xe; ++xi)
+	{
+		std::ostringstream item;
+		item << xi->name() << "_" << xi->ordpos() << "(" << xi-> origpos() << ")";
+		set_exp.insert( item.str());
+	}
+	for (; ri != re; ++ri)
+	{
+		std::ostringstream item;
+		item << ri->name() << "_" << ri->ordpos() << "(" << ri-> origpos() << ")";
+		set_res.insert( item.str());
+	}
+	std::set<std::string>::const_iterator sri = set_res.begin(), sre = set_res.end();
+	std::set<std::string>::const_iterator sxi = set_exp.begin(), sxe = set_exp.end();
+	for (; sxi != sxe && sri != sre; ++sri,++sxi)
+	{
+		if (*sri != *sxi)
+		{
+			std::cerr << "first diff in result " << *sri << " != " << *sxi << std::endl;
+			return false;
+		}
+	}
+	return sxi == sxe && sri == sre;
+}
+#endif
 
 static unsigned int processDocuments( const strus::TokenPatternMatchInstanceInterface* ptinst, const KeyTokenMap& keytokenmap, const std::vector<TreeNode*> treear, const std::vector<strus::utils::Document>& docs, std::map<std::string,double>& stats)
 {
@@ -844,7 +883,7 @@ static unsigned int processDocuments( const strus::TokenPatternMatchInstanceInte
 			expectedResults = eliminateDuplicates( sortResults( processDocumentAlt( keytokenmap, treear, *di)));
 
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cout << "nof expected matches " << expectedResults.size() << std::endl;
+		std::cout << "number of expected matches " << expectedResults.size() << std::endl;
 		strus::utils::printResults( std::cout, expectedResults);
 #endif
 		if (!compareResults( results, expectedResults))
