@@ -379,11 +379,11 @@ int main( int argc, const char** argv)
 			int value;
 			if (gi->first == "nofTriggersAvgActive")
 			{
-				value = (int)(gi->second/globals.totalNofDocs + 0.5);
+				value = (uint64_t)(gi->second/globals.totalNofDocs + 0.5);
 			}
 			else
 			{
-				value = (int)(gi->second + 0.5);
+				value = (uint64_t)(gi->second + 0.5);
 			}
 			std::cerr << "\t" << gi->first << ": " << value << std::endl;
 		}
