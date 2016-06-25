@@ -17,7 +17,7 @@
 #include <emmintrin.h>
 #define STRUS_USE_SSE_SCAN_TRIGGERS
 #endif
-#define STRUS_LOWLEVEL_DEBUG
+#undef STRUS_LOWLEVEL_DEBUG
 
 using namespace strus;
 

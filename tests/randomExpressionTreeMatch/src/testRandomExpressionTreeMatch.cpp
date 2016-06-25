@@ -191,7 +191,7 @@ class GlobalContext
 {
 public:
 	GlobalContext( unsigned int nofFeatures, unsigned int nofRules_)
-		:m_nofRules(nofRules_),m_featdist(nofFeatures, 0.8),m_rangedist(20,1.3),m_selopdist( 5),m_argcdist(5,1.3){}
+		:m_nofRules(nofRules_),m_featdist(nofFeatures, 0.8),m_rangedist(20,1.3),m_selopdist(5),m_argcdist(5,1.3){}
 
 	unsigned int randomTerm() const
 	{
@@ -203,7 +203,15 @@ public:
 	}
 	TreeNode::JoinOperation randomOp() const
 	{
-		return (TreeNode::JoinOperation)(m_selopdist.random()-1);
+		const TreeNode::JoinOperation ar[5] =
+		{
+			strus::TokenPatternMatchInstanceInterface::OpSequence,
+			strus::TokenPatternMatchInstanceInterface::OpSequenceStruct,
+			strus::TokenPatternMatchInstanceInterface::OpWithin,
+			strus::TokenPatternMatchInstanceInterface::OpWithinStruct,
+			strus::TokenPatternMatchInstanceInterface::OpAny
+		};
+		return ar[ (m_selopdist.random()-1)];
 	}
 	unsigned int randomArgc() const
 	{
