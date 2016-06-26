@@ -758,6 +758,7 @@ private:
 	{
 		if (tokstate.id == TokState::Start)
 		{
+			m_tokenpos = m_src.getPosition();
 			tokstate.id = TokState::ParsingToken;
 			m_outputBuf.clear();
 		}
@@ -1002,41 +1003,42 @@ private:
 	InputReader m_src;		///< source input iterator
 	const EntityMap* m_entityMap;	///< map with entities defined by the caller
 	OutputBuffer m_outputBuf;	///< buffer to use for output
-	OutputCharSet m_output;
+	OutputCharSet m_output;		///< output character set
+	std::size_t m_tokenpos;		///< last token position
 
 public:
 	/// \brief Constructor
 	/// \param [in] p_src source iterator
 	/// \param [in] p_entityMap read only map of named entities defined by the user
 	XMLScanner( const InputIterator& p_src, const EntityMap& p_entityMap)
-			:state(START),error(Ok),m_src(InputCharSet(),p_src),m_entityMap(&p_entityMap),m_output(OutputCharSet())
+			:state(START),error(Ok),m_src(InputCharSet(),p_src),m_entityMap(&p_entityMap),m_output(OutputCharSet()),m_tokenpos(0)
 	{}
 	/// \brief Constructor
 	/// \param [in] p_src source iterator
 	explicit XMLScanner( const InputIterator& p_src)
-			:state(START),error(Ok),m_src(InputCharSet(),p_src),m_entityMap(0),m_output(OutputCharSet())
+			:state(START),error(Ok),m_src(InputCharSet(),p_src),m_entityMap(0),m_output(OutputCharSet()),m_tokenpos(0)
 	{}
 	/// \brief Constructor
 	/// \param [in] p_charset character set encoding of input in case of non default settings (code page) needed
 	/// \param [in] p_src source iterator
 	/// \param [in] p_entityMap read only map of named entities defined by the user
 	XMLScanner( const InputCharSet& p_charset, const InputIterator& p_src, const EntityMap& p_entityMap)
-			:state(START),error(Ok),m_src(p_charset,p_src),m_entityMap(&p_entityMap),m_output(OutputCharSet())
+			:state(START),error(Ok),m_src(p_charset,p_src),m_entityMap(&p_entityMap),m_output(OutputCharSet()),m_tokenpos(0)
 	{}
 	/// \brief Constructor
 	/// \param [in] p_charset character set encoding of input in case of non default settings (code page) needed
 	/// \param [in] p_src source iterator
 	XMLScanner( const InputCharSet& p_charset, const InputIterator& p_src)
-			:state(START),error(Ok),m_src(p_charset,p_src),m_entityMap(0),m_output(OutputCharSet())
+			:state(START),error(Ok),m_src(p_charset,p_src),m_entityMap(0),m_output(OutputCharSet()),m_tokenpos(0)
 	{}
 	/// \brief Constructor
 	/// \param [in] p_charset character set encoding of input in case of non default settings (code page) needed
 	explicit XMLScanner( const InputCharSet& p_charset)
-			:state(START),error(Ok),m_src(p_charset),m_entityMap(0)
+			:state(START),error(Ok),m_src(p_charset),m_entityMap(0),m_tokenpos(0)
 	{}
 	/// \brief Default constructor
 	XMLScanner()
-			:state(START),error(Ok),m_src(InputCharSet()),m_entityMap(0)
+			:state(START),error(Ok),m_src(InputCharSet()),m_entityMap(0),m_tokenpos(0)
 	{}
 
 	/// \brief Copy constructor
@@ -1047,6 +1049,7 @@ public:
 		,m_src(o.m_src)
 		,m_entityMap(o.m_entityMap)
 		,m_outputBuf(o.m_outputBuf)
+		,m_tokenpos(o.m_tokenpos)
 	{}
 
 	/// \brief Assign something to the source iterator while keeping the state
@@ -1062,6 +1065,11 @@ public:
 	std::size_t getPosition() const
 	{
 		return m_src.getPosition();
+	}
+	/// \brief Get the current token position
+	std::size_t getTokenPosition() const
+	{
+		return m_tokenpos;
 	}
 
 	/// \brief Get the current parsed XML element pointer, if it was not masked out, see nextItem(unsigned short)
