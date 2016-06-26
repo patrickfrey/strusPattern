@@ -44,7 +44,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 
-#undef STRUS_LOWLEVEL_DEBUG
+#define STRUS_LOWLEVEL_DEBUG
 
 static void printIntelBsdLicense()
 {
@@ -85,6 +85,8 @@ static void printUsage()
 	std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 	std::cout << "--intel-bsd-license" << std::endl;
 	std::cout << "    " << _TXT("Print the BSD license text of the Intel hyperscan library") << std::endl;
+	std::cout << "-t|--threads <N>" << std::endl;
+	std::cout << "    " << _TXT("Set <N> as number of inserter threads to use") << std::endl;
 	std::cout << "-X|--ext <FILEEXT>" << std::endl;
 	std::cout << "    " << _TXT("Do only process files with extension <FILEEXT>") << std::endl;
 	std::cout << "-Y|--mimetype <TYPE>" << std::endl;
@@ -100,23 +102,43 @@ static void printUsage()
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;	// error buffer
 
+unsigned int getUintValue( const char* arg)
+{
+	unsigned int rt = 0, prev = 0;
+	char const* cc = arg;
+	for (; *cc; ++cc)
+	{
+		if (*cc < '0' || *cc > '9') throw std::runtime_error( std::string( "parameter is not a non negative integer number: ") + arg);
+		rt = (rt * 10) + (*cc - '0');
+		if (rt < prev) throw std::runtime_error( std::string( "parameter out of range: ") + arg);
+	}
+	return rt;
+}
+
 static void loadFileNames( std::vector<std::string>& result, const std::string& path, const std::string& fileext)
 {
-	unsigned int ec = strus::readDirFiles( path, fileext, result);
-	if (ec)
+	if (strus::isDir( path))
 	{
-		throw strus::runtime_error( _TXT( "could not read directory to process '%s' (errno %u)"), path.c_str(), ec);
+		unsigned int ec = strus::readDirFiles( path, fileext, result);
+		if (ec)
+		{
+			throw strus::runtime_error( _TXT( "could not read directory to process '%s' (errno %u)"), path.c_str(), ec);
+		}
+		std::vector<std::string> subdirs;
+		ec = strus::readDirSubDirs( path, subdirs);
+		if (ec)
+		{
+			throw strus::runtime_error( _TXT( "could not read subdirectories to process '%s' (errno %u)"), path.c_str(), ec);
+		}
+		std::vector<std::string>::const_iterator si = subdirs.begin(), se = subdirs.end();
+		for (; si != se; ++si)
+		{
+			loadFileNames( result, *si, fileext);
+		}
 	}
-	std::vector<std::string> subdirs;
-	ec = strus::readDirSubDirs( path, subdirs);
-	if (ec)
+	else
 	{
-		throw strus::runtime_error( _TXT( "could not read subdirectories to process '%s' (errno %u)"), path.c_str(), ec);
-	}
-	std::vector<std::string>::const_iterator si = subdirs.begin(), se = subdirs.end();
-	for (; si != se; ++si)
-	{
-		loadFileNames( result, *si, fileext);
+		result.push_back( path);
 	}
 }
 
@@ -221,10 +243,10 @@ public:
 			throw strus::runtime_error(_TXT("unknown document type specified: '%s'"));
 		}
 		std::vector<std::string>::const_iterator ei = selectexpr.begin(), ee = selectexpr.end();
-		for (int eidx=1; ei != ee; ++ei)
+		for (int eidx=1; ei != ee; ++ei,++eidx)
 		{
 			if (m_segmenter_cjson.get()) m_segmenter_cjson->defineSelectorExpression( eidx, *ei);
-			if (m_segmenter_textwolf.get()) m_segmenter_cjson->defineSelectorExpression( eidx, *ei);
+			if (m_segmenter_textwolf.get()) m_segmenter_textwolf->defineSelectorExpression( eidx, *ei);
 		}
 		if (g_errorBuffer->hasError())
 		{
@@ -272,19 +294,26 @@ public:
 		}
 	}
 
-	const std::string& fetchFile() const
+	std::string fetchFile()
 	{
 		boost::mutex::scoped_lock lock( m_mutex);
 		if (m_fileitr != m_files.end())
 		{
 			return *m_fileitr++;
 		}
+		return std::string();
 	}
+
+	const std::vector<std::string>& errors() const
+	{
+		return m_errors;
+	}
+
 public:
 	ThreadContext* createThreadContext() const;
 
 private:
-	mutable boost::mutex m_mutex;
+	boost::mutex m_mutex;
 	const strus::TokenPatternMatchInstanceInterface* m_ptinst;
 	const strus::CharRegexMatchInstanceInterface* m_crinst;
 	strus::SegmenterInstanceInterface* m_segmenter;
@@ -295,17 +324,17 @@ private:
 	strus::DocumentClass m_documentClass;
 	std::vector<std::string> m_errors;
 	std::vector<std::string> m_files;
-	mutable std::vector<std::string>::const_iterator m_fileitr;
+	std::vector<std::string>::const_iterator m_fileitr;
 };
 
 class ThreadContext
 {
-	explicit ThreadContext( const GlobalContext* globalContext_)
+public:
+	explicit ThreadContext( GlobalContext* globalContext_)
 		:m_globalContext(globalContext_){}
 
-	std::vector<strus::stream::TokenPatternMatchResult> processDocument()
+	void processDocument( const std::string& filename)
 	{
-		std::string filename = m_globalContext->fetchFile();
 		std::string content;
 
 		unsigned int ec = strus::readFile( filename, content);
@@ -324,6 +353,9 @@ class ThreadContext
 		std::size_t segmentsize;
 		while (segmenter->getNext( id, segmentpos, segment, segmentsize))
 		{
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cerr << "processing segment " << id << " [" << std::string(segment,segmentsize) << "] at " << segmentpos << std::endl;
+#endif
 			std::vector<strus::stream::PatternMatchToken> crmatches = crctx->match( segment, segmentsize);
 			if (crmatches.size() == 0 && g_errorBuffer->hasError())
 			{
@@ -340,24 +372,78 @@ class ThreadContext
 		{
 			throw std::runtime_error("error matching rules");
 		}
-		return mt->fetchResults();
+		std::vector<strus::stream::TokenPatternMatchResult> result = mt->fetchResults();
+		output( filename, result, content.c_str());
+	}
+
+	void printResults( std::ostream& out, const std::vector<strus::stream::TokenPatternMatchResult>& results, const char* src)
+	{
+		std::vector<strus::stream::TokenPatternMatchResult>::const_iterator
+			ri = results.begin(), re = results.end();
+		for (; ri != re; ++ri)
+		{
+			out << ri->name() << " [" << ri->ordpos() << ", " << ri->origpos() << "]:";
+			std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
+				ei = ri->items().begin(), ee = ri->items().end();
+		
+			for (; ei != ee; ++ei)
+			{
+				out << " " << ei->name() << " [" << ei->ordpos()
+						<< ", " << ei->origpos() << ", " << ei->origsize() << "]";
+				if (src)
+				{
+					out << " '" << std::string( src+ei->origpos(), ei->origsize()) << "'";
+				}
+			}
+			out << std::endl;
+		}
+	}
+
+	void output( const std::string& filename, const std::vector<strus::stream::TokenPatternMatchResult>& results, const char* src)
+	{
+		std::cout << filename << ":" << std::endl;
+		printResults( std::cout, results, src);
+	}
+
+	void run()
+	{
+		try
+		{
+		for (;;)
+		{
+			std::string filename = m_globalContext->fetchFile();
+			if (filename.empty()) break;
+
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cerr << _TXT("processing file '") << filename << "'" << std::endl;
+#endif
+			processDocument( filename);
+			if (g_errorBuffer->hasError())
+			{
+				std::cerr << _TXT( "got error, terminating thread ...");
+				break;
+			}
+		}
+		}
+		catch (const std::runtime_error& err)
+		{
+			g_errorBuffer->report( "error processing documents: %s", err.what());
+		}
+		catch (const std::bad_alloc&)
+		{
+			g_errorBuffer->report( "out of memory processing documents");
+		}
+		m_globalContext->fetchError();
 	}
 
 private:
-	const GlobalContext* m_globalContext;
+	GlobalContext* m_globalContext;
 };
 
 
 int main( int argc, const char* argv[])
 {
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
-	if (!errorBuffer.get())
-	{
-		std::cerr << _TXT("failed to create error buffer") << std::endl;
-		return -1;
-	}
-	g_errorBuffer = errorBuffer.get();
-
+	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer;
 	try
 	{
 		bool doExit = false;
@@ -367,6 +453,7 @@ int main( int argc, const char* argv[])
 		std::string encoding;
 		std::vector<std::string> programfiles;
 		std::vector<std::string> selectexpr;
+		unsigned int nofThreads = 0;
 
 		// Parsing arguments:
 		for (; argi < argc; ++argi)
@@ -378,10 +465,10 @@ int main( int argc, const char* argv[])
 			}
 			else if (0==std::strcmp( argv[argi], "-v") || 0==std::strcmp( argv[argi], "--version"))
 			{
-				std::cerr << "strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
-				std::cerr << "strus base version " << STRUS_BASE_VERSION_STRING << std::endl;
+				std::cerr << _TXT("strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
+				std::cerr << _TXT("strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
 				std::cerr << std::endl;
-				std::cerr << "hyperscan version " << HS_VERSION_STRING << std::endl;
+				std::cerr << _TXT("hyperscan version ") << HS_VERSION_STRING << std::endl;
 				std::cerr << "\tCopyright (c) 2015, Intel Corporation" << std::endl;
 				std::cerr << "\tCall this program with --intel-bsd-license" << std::endl;
 				std::cerr << "\tto print the the Intel hyperscan library license text." << std::endl; 
@@ -389,7 +476,7 @@ int main( int argc, const char* argv[])
 			}
 			else if (0==std::strcmp( argv[argi], "--intel-bsd-license"))
 			{
-				std::cerr << "Intel hyperscan library license:" << std::endl;
+				std::cerr << _TXT("Intel hyperscan library license:") << std::endl;
 				printIntelBsdLicense();
 				std::cerr << std::endl;
 				doExit = true;
@@ -463,6 +550,23 @@ int main( int argc, const char* argv[])
 				++argi;
 				programfiles.push_back( argv[argi]);
 			}
+			else if (0==std::strcmp( argv[argi], "-t") || 0==std::strcmp( argv[argi], "--threads"))
+			{
+				if (argi == argc || argv[argi+1][0] == '-')
+				{
+					throw strus::runtime_error( _TXT("no argument given to option --threads"));
+				}
+				++argi;
+				if (!nofThreads)
+				{
+					throw strus::runtime_error( _TXT("number of threads option --threads specified twice"));
+				}
+				nofThreads = getUintValue( argv[argi]);
+				if (!nofThreads)
+				{
+					throw strus::runtime_error( _TXT("number of threafs option --threads is 0"));
+				}
+			}
 			else if (argv[argi][0] == '-')
 			{
 				throw strus::runtime_error(_TXT("unknown option %s"), argv[ argi]);
@@ -483,6 +587,12 @@ int main( int argc, const char* argv[])
 			printUsage();
 			throw strus::runtime_error( _TXT("too many arguments (given %u, required %u)"), argc - argi, 2);
 		}
+		errorBuffer.reset( strus::createErrorBuffer_standard( 0, nofThreads+1));
+		if (!errorBuffer.get())
+		{
+			throw strus::runtime_error( _TXT("failed to create error buffer"));
+		}
+		g_errorBuffer = errorBuffer.get();
 
 		// Create objects:
 		std::auto_ptr<strus::TokenPatternMatchInterface> pti( strus::createTokenPatternMatch_standard( g_errorBuffer));
@@ -517,11 +627,48 @@ int main( int argc, const char* argv[])
 		{
 			throw strus::runtime_error(_TXT("error in initialization"));
 		}
-		std::string inputpath( argv[ argi+1]);
+		std::string inputpath( argv[ argi]);
+		if (selectexpr.empty())
+		{
+			selectexpr.push_back( "//()");
+		}
 		GlobalContext globalContext(
 				pii->getTokenPatternMatchInstance(),
 				pii->getCharRegexMatchInstance(),
 				selectexpr, inputpath, fileext, mimetype, encoding);
+
+		if (nofThreads)
+		{
+			fprintf( stderr, _TXT("starting %u threads for evaluation ...\n"), nofThreads);
+
+			std::vector<ThreadContext> ctxar;
+			for (unsigned int ti=0; ti<nofThreads; ++ti)
+			{
+				ctxar.push_back( ThreadContext( &globalContext));
+			}
+			{
+				boost::thread_group tgroup;
+				for (unsigned int ti=0; ti<nofThreads; ++ti)
+				{
+					tgroup.create_thread( boost::bind( &ThreadContext::run, &ctxar[ti]));
+				}
+				tgroup.join_all();
+			}
+		}
+		else
+		{
+			ThreadContext ctx( &globalContext);
+			ctx.run();
+		}
+		if (!globalContext.errors().empty())
+		{
+			std::vector<std::string>::const_iterator 
+				ei = globalContext.errors().begin(), ee = globalContext.errors().end();
+			for (; ei != ee; ++ei)
+			{
+				std::cerr << _TXT("error in thread: ") << *ei << std::endl;
+			}
+		}
 
 		// Check for reported error an terminate regularly:
 		if (g_errorBuffer->hasError())
