@@ -40,15 +40,58 @@
 #include "textwolf/char.hpp"
 #include "textwolf/charset_interface.hpp"
 #include "textwolf/exception.hpp"
+#include "textwolf/sourceiterator.hpp"
+#include "textwolf/istreamiterator.hpp"
+#include "textwolf/cstringiterator.hpp"
 #include <cstddef>
 
 namespace textwolf {
+
+template <typename Iterator>
+struct Traits{};
+
+template <>
+struct Traits<char*>
+{
+	static inline std::size_t getPosition( const char* start, char const* itr)
+	{
+		return itr-start;
+	}
+};
+
+template <>
+struct Traits<SrcIterator>
+{
+	static inline std::size_t getPosition( const SrcIterator&, const SrcIterator& itr)
+	{
+		return itr.position();
+	}
+};
+
+template <>
+struct Traits<IStreamIterator>
+{
+	static inline std::size_t getPosition( const IStreamIterator&, const IStreamIterator& itr)
+	{
+		return itr.position();
+	}
+};
+
+template <>
+struct Traits<CStringIterator>
+{
+	static inline std::size_t getPosition( const CStringIterator&, const CStringIterator& itr)
+	{
+		return itr.pos();
+	}
+};
+
 
 /// \class TextScanner
 /// \brief Reader for scanning the input character by character
 /// \tparam Iterator source iterator type (implements preincrement and '*' input byte access indirection)
 /// \tparam CharSet character set of the source stream
-template <class Iterator, class CharSet>
+template <typename Iterator, class CharSet>
 class TextScanner
 {
 private:
@@ -137,7 +180,7 @@ public:
 	/// \return source iterator position in character words (usually bytes)
 	std::size_t getPosition() const
 	{
-		return input - start;
+		return Traits<Iterator>::getPosition( start, input) - state;
 	}
 
 	/// \brief Get the unicode representation of the current character
