@@ -43,10 +43,10 @@ enum
 class Trigger
 {
 public:
-	enum SigType {SigAny=0x0,SigSequence=0x1,SigWithin=0x2,SigDel=0x3};
+	enum SigType {SigAny=0x0,SigSequence=0x1,SigSequenceImm=0x2,SigWithin=0x3,SigDel=0x4};
 	static const char* sigTypeName( SigType i)
 	{
-		static const char* ar[] = {"Any","Sequence","Within","Del"};
+		static const char* ar[] = {"Any","Sequence","SequenceImm","Within","Del"};
 		return ar[i];
 	}
 

@@ -44,7 +44,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 
-#define STRUS_LOWLEVEL_DEBUG
+#undef STRUS_LOWLEVEL_DEBUG
 
 static void printIntelBsdLicense()
 {
@@ -338,7 +338,15 @@ public:
 		std::string content;
 		std::string segmented;
 
-		unsigned int ec = strus::readFile( filename, content);
+		unsigned int ec;
+		if (filename == "-")
+		{
+			ec = strus::readStdin( content);
+		}
+		else
+		{
+			ec = strus::readFile( filename, content);
+		}
 		if (ec)
 		{
 			throw strus::runtime_error(_TXT("error (%u) reading rule file: %s"), ec, ::strerror(ec));
@@ -578,6 +586,14 @@ int main( int argc, const char* argv[])
 					throw strus::runtime_error( _TXT("number of threafs option --threads is 0"));
 				}
 			}
+			else if (argv[argi][0] == '-' && argv[argi][1] == '-' && !argv[argi][2])
+			{
+				break;
+			}
+			else if (argv[argi][0] == '-' && !argv[argi][1])
+			{
+				break;
+			}
 			else if (argv[argi][0] == '-')
 			{
 				throw strus::runtime_error(_TXT("unknown option %s"), argv[ argi]);
@@ -615,6 +631,7 @@ int main( int argc, const char* argv[])
 		std::auto_ptr<strus::PatternMatchProgramInstanceInterface> pii( ppi->createInstance());
 		if (!pii.get()) throw std::runtime_error("failed to create pattern program loader instance");
 
+		std::cerr << "loading programs ..." << std::endl;
 		std::vector<std::string>::const_iterator pi = programfiles.begin(), pe = programfiles.end();
 		for (; pi != pe; ++pi)
 		{
@@ -648,6 +665,7 @@ int main( int argc, const char* argv[])
 				pii->getCharRegexMatchInstance(),
 				selectexpr, inputpath, fileext, mimetype, encoding);
 
+		std::cerr << "start matching ..." << std::endl;
 		if (nofThreads)
 		{
 			fprintf( stderr, _TXT("starting %u threads for evaluation ...\n"), nofThreads);
@@ -686,7 +704,7 @@ int main( int argc, const char* argv[])
 		{
 			throw strus::runtime_error( _TXT("error processing resize blocks"));
 		}
-		std::cerr << _TXT("OK") << std::endl;
+		std::cerr << _TXT("OK done") << std::endl;
 		return 0;
 	}
 	catch (const std::exception& e)

@@ -75,6 +75,7 @@
 	<ol>
 	<li><b>any</b>: Matches if any of the argument subexpressions or tokens matches.</li>
 	<li><b>sequence</b>: Matches if the argument subexpressions or tokens appear in the order as the arguments within a proximity range of ordinal positions specified.</li>
+	<li><b>sequence_imm</b>: imm standst for immediate. Same as sequence, but the elements have no gap in between. No gap means that the oridinal position of the follower element in the sequence is the end ordinal position of the predecessor plus 1.</li>
 	<li><b>sequence_struct</b>: Matches if the argument subexpressions or tokens appear in the order as the arguments within a proximity range of ordinal positions specified without a structure delimiter (e.g. end of sentence token), specified as first argument, within the span of a match.</li>
 	<li><b>within</b>: Matches if the argument subexpressions or tokens appear in arbitrary order within a proximity range of ordinal positions specified.</li>
 	<li><b>within_struct</b>: Matches if the argument subexpressions or tokens appear in arbitrary order within a proximity range of ordinal positions specified without a structure delimiter (e.g. end of sentence token), specified as first argument, within the span of a match.</li>

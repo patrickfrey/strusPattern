@@ -125,6 +125,8 @@ public:
 		{
 			case strus::TokenPatternMatchInstanceInterface::OpSequence:
 				return "sequence";
+			case strus::TokenPatternMatchInstanceInterface::OpSequenceImm:
+				return "sequence_imm";
 			case strus::TokenPatternMatchInstanceInterface::OpSequenceStruct:
 				return "sequence_struct";
 			case strus::TokenPatternMatchInstanceInterface::OpWithin:
@@ -284,6 +286,7 @@ static TreeNode* createRandomTree( const GlobalContext* ctx, const strus::utils:
 		switch (op)
 		{
 			case strus::TokenPatternMatchInstanceInterface::OpSequence:
+			case strus::TokenPatternMatchInstanceInterface::OpSequenceImm:
 			{
 				break;
 			}
@@ -367,6 +370,7 @@ static void fillKeyTokens( KeyTokenMap& keytokenmap, TreeNode* tree, std::size_t
 	else switch (tree->op())
 	{
 		case strus::TokenPatternMatchInstanceInterface::OpSequence:
+		case strus::TokenPatternMatchInstanceInterface::OpSequenceImm:
 			fillKeyTokens( keytokenmap, tree->args()[ 0], treeidx);
 			break;
 		case strus::TokenPatternMatchInstanceInterface::OpSequenceStruct:
@@ -589,6 +593,8 @@ static TreeMatchResult matchTree( const TreeNode* tree, const strus::utils::Docu
 	{
 		switch (tree->op())
 		{
+			case strus::TokenPatternMatchInstanceInterface::OpSequenceImm:
+				throw std::runtime_error("not implemented for test: OpSequenceStructImm");
 			case strus::TokenPatternMatchInstanceInterface::OpSequenceStruct:
 			{
 				std::vector<TreeNode*>::const_iterator ai = tree->args().begin(), ae = tree->args().end();
