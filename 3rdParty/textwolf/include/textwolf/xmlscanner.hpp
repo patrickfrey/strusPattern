@@ -1175,6 +1175,7 @@ public:
 				}
 				else
 				{
+					m_tokenpos = m_src.getPosition();
 					m_outputBuf.clear();
 					rt = (ElementType)sd->action.arg;
 				}

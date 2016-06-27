@@ -336,6 +336,7 @@ public:
 	void processDocument( const std::string& filename)
 	{
 		std::string content;
+		std::string segmented;
 
 		unsigned int ec = strus::readFile( filename, content);
 		if (ec)
@@ -353,6 +354,16 @@ public:
 		std::size_t segmentsize;
 		while (segmenter->getNext( id, segmentpos, segment, segmentsize))
 		{
+			if ((std::size_t)segmentpos > segmented.size())
+			{
+				segmented.resize( segmentpos, ' ');
+				segmented.append( segment, segmentsize);
+			}
+			else if (segmentpos + segmentsize > segmented.size())
+			{
+				std::size_t part = segmented.size() - segmentpos;
+				segmented.append( segment + part, segmentsize - part);
+			}
 #ifdef STRUS_LOWLEVEL_DEBUG
 			std::cerr << "processing segment " << id << " [" << std::string(segment,segmentsize) << "] at " << segmentpos << std::endl;
 #endif
@@ -373,7 +384,7 @@ public:
 			throw std::runtime_error("error matching rules");
 		}
 		std::vector<strus::stream::TokenPatternMatchResult> result = mt->fetchResults();
-		output( filename, result, content.c_str());
+		output( filename, result, segmented.c_str());
 	}
 
 	void printResults( std::ostream& out, const std::vector<strus::stream::TokenPatternMatchResult>& results, const char* src)
