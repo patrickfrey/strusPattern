@@ -68,7 +68,10 @@
 	But rather than subsequently executing a program, it installs for every pattern node triggered a small set
 	of triggers and a slot with an expiration time. Signals are fired to the slot when an event matching
 	a trigger occurrs in the subsequent event stream. The completion all awaited signals of a slot leads
-	to an emission of a signal for other slots waiting for it and/or the production of a result.
+	to an emission of a signal for other slots waiting for it and/or the production of a result.<br/>
+	This pattern of processing can also be found in other form in event driven stream processing libraries:
+	A node waits untils all conditions of a rule all fulfilled and emits an event that is forwarded to another
+	node. If a timeout for the rule occurrs, then the rule is discarded.
 	</p>
 
 	<h3>Operators</h3>
@@ -147,38 +150,51 @@ He is responsible for development, etc..
 	<p id="description">We call the program <i>strusPatternMatch</i> with the following command line:
 	<pre>
 strusPatternMatch -K -p examples/config/program1.rul examples/data/input.xml
-	&</pre>
+	</pre>
 	</p>
 	<p id="description">The option -K tells the program also to print the tokens recognized.
 	The following output shows the tokens recognized with our set of patterns defined:
 	</p>
 	<pre>
-token WORD(1) at 1[0:4] 'This'
-token CAPWORD(6) at 1[0:4] 'This'
-token WORD(1) at 2[5:2] 'is'
-token WORD(1) at 3[8:2] 'an'
-token WORD(1) at 4[11:7] 'example'
-token WORD(1) at 5[19:8] 'document'
-token WORD(1) at 6[28:5] 'about'
-token ABBREV(3) at 7[34:5] 'Prof.'
-token WORD(1) at 8[40:4] 'John'
-token CAPWORD(6) at 8[40:4] 'John'
-token WORD(1) at 9[45:3] 'Doe'
-token CAPWORD(6) at 9[45:3] 'Doe'
-token WORD(1) at 10[50:7] 'contact'
-token EMAIL(5) at 11[58:12] 'mail@etc.com'
-token WORD(1) at 12[72:2] 'or'
-token WORD(1) at 13[75:5] 'visit'
-token URL(4) at 14[81:10] 'www.etc.ch'
-token SENT(2) at 15[91:1] '.'
-token WORD(1) at 16[93:2] 'He'
-token CAPWORD(6) at 16[93:2] 'He'
-token WORD(1) at 17[96:2] 'is'
-token WORD(1) at 18[99:11] 'responsible'
-token WORD(1) at 19[111:3] 'for'
-token WORD(1) at 20[115:11] 'development'
-token ABBREV(3) at 21[128:4] 'etc.'
-token SENT(2) at 22[132:1] '.'
+1: WORD This
+1: CAPWORD This
+2: WORD is
+2: LOWORD is
+3: WORD an
+3: LOWORD an
+4: WORD example
+4: LOWORD example
+5: WORD document
+5: LOWORD document
+6: WORD about
+6: LOWORD about
+7: ABBREV Prof.
+8: WORD John
+8: CAPWORD John
+9: ABBREV P.
+10: WORD Doe
+10: CAPWORD Doe
+11: WORD contact
+11: LOWORD contact
+12: EMAIL mail@etc.com
+13: WORD or
+13: LOWORD or
+14: WORD visit
+14: LOWORD visit
+15: URL www.etc.ch
+16: SENT .
+17: WORD He
+17: CAPWORD He
+18: WORD is
+18: LOWORD is
+19: WORD responsible
+19: LOWORD responsible
+20: WORD for
+20: LOWORD for
+21: WORD development
+21: LOWORD development
+22: ABBREV etc.
+23: SENT .
 	</pre>
 	<h3>Rule matching</h3>
 	<p id="description">As output of our command line call we get also the entities recognized with our example patterns:
@@ -287,8 +303,6 @@ statistiscs:
 <li><b>nofSignalsFired</b>: Tells how many signals were fired during the whole processing of the 100 documents. An active pattern listens for signals fired on a slot. The pattern matches on a completion condition on the slot.</li>
 </ol>
 </p>
-</div>
-</div>
 <h4>Performance measurement plot</h4>
 <p id="description">The following plot shows the measured execution time against the number of sequence 
 rule nodes evaluated.
@@ -347,6 +361,8 @@ of modern CPUs and it accesses new (far away) memory mainly for feeding the syst
 For users that do not need arbitrary programs to define patterns and for users, that can live with 
 the restrictions of the model of <i>StrusStream</i>, the prospect of the performance may be convincing.
 </p>
+</div>
+</div>
 </body>
 </html>
 
