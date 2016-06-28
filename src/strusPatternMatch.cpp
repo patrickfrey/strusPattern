@@ -83,6 +83,8 @@ static void printUsage()
 	std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 	std::cout << "-v|--version" << std::endl;
 	std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
+	std::cout << "-K|--tokens" << std::endl;
+	std::cout << "    " << _TXT("Print the tokenization used for pattern matching too") << std::endl;
 	std::cout << "--intel-bsd-license" << std::endl;
 	std::cout << "    " << _TXT("Print the BSD license text of the Intel hyperscan library") << std::endl;
 	std::cout << "-t|--threads <N>" << std::endl;
@@ -148,16 +150,20 @@ class GlobalContext
 {
 public:
 	explicit GlobalContext(
+			const strus::PatternMatchProgramInstanceInterface* program_,
 			const strus::TokenPatternMatchInstanceInterface* ptinst_,
 			const strus::CharRegexMatchInstanceInterface* crinst_,
 			const std::vector<std::string>& selectexpr,
 			const std::string& path,
 			const std::string& fileext,
 			const std::string& mimetype,
-			const std::string& encoding)
-		:m_ptinst(ptinst_)
+			const std::string& encoding,
+			bool printTokens_)
+		:m_program(program_)
+		,m_ptinst(ptinst_)
 		,m_crinst(crinst_)
 		,m_segmenter(0)
+		,m_printTokens(printTokens_)
 	{
 		loadFileNames( m_files, path, fileext);
 		m_fileitr = m_files.begin();
@@ -285,6 +291,9 @@ public:
 	const strus::TokenPatternMatchInstanceInterface* tokenPatternMatchInstance() const	{return m_ptinst;}
 	const strus::CharRegexMatchInstanceInterface* charRegexMatchInstance() const		{return m_crinst;}
 
+	bool printTokens() const								{return m_printTokens;}
+	const char* tokenName( unsigned int id) const						{return m_program->tokenName( id);}
+
 	void fetchError()
 	{
 		boost::mutex::scoped_lock lock( m_mutex);
@@ -314,6 +323,7 @@ public:
 
 private:
 	boost::mutex m_mutex;
+	const strus::PatternMatchProgramInstanceInterface* m_program;
 	const strus::TokenPatternMatchInstanceInterface* m_ptinst;
 	const strus::CharRegexMatchInstanceInterface* m_crinst;
 	strus::SegmenterInstanceInterface* m_segmenter;
@@ -325,6 +335,7 @@ private:
 	std::vector<std::string> m_errors;
 	std::vector<std::string> m_files;
 	std::vector<std::string>::const_iterator m_fileitr;
+	bool m_printTokens;
 };
 
 class ThreadContext
@@ -384,6 +395,10 @@ public:
 			for (; ti != te; ++ti)
 			{
 				strus::stream::PatternMatchToken tok( strus::stream::PatternMatchToken( ti->id(), ti->ordpos(), ti->origpos()+segmentpos, ti->origsize()));
+				if (m_globalContext->printTokens())
+				{
+					std::cout << ti->ordpos() << ": " << m_globalContext->tokenName(ti->id()) << " " << std::string( segment+ti->origpos(), ti->origsize()) << std::endl;
+				}
 				mt->putInput( tok);
 			}
 		}
@@ -473,6 +488,7 @@ int main( int argc, const char* argv[])
 		std::vector<std::string> programfiles;
 		std::vector<std::string> selectexpr;
 		unsigned int nofThreads = 0;
+		bool printTokens = false;
 
 		// Parsing arguments:
 		for (; argi < argc; ++argi)
@@ -559,6 +575,10 @@ int main( int argc, const char* argv[])
 				}
 				++argi;
 				selectexpr.push_back( argv[argi]);
+			}
+			else if (0==std::strcmp( argv[argi], "-K") || 0==std::strcmp( argv[argi], "--tokens"))
+			{
+				printTokens = true;
 			}
 			else if (0==std::strcmp( argv[argi], "-p") || 0==std::strcmp( argv[argi], "--program"))
 			{
@@ -661,9 +681,10 @@ int main( int argc, const char* argv[])
 			selectexpr.push_back( "//()");
 		}
 		GlobalContext globalContext(
+				pii.get(),
 				pii->getTokenPatternMatchInstance(),
 				pii->getCharRegexMatchInstance(),
-				selectexpr, inputpath, fileext, mimetype, encoding);
+				selectexpr, inputpath, fileext, mimetype, encoding, printTokens);
 
 		std::cerr << "start matching ..." << std::endl;
 		if (nofThreads)

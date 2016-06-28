@@ -21,11 +21,18 @@
 	It can be used for detecting multipart entities or structures in text. In a bigger context it can
 	support NLP and entity recognition.<br/>
 	Patterns are describable as expression trees with basic tokens as 
-	leafs, that are recognized with regular expressions on text.</br></br>
+	leafs, that are recognized with regular expressions on text.
+	</p>
+	<h2>Justification of the name StrusStream</h2>
+	<p id="description">
 	The name <i>StrusStream</i> reflects its event or data flow driven processing of text.
 	Its programming paradigms borrow from concepts of <a href=https://en.wikipedia.org/wiki/Stream_processing">
 	stream processing</a>. But it is not related to modern stream processing frameworks for event
-	driven processing.
+	driven processing. The association to distributed systems (like for example <a href="http://flink.apache.org/">Apache Flink</a>)
+	that process streams of huge amount of events with a big flow rate under many different constraints as 
+	latency, throughput, fault tolerance and uniqueness guarantees makes the name <i>StrusStream</i> a 
+	sort of a misnamer.<br/>
+	I just did not find a better name yet.
 	</p>
 
 	<h2>The Intel hyperscan library</h3>
@@ -43,7 +50,7 @@
 		licensed under <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GPLv3</a>. 
 		API available for Java. Stanford <i>CoreNLP</i> covers much more than simple pattern
 		matching. It provides a workbench for all aspects of natural language processing accompanied
-		by a huge knowledge base on the topic. (See for example the <a href="https://class.coursera.org/nlp/lecture">Standford video lectures</a>).
+		by a huge knowledge base on the topic.
 	</li>
 	<li>The <a href="https://uima.apache.org/ruta.html">Uima Ruta</a> workbench for rule-based text annotation,
 	licensed under the <a href="http://www.apache.org/licenses">Apache license</a>.
@@ -75,7 +82,7 @@
 	<ol>
 	<li><b>any</b>: Matches if any of the argument subexpressions or tokens matches.</li>
 	<li><b>sequence</b>: Matches if the argument subexpressions or tokens appear in the order as the arguments within a proximity range of ordinal positions specified.</li>
-	<li><b>sequence_imm</b>: imm standst for immediate. Same as sequence, but the elements have no gap in between. No gap means that the oridinal position of the follower element in the sequence is the end ordinal position of the predecessor plus 1.</li>
+	<li><b>sequence_imm</b>: <i>imm</i> means immediate. Same as sequence, but the elements have no gaps in between. No gap means that the oridinal position of the follower element in the sequence is the end ordinal position of the predecessor plus 1.</li>
 	<li><b>sequence_struct</b>: Matches if the argument subexpressions or tokens appear in the order as the arguments within a proximity range of ordinal positions specified without a structure delimiter (e.g. end of sentence token), specified as first argument, within the span of a match.</li>
 	<li><b>within</b>: Matches if the argument subexpressions or tokens appear in arbitrary order within a proximity range of ordinal positions specified.</li>
 	<li><b>within_struct</b>: Matches if the argument subexpressions or tokens appear in arbitrary order within a proximity range of ordinal positions specified without a structure delimiter (e.g. end of sentence token), specified as first argument, within the span of a match.</li>
@@ -87,8 +94,8 @@
 	</p>
 	<h3>Example patterns defined</h3>
 	<h4>Define the patterns with in a configuration file</h4>
-	<p id="description">We define the example rules defined in the following listing.
-	The declarations with an identifier followed by a ':' specify the tokens defined by regular expressions. The counting of the different token start positions defines the ordinal positions of the tokens. The number following a '^' after the name of the token defines its level, a sort of priorization. Tokens covered completely by a token of a higher level are not part of the output and for ordinal position assignments. We use the possibiliy to superseed rules in our example to define a hierarchy <b>SENT</b> (end of sentence) &lt; <b>ABBREV</b> (abbreviation) &lt; <b>URL</b> &lt; <b>EMAIL</b>. It means that a dot is an end of sentence marker if not part of an abbreviation, URL or email address. An abbreviation is not recognized as such, if part of an URL. An URL is not an URL, if part of an email address, etc.
+	<p id="description">We define the example rules defined in the following listing in a file "example.rul".
+	The declarations with an identifier followed by a ':' specify the tokens defined by regular expressions. The counting of the different token start positions defines the ordinal positions of the tokens. The number following a '^' after the name of the token defines its level, a sort of priorization. Tokens covered completely by a token of a higher level are not part of the output and for ordinal position assignments. We use the possibiliy to superseed rules. In our example we define a hierarchy <b>SENT</b> (end of sentence) &lt; <b>ABBREV</b> (abbreviation) &lt; <b>URL</b> &lt; <b>EMAIL</b>. It means that a dot is an end of sentence marker if not part of an abbreviation, URL or email address. An abbreviation is not recognized as such, if part of an URL. An URL is not an URL, if part of an email address, etc.
 	<br/>The declarations with an identifier followed by a '=' specify the patterns defined on tokens with the ordinal position as position reference for proximity range specifications.
 	</p>
 	<pre>
@@ -99,14 +106,19 @@ ABBREV ^3	: /\b[aA]bbr[\.]/ | /\b[aA]d[cjv][\.]/ | /\b[oO]bj[\.]/ | /\b[pP]seud[
 		| /\b[mM]rs[\.]/ | /\b[pP]rof[\.]/ | /\b[rR]ev[\.]/ | /\b[hH]on[\.]/ | /\b[hH]rs[\.]/
 		| /\b[A-Za-z][btlsr][\.]/ | /\b[gG]en[\.]/ | /\b[sS]ing[\.]/ | /\b[sS]yn[\.]/
 		| /\b[aA]ve[\.]/ | /\b[d]dD]ept[\.]/ | /\b[eE]st[\.]/ | /\b[fF]ig[\.]/ | /\b[iI]nc[\.]/
-		| /\b[oO]z[\.]/ | /\b[nN]o[\.]/ | /\b[sS]q[\.]/ | /\b[aA]ssn[\.]/ | /\b[tT]rans[\.]/;
+		| /\b[oO]z[\.]/ | /\b[nN]o[\.]/ | /\b[sS]q[\.]/ | /\b[aA]ssn[\.]/ | /\b[tT]rans[\.]/
+		| /\b[A-Z][\.]/
+		;
 ABBREV ^4	: /\bet\sal[\.]/ | /\b[rR][\.][iI][\.][pP]\b/;
 URL ^5		: @([^\s/?\.#-][^\s/?\.#-]+\.)(aero|asia|biz|cat|com|coop|edu|gov|info|int|jobs|mil|mobi|museum|name|net|org|pro|tel|travel|ac|ad|ae|af|ag|ai|al|am|an|ao|aq|ar|as|at|au|aw|ax|az|ba|bb|bd|be|bf|bg|bh|bi|bj|bm|bn|bo|br|bs|bt|bv|bw|by|bz|ca|cc|cd|cf|cg|ch|ci|ck|cl|cm|cn|co|cr|cu|cv|cx|cy|cz|cz|de|dj|dk|dm|do|dz|ec|ee|eg|er|es|et|eu|fi|fj|fk|fm|fo|fr|ga|gb|gd|ge|gf|gg|gh|gi|gl|gm|gn|gp|gq|gr|gs|gt|gu|gw|gy|hk|hm|hn|hr|ht|hu|id|ie|il|im|in|io|iq|ir|is|it|je|jm|jo|jp|ke|kg|kh|ki|km|kn|kp|kr|kw|ky|kz|la|lb|lc|li|lk|lr|ls|lt|lu|lv|ly|ma|mc|md|me|mg|mh|mk|ml|mn|mn|mo|mp|mr|ms|mt|mu|mv|mw|mx|my|mz|na|nc|ne|nf|ng|ni|nl|no|np|nr|nu|nz|nom|pa|pe|pf|pg|ph|pk|pl|pm|pn|pr|ps|pt|pw|py|qa|re|ra|rs|ru|rw|sa|sb|sc|sd|se|sg|sh|si|sj|sj|sk|sl|sm|sn|so|sr|st|su|sv|sy|sz|tc|td|tf|tg|th|tj|tk|tl|tm|tn|to|tp|tr|tt|tv|tw|tz|ua|ug|uk|us|uy|uz|va|vc|ve|vg|vi|vn|vu|wf|ws|xyz|ye|yt|yu|za|zm|zw|arpa)@;
 URL ^6		: @\b(https?://|ftp://)?([^\s/?\.#-]+\.)([^\s/?\.#-]+\.)([a-z]{2,6})(/[^\s]*)?@;
 EMAIL ^7	: /\b([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})\b/;
-CAPWORD ^1	: /\b\p{Lu}\p{Ll}+\b/;
+CAPWORD ^1	: /\b\p{Lu}\p{Ll}*\b/;
+LOWORD ^1	: /\b\p{Ll}+\b/;
 
-Name		= sequence( firstname=[0.75]CAPWORD, surname=CAPWORD | 2 );
+Name		= sequence_imm( firstname=[0.75]CAPWORD, surname=CAPWORD | 2 );
+Name		= sequence_imm( firstname=[0.75]CAPWORD, surname=ABBREV | 2 );
+Name		= sequence_imm( Name, surname=CAPWORD | 10 );
 Contact		= sequence_struct( SENT, Name, email=EMAIL | 10 );
 	</pre>
 	<p id="description">
@@ -114,7 +126,7 @@ Contact		= sequence_struct( SENT, Name, email=EMAIL | 10 );
 	In this example the variable assignment of firstname gets the weight 0.75 assigned. Weigths are not
 	interpreted or used by <i>StrusStream</i>. They are there for the user if part or the interpretation of the result.
 	<br/>
-	A "Contact" is defined as sequence of a name as we defined it and an email address in in a proximity
+	A "PersonMail" is defined as sequence of a name as we defined it and an email address in in a proximity
 	distance of maximum 10 tokens, without an end of sentence marker appearing in between a candidate match.
 	</p>
 	<h4>Define the patterns in C++</h4>
@@ -124,11 +136,21 @@ Contact		= sequence_struct( SENT, Name, email=EMAIL | 10 );
 
 	<h3>Example input</h3>
 	<pre>
-This is an example document about Prof. John Doe, contact mail@etc.com, or visit www.etc.ch.
+&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;
+&lt;doc&gt;
+&lt;text&gt;This is an example document about Prof. John P. Doe, contact mail@etc.com, or visit www.etc.ch.
 He is responsible for development, etc..
+&lt;/text&gt;
+&lt;/doc&gt;
 	</pre>
 	<h3>Tokenization</h3>
-	<p id="description">The following output shows the tokens recognized with our set of patterns defined:
+	<p id="description">We call the program <i>strusPatternMatch</i> with the following command line:
+	<pre>
+strusPatternMatch -K -p examples/config/program1.rul examples/data/input.xml
+	&</pre>
+	</p>
+	<p id="description">The option -K tells the program also to print the tokens recognized.
+	The following output shows the tokens recognized with our set of patterns defined:
 	</p>
 	<pre>
 token WORD(1) at 1[0:4] 'This'
@@ -158,19 +180,16 @@ token WORD(1) at 20[115:11] 'development'
 token ABBREV(3) at 21[128:4] 'etc.'
 token SENT(2) at 22[132:1] '.'
 	</pre>
-
 	<h3>Rule matching</h3>
-	<p id="description">The following output of the program <i>strusPatternMatch</i> shows the entities recognized with our example patterns:
+	<p id="description">As output of our command line call we get also the entities recognized with our example patterns:
 	</p>
 	<pre>
-result Name at 8:
-        item surname at 9 [45:3] 1 'Doe'
-        item firstname at 8 [40:4] 0.75 'John'
-
-result Contact at 8:
-        item email at 11 [58:12] 1 'mail@etc.com'
-        item firstname at 8 [40:4] 0.75 'John'
-        item surname at 9 [45:3] 1 'Doe'
+examples/data/input.xml:
+Name [8, 108]: surname [9, 113, 2] 'P.' firstname [8, 108, 4] 'John'
+Name [8, 108]: surname [10, 116, 3] 'Doe' firstname [8, 108, 4] 'John' surname [9, 113, 2] 'P.'
+Contact [8, 108]: email [12, 129, 12] 'mail@etc.com' firstname [8, 108, 4] 'John' surname [9, 113, 2] 'P.'
+Contact [8, 108]: email [12, 129, 12] 'mail@etc.com' surname [9, 113, 2] 'P.' firstname [8, 108, 4] 'John' surname [10, 116, 3] 'Doe'
+OK done
 	</pre>
 
 	<h2>Performance measurements on an Intel NUC (NUC6i3SYK)</h2>
