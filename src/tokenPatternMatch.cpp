@@ -205,6 +205,10 @@ public:
 					slot_sigtype = Trigger::SigSequence;
 					slot_initsigval = argc;
 					break;
+				case OpSequenceImm:
+					slot_sigtype = Trigger::SigSequenceImm;
+					slot_initsigval = argc;
+					break;
 				case OpSequenceStruct:
 					slot_sigtype = Trigger::SigSequence;
 					slot_initsigval = argc-1;
@@ -268,6 +272,15 @@ public:
 						}
 						break;
 					case OpSequence:
+						trigger_sigval = argc-ai;
+						isKeyEvent = (ai == 0);
+						break;
+					case OpSequenceImm:
+						if (ai == 0)
+						{
+							//... first element has no predecessor
+							trigger_sigtype = Trigger::SigSequence;
+						}
 						trigger_sigval = argc-ai;
 						isKeyEvent = (ai == 0);
 						break;

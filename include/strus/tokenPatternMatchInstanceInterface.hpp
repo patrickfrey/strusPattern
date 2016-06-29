@@ -38,6 +38,7 @@ public:
 	enum JoinOperation
 	{
 		OpSequence,		///< The argument patterns must appear in the specified (strict) order (ordinal span) within a specified proximity range of ordinal positions for the completion of the rule.
+		OpSequenceImm,		///< Same as OpSequence, but does not allow any gap in between the elements.
 		OpSequenceStruct,	///< The argument patterns must appear in the specified (strict) order (ordinal span) within a specified proximity range of ordinal positions for the completion of the rule without a structure element appearing before the last argument pattern needed for then completion of the rule.
 		OpWithin,		///< The argument patterns must appear within a specified proximity range of ordinal positions without overlapping ordinal spans for the completion of the rule.
 		OpWithinStruct,		///< The argument patterns must appear within a specified proximity range of ordinal positions without overlapping ordinal spans for the completion of the rule without a structure element appearing before the last element for then completion of the rule.

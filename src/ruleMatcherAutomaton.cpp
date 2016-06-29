@@ -331,6 +331,7 @@ uint32_t ProgramTable::getAltEventId( uint32_t eventid, uint32_t triggerListIdx)
 				// ... For SigAny all events are key events, so no alternative can be chosen
 				return 0;
 			case Trigger::SigSequence:
+			case Trigger::SigSequenceImm:
 			case Trigger::SigWithin:
 			{
 				if (sigtype == trigger->sigtype)
@@ -671,6 +672,24 @@ void StateMachine::fireSignal(
 			break;
 		case Trigger::SigSequence:
 			if (trigger.sigval() == slot.value && slot.end_ordpos < data.ordpos)
+			{
+				slot.end_ordpos = m_curpos;
+				slot.value = trigger.sigval()-1;
+				if (slot.count > 0)
+				{
+					--slot.count;
+					match = (slot.count == 0);
+				}
+				else
+				{
+					match = true;
+				}
+				finished = (slot.value == 0);
+				takeEventData = true;
+			}
+			break;
+		case Trigger::SigSequenceImm:
+			if (trigger.sigval() == slot.value && slot.end_ordpos+1 == data.ordpos)
 			{
 				slot.end_ordpos = m_curpos;
 				slot.value = trigger.sigval()-1;
