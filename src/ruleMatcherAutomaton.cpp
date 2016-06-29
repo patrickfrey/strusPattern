@@ -19,6 +19,7 @@
 #include <emmintrin.h>
 #define STRUS_USE_SSE_SCAN_TRIGGERS
 #endif
+#define HAVE_BUILTIN_ASSUME_ALIGNED
 #endif
 #undef STRUS_LOWLEVEL_DEBUG
 
@@ -201,7 +202,7 @@ void EventTriggerTable::getTriggers( TriggerRefList& triggers, uint32_t event) c
 	Trigger const** tar = triggers.reserve( rec.m_size);
 	std::size_t nofresults = 0;
 
-#if __GNUC__ >= 4
+#if __GNUC__ >= 4 && defined(HAVE_BUILTIN_ASSUME_ALIGNED)
 	const uint32_t* eventAr = (const uint32_t*)__builtin_assume_aligned( rec.m_eventAr, EventArrayMemoryAlignment);
 #else
 	const uint32_t* eventAr = rec.m_eventAr;
