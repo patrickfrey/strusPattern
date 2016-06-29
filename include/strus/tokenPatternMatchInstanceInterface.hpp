@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// \brief StrusStream interface for building the automaton for detecting patterns of tokens in a document stream
+/// \brief Interface for building the automaton for detecting patterns of tokens in a document stream
 /// \file "tokenPatternMatchInstanceInterface.hpp"
 #ifndef _STRUS_STREAM_TOKEN_PATTERN_MATCH_INSTANCE_INTERFACE_HPP_INCLUDED
 #define _STRUS_STREAM_TOKEN_PATTERN_MATCH_INSTANCE_INTERFACE_HPP_INCLUDED

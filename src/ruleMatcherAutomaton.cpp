@@ -13,9 +13,12 @@
 #include <algorithm>
 #include <iostream>
 #include <new>
+
+#if !defined (__APPLE__) && !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(_WIN32)
 #ifdef __SSE__
 #include <emmintrin.h>
 #define STRUS_USE_SSE_SCAN_TRIGGERS
+#endif
 #endif
 #undef STRUS_LOWLEVEL_DEBUG
 
