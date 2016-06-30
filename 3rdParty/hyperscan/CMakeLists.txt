@@ -354,8 +354,8 @@ if (EXISTS ${CMAKE_SOURCE_DIR}/tools/CMakeLists.txt)
 endif()
 
 # do substitutions
-configure_file(${CMAKE_MODULE_PATH}/config.h.in ${PROJECT_BINARY_DIR}/config.h)
-configure_file(src/hs_version.h.in ${PROJECT_BINARY_DIR}/hs_version.h)
+configure_file(${CMAKE_MODULE_PATH}/config.h.in ${PROJECT_SOURCE_DIR}/config.h)
+configure_file(src/hs_version.h.in ${PROJECT_SOURCE_DIR}/hs_version.h)
 
 if (NOT WIN32)
     # expand out library names for pkgconfig static link info
@@ -367,8 +367,8 @@ if (NOT WIN32)
     endforeach()
 
     configure_file(libhs.pc.in ${PROJECT_BINARY_DIR}/libhs.pc @ONLY) # only replace @ quoted vars
-    install(FILES ${PROJECT_BINARY_DIR}/libhs.pc
-            DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")
+#    install(FILES ${PROJECT_BINARY_DIR}/libhs.pc
+#            DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")
 endif()
 
 # only set these after all tests are done
