@@ -135,6 +135,8 @@ public:
 				return "within_struct";
 			case strus::TokenPatternMatchInstanceInterface::OpAny:
 				return "any";
+			case strus::TokenPatternMatchInstanceInterface::OpAnd:
+				return "and";
 		}
 		return 0;
 	}
@@ -211,7 +213,8 @@ public:
 			strus::TokenPatternMatchInstanceInterface::OpSequenceStruct,
 			strus::TokenPatternMatchInstanceInterface::OpWithin,
 			strus::TokenPatternMatchInstanceInterface::OpWithinStruct,
-			strus::TokenPatternMatchInstanceInterface::OpAny
+			strus::TokenPatternMatchInstanceInterface::OpAny,
+			//[+]strus::TokenPatternMatchInstanceInterface::OpAnd
 		};
 		return ar[ (m_selopdist.random()-1)];
 	}
@@ -323,6 +326,8 @@ static TreeNode* createRandomTree( const GlobalContext* ctx, const strus::utils:
 			case strus::TokenPatternMatchInstanceInterface::OpAny:
 				cardinality = 0;
 				break;
+			case strus::TokenPatternMatchInstanceInterface::OpAnd:
+				throw std::runtime_error( "operator 'And' not implemented yet");
 		}
 		rt = new TreeNode( op, args, range, cardinality);
 	}
@@ -395,12 +400,16 @@ static void fillKeyTokens( KeyTokenMap& keytokenmap, TreeNode* tree, std::size_t
 			break;
 		}
 		case strus::TokenPatternMatchInstanceInterface::OpAny:
+		{
 			std::vector<TreeNode*>::const_iterator ti = tree->args().begin(), te = tree->args().end();
 			for (; ti != te; ++ti)
 			{
 				fillKeyTokens( keytokenmap, *ti, treeidx);
 			}
 			break;
+		}
+		case strus::TokenPatternMatchInstanceInterface::OpAnd:
+			throw std::runtime_error( "operator 'And' not implemented yet");
 	}
 }
 
@@ -692,6 +701,8 @@ static TreeMatchResult matchTree( const TreeNode* tree, const strus::utils::Docu
 				}
 				break;
 			}
+			case strus::TokenPatternMatchInstanceInterface::OpAnd:
+				throw std::runtime_error( "operator 'And' not implemented yet");
 			case strus::TokenPatternMatchInstanceInterface::OpAny:
 			{
 				TreeMatchResult selected;
