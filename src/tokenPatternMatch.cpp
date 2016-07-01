@@ -243,6 +243,9 @@ public:
 					slot_sigtype = Trigger::SigAny;
 					slot_initcount = cardinality?(uint32_t)cardinality:(uint32_t)1;
 					break;
+				case OpAnd:
+					slot_sigtype = Trigger::SigAnd;
+					break;
 			}
 			ActionSlotDef actionSlotDef( slot_initsigval, slot_initcount, slot_event, slot_resultHandle);
 			uint32_t program = m_data.programTable.createProgram( range, actionSlotDef);
@@ -297,6 +300,7 @@ public:
 						isKeyEvent = true;
 						break;
 					case OpAny:
+					case OpAnd:
 						isKeyEvent = true;
 						break;
 				}

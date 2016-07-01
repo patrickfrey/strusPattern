@@ -72,7 +72,7 @@ static SourcePosition getSourcePosition( const std::string& source, const char* 
 typedef strus::TokenPatternMatchInstanceInterface::JoinOperation JoinOperation;
 static JoinOperation joinOperation( const std::string& name)
 {
-	static const char* ar[] = {"sequence","sequence_imm","sequence_struct","within","within_struct","any",0};
+	static const char* ar[] = {"sequence","sequence_imm","sequence_struct","within","within_struct","any","and",0};
 	std::size_t ai = 0;
 	for (; ar[ai]; ++ai)
 	{

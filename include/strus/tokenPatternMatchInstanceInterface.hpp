@@ -42,7 +42,8 @@ public:
 		OpSequenceStruct,	///< The argument patterns must appear in the specified (strict) order (ordinal span) within a specified proximity range of ordinal positions for the completion of the rule without a structure element appearing before the last argument pattern needed for then completion of the rule.
 		OpWithin,		///< The argument patterns must appear within a specified proximity range of ordinal positions without overlapping ordinal spans for the completion of the rule.
 		OpWithinStruct,		///< The argument patterns must appear within a specified proximity range of ordinal positions without overlapping ordinal spans for the completion of the rule without a structure element appearing before the last element for then completion of the rule.
-		OpAny			///< At least one of the argument patterns must appear for the completion of the rule.
+		OpAny,			///< At least one of the argument patterns must appear for the completion of the rule.
+		OpAnd			///< All of the argument patterns must appear for the completion of the rule at the same ordinal position.
 	};
 
 	/// \brief Take the topmost elements from the stack, build an expression out of them and replace the argument elements with the created element on the stack
