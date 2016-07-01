@@ -37,7 +37,8 @@ public:
 	/// \param[in] closeMarker string to put as end of the markup
 	/// \param[in] level sort of priority (areas with a higher level markup are superseding the ones with lovel level. It is also used as criterion to resolve conflicts)
 	virtual void putMarkup(
-			std::size_t startpos,
+			std::size_t start_origseg,
+			std::size_t start_origpos,
 			std::size_t size,
 			const std::string& openMarker,
 			const std::string& closeMarker,

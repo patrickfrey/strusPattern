@@ -445,7 +445,7 @@ public:
 				{
 					std::size_t start_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->start_origpos();
 					std::size_t end_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->end_origpos();
-					out << " '" << std::string( start_srcpos, end_srcpos - start_srcpos) << "'";
+					out << " '" << std::string( src + start_srcpos, end_srcpos - start_srcpos) << "'";
 				}
 			}
 			out << std::endl;

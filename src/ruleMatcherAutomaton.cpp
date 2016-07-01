@@ -334,6 +334,26 @@ uint32_t ProgramTable::getAltEventId( uint32_t eventid, uint32_t triggerListIdx)
 			case Trigger::SigAny:
 				// ... For SigAny all events are key events, so no alternative can be chosen
 				return 0;
+			case Trigger::SigAnd:
+			{
+				if (sigtype == trigger->sigtype)
+				{
+					if (trigger->event != eventid)
+					{
+						eventid_selected = trigger->event;
+						sigtype = (Trigger::SigType)trigger->sigtype;
+					}
+				}
+				else if (sigtype == Trigger::SigAny && trigger->event != eventid)
+				{
+					eventid_selected = trigger->event;
+					sigtype = (Trigger::SigType)trigger->sigtype;
+				}
+				else
+				{
+					return 0;
+				}
+			}
 			case Trigger::SigSequence:
 			case Trigger::SigSequenceImm:
 			case Trigger::SigWithin:
@@ -672,6 +692,23 @@ void StateMachine::fireSignal(
 				match = true;
 				--slot.count;
 				finished = (slot.count == 0);
+			}
+			break;
+		case Trigger::SigAnd:
+			if (slot.count > 0)
+			{
+				if (!slot.value)
+				{
+					slot.value = data.ordpos;
+				}
+				if (slot.value == data.ordpos)
+				{
+					slot.end_ordpos = m_curpos;
+					match = true;
+					--slot.count;
+					finished = (slot.count == 0);
+					takeEventData = true;
+				}
 			}
 			break;
 		case Trigger::SigSequence:
