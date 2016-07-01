@@ -12,6 +12,7 @@
 #include "strus/tokenPatternMatchInstanceInterface.hpp"
 #include "strus/stream/tokenPatternMatchResult.hpp"
 #include "strus/stream/tokenPatternMatchStatistics.hpp"
+#include "strus/segmenterContextInterface.hpp"
 #include <vector>
 #include <string>
 #include <iostream>
@@ -62,7 +63,7 @@ typedef strus::TokenPatternMatchInstanceInterface::JoinOperation JoinOperation;
 JoinOperation joinOperation( const char* joinopstr);
 
 unsigned int getUintValue( const char* arg);
-void printResults( std::ostream& out, const std::vector<strus::stream::TokenPatternMatchResult>& results, const char* src=0);
+void printResults( std::ostream& out, const std::vector<strus::SegmenterPosition>& segmentposmap, const std::vector<strus::stream::TokenPatternMatchResult>& results, const char* src=0);
 void printStatistics( std::ostream& out, const strus::stream::TokenPatternMatchStatistics& stats);
 
 }} //namespace

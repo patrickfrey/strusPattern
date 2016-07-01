@@ -182,7 +182,7 @@ int main( int argc, const char** argv)
 		}
 
 		// Print results to buffer:
-		strus::utils::printResults( resultstrbuf, results, inputsrc.c_str());
+		strus::utils::printResults( resultstrbuf, std::vector<strus::SegmenterPosition>(), results, inputsrc.c_str());
 		strus::stream::TokenPatternMatchStatistics stats = ptctx->getStatistics();
 		strus::utils::printStatistics( resultstrbuf, stats);
 

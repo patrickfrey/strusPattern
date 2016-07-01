@@ -67,12 +67,20 @@ public:
 			{
 				m_statemachine.setCurrentPos( m_curPosition = term.ordpos());
 			}
-			else if (term.origpos() + term.origsize() >= (std::size_t)std::numeric_limits<uint32_t>::max())
+			else if (term.origsize() >= (std::size_t)std::numeric_limits<uint16_t>::max())
 			{
-				throw strus::runtime_error(_TXT("term event orig position and length out of range"));
+				throw strus::runtime_error(_TXT("term event orig size out of range"));
+			}
+			else if (term.origseg() >= (std::size_t)std::numeric_limits<uint16_t>::max())
+			{
+				throw strus::runtime_error(_TXT("term event orig segment number out of range"));
+			}
+			else if (term.origpos() >= (std::size_t)std::numeric_limits<uint16_t>::max())
+			{
+				throw strus::runtime_error(_TXT("term event orig segment byte position out of range"));
 			}
 			uint32_t eventid = eventHandle( TermEvent, term.id());
-			EventData data( term.origpos(), term.origsize(), term.ordpos(), 0/*subdataref*/);
+			EventData data( term.origseg(), term.origpos(), term.origseg(), term.origpos() + term.origsize(), term.ordpos(), 0/*subdataref*/);
 			m_statemachine.doTransition( eventid, data);
 			++m_nofEvents;
 		}
@@ -86,7 +94,7 @@ public:
 		while (0!=(item=m_statemachine.nextResultItem( itemList)))
 		{
 			const char* itemName = m_data->variableMap.key( item->variable);
-			TokenPatternMatchResultItem rtitem( itemName, item->data.ordpos, item->data.origpos, item->data.origsize, item->weight);
+			TokenPatternMatchResultItem rtitem( itemName, item->data.ordpos, item->data.start_origseg, item->data.start_origpos, item->data.end_origseg, item->data.end_origpos, item->weight);
 			resitemlist.push_back( rtitem);
 			if (item->data.subdataref)
 			{
@@ -112,7 +120,7 @@ public:
 				{
 					gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
 				}
-				rt.push_back( TokenPatternMatchResult( resultName, result.ordpos, result.origpos, rtitemlist));
+				rt.push_back( TokenPatternMatchResult( resultName, result.ordpos, result.origseg, result.origpos, rtitemlist));
 			}
 			return rt;
 		}

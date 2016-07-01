@@ -4,6 +4,7 @@ include_directories(
 	"${Boost_INCLUDE_DIRS}"
 	"${Intl_INCLUDE_DIRS}"
 	"${PROJECT_SOURCE_DIR}/include"
+	"${PROJECT_SOURCE_DIR}/tests/utils"
 	"${strusbase_INCLUDE_DIRS}"
 )
 link_directories(
@@ -13,5 +14,5 @@ link_directories(
 )
 
 add_executable( testSimpleTokenPatternMatch testSimpleTokenPatternMatch.cpp )
-target_link_libraries( testSimpleTokenPatternMatch strus_error strus_base strus_stream ${Boost_LIBRARIES} "${Intl_LIBRARIES}"  )
+target_link_libraries( testSimpleTokenPatternMatch local_test_utils strus_error strus_base strus_stream ${Boost_LIBRARIES} "${Intl_LIBRARIES}"  )
 

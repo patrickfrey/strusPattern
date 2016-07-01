@@ -145,7 +145,7 @@ static unsigned int processDocument( const strus::TokenPatternMatchInstanceInter
 	unsigned int didx = 0;
 	for (; di != de; ++di,++didx)
 	{
-		mt->putInput( strus::stream::PatternMatchToken( di->termid, di->pos, didx, 1));
+		mt->putInput( strus::stream::PatternMatchToken( di->termid, di->pos, 0/*segpos*/, didx, 1));
 	}
 	if (g_errorBuffer->hasError())
 	{

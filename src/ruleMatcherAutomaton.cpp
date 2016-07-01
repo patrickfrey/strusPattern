@@ -771,7 +771,8 @@ void StateMachine::fireSignal(
 		if (slot.start_ordpos == 0 || slot.start_ordpos > data.ordpos)
 		{
 			slot.start_ordpos = data.ordpos;
-			slot.start_origpos = data.origpos;
+			slot.start_origseg = data.start_origseg;
+			slot.start_origpos = data.start_origpos;
 		}
 	}
 	if (match)
@@ -780,8 +781,7 @@ void StateMachine::fireSignal(
 		{
 			if (slot.event)
 			{
-				std::size_t eventOrigSize = data.origpos + data.origsize - slot.start_origpos;
-				EventStruct followEventData( EventData( slot.start_origpos, eventOrigSize, slot.start_ordpos, rule.eventDataReferenceIdx), slot.event);
+				EventStruct followEventData( EventData( slot.start_origseg, slot.start_origpos, data.end_origseg, data.end_origpos, slot.start_ordpos, rule.eventDataReferenceIdx), slot.event);
 				if (rule.eventDataReferenceIdx)
 				{
 					referenceEventData( rule.eventDataReferenceIdx);
@@ -790,7 +790,7 @@ void StateMachine::fireSignal(
 			}
 			if (slot.resultHandle)
 			{
-				m_results.add( Result( slot.resultHandle, rule.eventDataReferenceIdx, slot.start_ordpos, slot.start_origpos));
+				m_results.add( Result( slot.resultHandle, rule.eventDataReferenceIdx, slot.start_ordpos, slot.start_origseg, slot.start_origpos));
 				if (rule.eventDataReferenceIdx)
 				{
 					referenceEventData( rule.eventDataReferenceIdx);

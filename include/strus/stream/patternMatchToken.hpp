@@ -20,11 +20,11 @@ class PatternMatchToken
 {
 public:
 	/// \brief Constructor
-	PatternMatchToken( unsigned int id_, unsigned int ordpos_, std::size_t origpos_, std::size_t origsize_)
-		:m_id(id_),m_ordpos(ordpos_),m_origpos(origpos_),m_origsize(origsize_){}
+	PatternMatchToken( unsigned int id_, unsigned int ordpos_, std::size_t origseg_, std::size_t origpos_, std::size_t origsize_)
+		:m_id(id_),m_ordpos(ordpos_),m_origseg(origseg_),m_origpos(origpos_),m_origsize(origsize_){}
 	/// \brief Copy constructor
 	PatternMatchToken( const PatternMatchToken& o)
-		:m_id(o.m_id),m_ordpos(o.m_ordpos),m_origpos(o.m_origpos),m_origsize(o.m_origsize){}
+		:m_id(o.m_id),m_ordpos(o.m_ordpos),m_origseg(o.m_origseg),m_origpos(o.m_origpos),m_origsize(o.m_origsize){}
 	/// \brief Destructor
 	~PatternMatchToken(){}
 
@@ -32,14 +32,23 @@ public:
 	unsigned int id() const				{return m_id;}
 	/// \brief Ordinal (counting) position assigned to the token
 	unsigned int ordpos() const			{return m_ordpos;}
-	/// \brief Original position of the token in the source
+	/// \brief Original segment index of the token in the source
+	std::size_t origseg() const			{return m_origseg;}
+	/// \brief Original byte position of the token in the source segment as UTF-8 specified with origseg
 	std::size_t origpos() const			{return m_origpos;}
-	/// \brief Original size of the token in the source
+	/// \brief Original byte size of the token in the source as UTF-8
 	std::size_t origsize() const			{return m_origsize;}
+
+	/// \brief Set the original segment index of the token in the source
+	void setOrigseg( std::size_t origseg_)
+	{
+		m_origseg = origseg_;
+	}
 
 private:
 	unsigned int m_id;
 	unsigned int m_ordpos;
+	std::size_t m_origseg;
 	std::size_t m_origpos;
 	std::size_t m_origsize;
 };

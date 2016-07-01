@@ -464,7 +464,7 @@ static std::vector<strus::stream::TokenPatternMatchResult> processDocument( cons
 	unsigned int didx = 0;
 	for (; di != de; ++di,++didx)
 	{
-		mt->putInput( strus::stream::PatternMatchToken( di->termid, di->pos, didx, 1));
+		mt->putInput( strus::stream::PatternMatchToken( di->termid, di->pos, 0/*origseg*/, didx, 1));
 		if (g_errorBuffer->hasError()) throw std::runtime_error("error matching rules");
 	}
 	std::vector<strus::stream::TokenPatternMatchResult> results = mt->fetchResults();
@@ -725,7 +725,7 @@ static TreeMatchResult matchTree( const TreeNode* tree, const strus::utils::Docu
 	}
 	if (rt.valid && tree->variable())
 	{
-		strus::stream::TokenPatternMatchResultItem item( tree->variable(), rt.ordpos, rt.startidx, rt.endidx-rt.startidx, rt.weight);
+		strus::stream::TokenPatternMatchResultItem item( tree->variable(), rt.ordpos, 0/*start_origseg*/, rt.startidx, 0/*end_origseg*/, rt.endidx, rt.weight);
 		rt.itemar.push_back( item);
 	}
 	return rt;
@@ -754,7 +754,7 @@ static std::vector<strus::stream::TokenPatternMatchResult>
 			TreeMatchResult match = matchTree( candidateTree, doc, didx, endpos, ri->first);
 			if (match.valid)
 			{
-				strus::stream::TokenPatternMatchResult result( candidateTree->name(), match.ordpos, match.startidx, match.itemar);
+				strus::stream::TokenPatternMatchResult result( candidateTree->name(), match.ordpos, 0/*origseg*/, match.startidx, match.itemar);
 				rt.push_back( result);
 			}
 		}
@@ -777,8 +777,10 @@ bool compareResultItem( const strus::stream::TokenPatternMatchResultItem &res1, 
 	int cmp = std::strcmp( res1.name(), res2.name());
 	if (cmp) return cmp < 0;
 	if (res1.ordpos() != res2.ordpos()) return res1.ordpos() < res2.ordpos();
-	if (res1.origpos() != res2.origpos()) return res1.origpos() < res2.origpos();
-	if (res1.origsize() != res2.origsize()) return res1.origsize() < res2.origsize();
+	if (res1.start_origseg() != res2.start_origseg()) return res1.start_origseg() < res2.start_origseg();
+	if (res1.start_origpos() != res2.start_origpos()) return res1.start_origpos() < res2.start_origpos();
+	if (res1.end_origseg() != res2.end_origseg()) return res1.end_origseg() < res2.end_origseg();
+	if (res1.end_origpos() != res2.end_origpos()) return res1.end_origpos() < res2.end_origpos();
 	return true;
 }
 
@@ -787,6 +789,7 @@ bool compareResult( const strus::stream::TokenPatternMatchResult &res1, const st
 	int cmp = std::strcmp( res1.name(), res2.name());
 	if (cmp) return cmp < 0;
 	if (res1.ordpos() != res2.ordpos()) return res1.ordpos() < res2.ordpos();
+	if (res1.origseg() != res2.origseg()) return res1.origseg() < res2.origseg();
 	if (res1.origpos() != res2.origpos()) return res1.origpos() < res2.origpos();
 	if (res1.items().size() != res2.items().size()) return res1.items().size() < res2.items().size();
 	std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
@@ -822,7 +825,7 @@ static std::vector<strus::stream::TokenPatternMatchResult>
 	{
 		std::vector<strus::stream::TokenPatternMatchResultItem> items = ri->items();
 		std::sort( items.begin(), items.end(), compareResultItem);
-		rt.push_back( strus::stream::TokenPatternMatchResult( ri->name(), ri->ordpos(), ri->origpos(), items));
+		rt.push_back( strus::stream::TokenPatternMatchResult( ri->name(), ri->ordpos(), ri->origseg(), ri->origpos(), items));
 	}
 	std::sort( rt.begin(), rt.end(), compareResult);
 	return rt;
@@ -853,13 +856,13 @@ static bool compareResults( const std::vector<strus::stream::TokenPatternMatchRe
 	for (; xi != xe; ++xi)
 	{
 		std::ostringstream item;
-		item << xi->name() << "_" << xi->ordpos() << "(" << xi-> origpos() << ")";
+		item << xi->name() << "_" << xi->ordpos() << "(" << xi-> origseg() << "|" << xi->origpos() << ")";
 		set_exp.insert( item.str());
 	}
 	for (; ri != re; ++ri)
 	{
 		std::ostringstream item;
-		item << ri->name() << "_" << ri->ordpos() << "(" << ri-> origpos() << ")";
+		item << ri->name() << "_" << ri->ordpos() << "(" << ri-> origseg() << "|" << ri->origpos() << ")";
 		set_res.insert( item.str());
 	}
 	std::set<std::string>::const_iterator sri = set_res.begin(), sre = set_res.end();
@@ -891,14 +894,14 @@ static unsigned int processDocuments( const strus::TokenPatternMatchInstanceInte
 
 #ifdef STRUS_LOWLEVEL_DEBUG
 		std::cout << "number of matches " << results.size() << std::endl;
-		strus::utils::printResults( std::cout, results);
+		strus::utils::printResults( std::cout, std::vector<strus::SegmenterPosition>(), results);
 #endif
 		std::vector<strus::stream::TokenPatternMatchResult>
 			expectedResults = eliminateDuplicates( sortResults( processDocumentAlt( keytokenmap, treear, *di)));
 
 #ifdef STRUS_LOWLEVEL_DEBUG
 		std::cout << "number of expected matches " << expectedResults.size() << std::endl;
-		strus::utils::printResults( std::cout, expectedResults);
+		strus::utils::printResults( std::cout, std::vector<strus::SegmenterPosition>(), expectedResults);
 #endif
 		if (!compareResults( results, expectedResults))
 		{

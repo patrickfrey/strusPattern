@@ -40,6 +40,7 @@
 #include <cstdio>
 #include <iostream>
 #include <memory>
+#include <limits>
 #include "hs_version.h"
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
@@ -344,10 +345,20 @@ public:
 	explicit ThreadContext( GlobalContext* globalContext_)
 		:m_globalContext(globalContext_){}
 
+	struct PositionInfo
+	{
+		strus::SegmenterPosition segpos;
+		std::size_t srcpos;
+
+		PositionInfo( strus::SegmenterPosition segpos_, std::size_t srcpos_)
+			:segpos(segpos_),srcpos(srcpos_){}
+		PositionInfo( const PositionInfo& o)
+			:segpos(o.segpos),srcpos(o.srcpos){}
+	};
+
 	void processDocument( const std::string& filename)
 	{
 		std::string content;
-		std::string segmented;
 
 		unsigned int ec;
 		if (filename == "-")
@@ -371,17 +382,21 @@ public:
 		strus::SegmenterPosition segmentpos;
 		const char* segment;
 		std::size_t segmentsize;
+		std::vector<PositionInfo> segmentposmap;
+		std::string source;
+		std::size_t segmentidx;
+		strus::SegmenterPosition prev_segmentpos = (strus::SegmenterPosition)std::numeric_limits<std::size_t>::max();
 		while (segmenter->getNext( id, segmentpos, segment, segmentsize))
 		{
-			if ((std::size_t)segmentpos > segmented.size())
+			segmentidx = segmentposmap.size();
+			if (prev_segmentpos != segmentpos)
 			{
-				segmented.resize( segmentpos, ' ');
-				segmented.append( segment, segmentsize);
+				segmentposmap.push_back( PositionInfo( segmentpos, source.size()));
+				source.append( segment, segmentsize);
 			}
-			else if (segmentpos + segmentsize > segmented.size())
+			else
 			{
-				std::size_t part = segmented.size() - segmentpos;
-				segmented.append( segment + part, segmentsize - part);
+				segmentposmap.push_back( PositionInfo( segmentpos, segmentposmap.back().srcpos));
 			}
 #ifdef STRUS_LOWLEVEL_DEBUG
 			std::cerr << "processing segment " << id << " [" << std::string(segment,segmentsize) << "] at " << segmentpos << std::endl;
@@ -391,15 +406,15 @@ public:
 			{
 				throw std::runtime_error( "failed to scan for tokens with char regex match automaton");
 			}
-			std::vector<strus::stream::PatternMatchToken>::const_iterator ti = crmatches.begin(), te = crmatches.end();
+			std::vector<strus::stream::PatternMatchToken>::iterator ti = crmatches.begin(), te = crmatches.end();
 			for (; ti != te; ++ti)
 			{
-				strus::stream::PatternMatchToken tok( strus::stream::PatternMatchToken( ti->id(), ti->ordpos(), ti->origpos()+segmentpos, ti->origsize()));
+				ti->setOrigseg( segmentidx);
 				if (m_globalContext->printTokens())
 				{
 					std::cout << ti->ordpos() << ": " << m_globalContext->tokenName(ti->id()) << " " << std::string( segment+ti->origpos(), ti->origsize()) << std::endl;
 				}
-				mt->putInput( tok);
+				mt->putInput( *ti);
 			}
 		}
 		if (g_errorBuffer->hasError())
@@ -407,36 +422,40 @@ public:
 			throw std::runtime_error("error matching rules");
 		}
 		std::vector<strus::stream::TokenPatternMatchResult> result = mt->fetchResults();
-		output( filename, result, segmented.c_str());
+		output( filename, segmentposmap, result, source.c_str());
 	}
 
-	void printResults( std::ostream& out, const std::vector<strus::stream::TokenPatternMatchResult>& results, const char* src)
+	void printResults( std::ostream& out, const std::vector<PositionInfo>& segmentposmap, const std::vector<strus::stream::TokenPatternMatchResult>& results, const char* src)
 	{
 		std::vector<strus::stream::TokenPatternMatchResult>::const_iterator
 			ri = results.begin(), re = results.end();
 		for (; ri != re; ++ri)
 		{
-			out << ri->name() << " [" << ri->ordpos() << ", " << ri->origpos() << "]:";
+			out << ri->name() << " [" << ri->ordpos() << ", " << ri->origseg() << "|" << ri->origpos() << "]:";
 			std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
 				ei = ri->items().begin(), ee = ri->items().end();
-		
+
 			for (; ei != ee; ++ei)
 			{
+				std::size_t start_segpos = segmentposmap[ ei->start_origseg()].segpos;
+				std::size_t end_segpos = segmentposmap[ ei->end_origseg()].segpos;
 				out << " " << ei->name() << " [" << ei->ordpos()
-						<< ", " << ei->origpos() << ", " << ei->origsize() << "]";
+						<< ", " << start_segpos << "|" << ei->start_origpos() << " .. " << end_segpos << "|" << ei->end_origpos() << "]";
 				if (src)
 				{
-					out << " '" << std::string( src+ei->origpos(), ei->origsize()) << "'";
+					std::size_t start_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->start_origpos();
+					std::size_t end_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->end_origpos();
+					out << " '" << std::string( start_srcpos, end_srcpos - start_srcpos) << "'";
 				}
 			}
 			out << std::endl;
 		}
 	}
 
-	void output( const std::string& filename, const std::vector<strus::stream::TokenPatternMatchResult>& results, const char* src)
+	void output( const std::string& filename, const std::vector<PositionInfo>& segmentposmap, const std::vector<strus::stream::TokenPatternMatchResult>& results, const char* src)
 	{
 		std::cout << filename << ":" << std::endl;
-		printResults( std::cout, results, src);
+		printResults( std::cout, segmentposmap, results, src);
 	}
 
 	void run()
