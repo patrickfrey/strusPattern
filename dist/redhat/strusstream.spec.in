@@ -281,7 +281,10 @@ make test
 %{_includedir}/strus/base/*.hpp
 
 %changelog
+* Tue Jul 5 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.10.0-0.1
+- version increment along other strus projects (for dependency rules)
+- many bugfixes and added tests -- development still in progress
+
 * Mon May 16 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.9.0-0.1
 - initial revision
-
 
