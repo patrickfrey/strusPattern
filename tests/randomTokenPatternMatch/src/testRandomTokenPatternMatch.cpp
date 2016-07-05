@@ -222,7 +222,9 @@ public:
 			li = addstats.begin(), le = addstats.end();
 		for (; li != le; ++li)
 		{
-			stats[ li->first] += li->second;
+			if (li->second < 0.0) throw std::runtime_error("statistics got negative [part]");
+			double vv = stats[ li->first] += li->second;
+			if (vv < 0.0) throw std::runtime_error("statistics got negative [total]");
 		}
 		totalNofMatches += nofMatches;
 		totalNofDocs += nofDocs;
