@@ -8,6 +8,7 @@
 #include "strus/base/stdint.h"
 #include "strus/lib/stream.hpp"
 #include "strus/lib/error.hpp"
+#include "strus/base/fileio.hpp"
 #include "strus/reference.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/tokenPatternMatchInterface.hpp"
@@ -890,7 +891,7 @@ static bool compareResults( const std::vector<strus::stream::TokenPatternMatchRe
 }
 #endif
 
-static unsigned int processDocuments( const strus::TokenPatternMatchInstanceInterface* ptinst, const KeyTokenMap& keytokenmap, const std::vector<TreeNode*> treear, const std::vector<strus::utils::Document>& docs, std::map<std::string,double>& stats)
+static unsigned int processDocuments( const strus::TokenPatternMatchInstanceInterface* ptinst, const KeyTokenMap& keytokenmap, const std::vector<TreeNode*> treear, const std::vector<strus::utils::Document>& docs, std::map<std::string,double>& stats, const char* outputpath)
 {
 	unsigned int totalNofmatches = 0;
 	std::vector<strus::utils::Document>::const_iterator di = docs.begin(), de = docs.end();
@@ -903,17 +904,34 @@ static unsigned int processDocuments( const strus::TokenPatternMatchInstanceInte
 		std::vector<strus::stream::TokenPatternMatchResult>
 			results = eliminateDuplicates( sortResults( processDocument( ptinst, *di, stats)));
 
-#ifdef STRUS_LOWLEVEL_DEBUG
-		std::cout << "number of matches " << results.size() << std::endl;
-		strus::utils::printResults( std::cout, std::vector<strus::SegmenterPosition>(), results);
-#endif
+		if (outputpath)
+		{
+			std::ostringstream out;
+			out << "number of matches " << results.size() << std::endl;
+			strus::utils::printResults( out, std::vector<strus::SegmenterPosition>(), results);
+
+			std::string outputfile( outputpath);
+			outputfile.push_back( strus::dirSeparator());
+			outputfile.append( "res.txt");
+
+			strus::writeFile( outputfile, out.str());
+		}
 		std::vector<strus::stream::TokenPatternMatchResult>
 			expectedResults = eliminateDuplicates( sortResults( processDocumentAlt( keytokenmap, treear, *di)));
 
-#ifdef STRUS_LOWLEVEL_DEBUG
-		std::cout << "number of expected matches " << expectedResults.size() << std::endl;
-		strus::utils::printResults( std::cout, std::vector<strus::SegmenterPosition>(), expectedResults);
-#endif
+		if (outputpath)
+		{
+			std::ostringstream out;
+			out << "number of matches " << expectedResults.size() << std::endl;
+			strus::utils::printResults( out, std::vector<strus::SegmenterPosition>(), expectedResults);
+
+			std::string outputfile( outputpath);
+			outputfile.push_back( strus::dirSeparator());
+			outputfile.append( "exp.txt");
+
+			strus::writeFile( outputfile, out.str());
+		}
+
 		if (!compareResults( results, expectedResults))
 		{
 			throw std::runtime_error(std::string( "results differ to expected for document ") + di->id);
@@ -958,7 +976,7 @@ int main( int argc, const char** argv)
 			printUsage( argc, argv);
 			return 1;
 		}
-		else if (argc - argidx > 4)
+		else if (argc - argidx > 5)
 		{
 			std::cerr << "ERROR too many arguments" << std::endl;
 			printUsage( argc, argv);
@@ -975,6 +993,7 @@ int main( int argc, const char** argv)
 		unsigned int nofDocuments = strus::utils::getUintValue( argv[ argidx+1]);
 		unsigned int documentSize = strus::utils::getUintValue( argv[ argidx+2]);
 		unsigned int nofPatterns = strus::utils::getUintValue( argv[ argidx+3]);
+		const char* outputpath = (argc - argidx > 4)? argv[ argidx+4] : 0;
 
 		std::auto_ptr<strus::TokenPatternMatchInterface> pt( strus::createTokenPatternMatch_standard( g_errorBuffer));
 		if (!pt.get()) throw std::runtime_error("failed to create pattern matcher");
@@ -1007,7 +1026,7 @@ int main( int argc, const char** argv)
 		std::cerr << "starting rule evaluation ..." << std::endl;
 	
 		std::map<std::string,double> stats;
-		unsigned int totalNofMatches = processDocuments( ptinst.get(), keyTokenMap, treear, docs, stats);
+		unsigned int totalNofMatches = processDocuments( ptinst.get(), keyTokenMap, treear, docs, stats, outputpath);
 		unsigned int totalNofDocs = docs.size();
 
 		if (g_errorBuffer->hasError())

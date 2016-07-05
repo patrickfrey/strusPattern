@@ -20,9 +20,9 @@
 	text processing with a competitive performance, suitable for processing large sets of patterns.
 	It can be used for detecting multipart entities or structures in text. In a bigger context it can
 	support NLP and entity recognition.<br/>
-	Patterns are describable as expression trees with basic tokens as 
-	leafs, that are recognized with regular expressions on text.
+	Patterns are describable as expression trees with basic tokens as leafs, that are recognized with regular expressions on text.
 	</p>
+
 	<h2>Justification of the name StrusStream</h2>
 	<p id="description">
 	The name <i>StrusStream</i> reflects its event or data flow driven processing of text.
@@ -330,9 +330,16 @@ Sequences do not have this problem.
 
 <h2>Testing</h2>
 <p id="description">We tested the token pattern matching of <i>StrusStream</i> with random generated
-rules on random generated documents verified with an alternative implementation. Currently the
-tests fail because of differences due to the problems with operators on subexpressions with 
+rules on random generated documents verified with an alternative implementation.
+The test program can be run manually
+<pre>
+cd tests/randomExpressionTreeMatch
+src/testRandomExpressionTreeMatch 100 100 100 100 ./
+</pre>
+And the differences can be inspected with a diff of the res.txt with the exp.txt file.
+Currently the tests fail because of small differences due to the problems with operators on subexpressions with 
 non disjuct sets of accepted input. We are working on the problem.
+</pre>
 </p>
 
 <h2>Caveats</h2>

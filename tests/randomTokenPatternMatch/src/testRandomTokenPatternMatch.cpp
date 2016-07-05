@@ -159,6 +159,7 @@ static unsigned int processDocument( const strus::TokenPatternMatchInstanceInter
 		li = stats.items().begin(), le = stats.items().end();
 	for (; li != le; ++li)
 	{
+		if (li->value() < 0.0) throw std::runtime_error("statistics got negative");
 		globalstats[ li->name()] += li->value();
 	}
 

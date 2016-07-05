@@ -1,0 +1,185 @@
+number of matches 184
+match 'pattern_1' at 1 [0|0]:
+match 'pattern_1' at 3 [0|2]:
+match 'pattern_100' at 11 [0|10]:
+match 'pattern_100' at 12 [0|11]:
+match 'pattern_100' at 44 [0|46]:
+match 'pattern_100' at 46 [0|49]:
+match 'pattern_11' at 5 [0|4]:
+match 'pattern_11' at 32 [0|34]:
+match 'pattern_11' at 59 [0|64]:
+match 'pattern_11' at 67 [0|72]:
+match 'pattern_11' at 71 [0|77]:
+match 'pattern_11' at 86 [0|95]:
+match 'pattern_2' at 2 [0|1]:
+match 'pattern_2' at 11 [0|10]:
+match 'pattern_2' at 12 [0|11]:
+match 'pattern_2' at 25 [0|26]:
+match 'pattern_2' at 30 [0|32]:
+match 'pattern_2' at 31 [0|33]:
+match 'pattern_2' at 36 [0|38]:
+match 'pattern_2' at 38 [0|40]:
+match 'pattern_2' at 39 [0|41]:
+match 'pattern_2' at 43 [0|45]:
+match 'pattern_2' at 44 [0|46]:
+match 'pattern_2' at 46 [0|49]:
+match 'pattern_2' at 63 [0|68]:
+match 'pattern_2' at 64 [0|69]:
+match 'pattern_2' at 76 [0|83]:
+match 'pattern_2' at 77 [0|84]:
+match 'pattern_2' at 79 [0|86]:
+match 'pattern_2' at 85 [0|94]:
+match 'pattern_2' at 94 [0|103]:
+match 'pattern_23' at 2 [0|1]: V9 [2, 0|1..0|2]
+match 'pattern_23' at 11 [0|10]: V9 [11, 0|10..0|11]
+match 'pattern_23' at 12 [0|11]: V9 [12, 0|11..0|12]
+match 'pattern_23' at 25 [0|26]: V9 [25, 0|26..0|27]
+match 'pattern_23' at 30 [0|32]: V9 [30, 0|32..0|33]
+match 'pattern_23' at 31 [0|33]: V9 [31, 0|33..0|34]
+match 'pattern_23' at 36 [0|38]: V9 [36, 0|38..0|39]
+match 'pattern_23' at 38 [0|40]: V9 [38, 0|40..0|41]
+match 'pattern_23' at 39 [0|41]: V9 [39, 0|41..0|42]
+match 'pattern_23' at 43 [0|45]: V9 [43, 0|45..0|46]
+match 'pattern_23' at 44 [0|46]: V9 [44, 0|46..0|47]
+match 'pattern_23' at 46 [0|49]: V9 [46, 0|49..0|50]
+match 'pattern_23' at 63 [0|68]: V9 [63, 0|68..0|69]
+match 'pattern_23' at 64 [0|69]: V9 [64, 0|69..0|70]
+match 'pattern_23' at 76 [0|83]: V9 [76, 0|83..0|84]
+match 'pattern_23' at 77 [0|84]: V9 [77, 0|84..0|85]
+match 'pattern_23' at 79 [0|86]: V9 [79, 0|86..0|87]
+match 'pattern_23' at 85 [0|94]: V9 [85, 0|94..0|95]
+match 'pattern_23' at 94 [0|103]: V9 [94, 0|103..0|104]
+match 'pattern_27' at 2 [0|1]: V3 [15, 0|14..0|15]
+match 'pattern_27' at 59 [0|64]: V3 [60, 0|65..0|66]
+match 'pattern_29' at 22 [0|22]:
+match 'pattern_29' at 62 [0|67]:
+match 'pattern_30' at 35 [0|37]:
+match 'pattern_30' at 54 [0|58]:
+match 'pattern_33' at 7 [0|6]:
+match 'pattern_33' at 16 [0|15]:
+match 'pattern_34' at 40 [0|42]:
+match 'pattern_36' at 1 [0|0]:
+match 'pattern_36' at 3 [0|2]:
+match 'pattern_39' at 2 [0|1]: V2 [2, 0|1..0|2]
+match 'pattern_39' at 11 [0|10]: V2 [11, 0|10..0|11]
+match 'pattern_39' at 12 [0|11]: V2 [12, 0|11..0|12]
+match 'pattern_39' at 25 [0|26]: V2 [25, 0|26..0|27]
+match 'pattern_39' at 30 [0|32]: V2 [30, 0|32..0|33]
+match 'pattern_39' at 31 [0|33]: V2 [31, 0|33..0|34]
+match 'pattern_39' at 36 [0|38]: V2 [36, 0|38..0|39]
+match 'pattern_39' at 38 [0|40]: V2 [38, 0|40..0|41]
+match 'pattern_39' at 39 [0|41]: V2 [39, 0|41..0|42]
+match 'pattern_39' at 43 [0|45]: V2 [43, 0|45..0|46]
+match 'pattern_39' at 44 [0|46]: V2 [44, 0|46..0|47]
+match 'pattern_39' at 46 [0|49]: V2 [46, 0|49..0|50]
+match 'pattern_39' at 63 [0|68]: V2 [63, 0|68..0|69]
+match 'pattern_39' at 64 [0|69]: V2 [64, 0|69..0|70]
+match 'pattern_39' at 76 [0|83]: V2 [76, 0|83..0|84]
+match 'pattern_39' at 77 [0|84]: V2 [77, 0|84..0|85]
+match 'pattern_39' at 79 [0|86]: V2 [79, 0|86..0|87]
+match 'pattern_39' at 85 [0|94]: V2 [85, 0|94..0|95]
+match 'pattern_39' at 94 [0|103]: V2 [94, 0|103..0|104]
+match 'pattern_45' at 7 [0|6]:
+match 'pattern_45' at 16 [0|15]:
+match 'pattern_45' at 35 [0|37]:
+match 'pattern_45' at 54 [0|58]:
+match 'pattern_46' at 84 [0|93]:
+match 'pattern_47' at 14 [0|13]:
+match 'pattern_47' at 48 [0|51]:
+match 'pattern_47' at 70 [0|75]:
+match 'pattern_5' at 14 [0|13]:
+match 'pattern_5' at 48 [0|51]:
+match 'pattern_5' at 70 [0|75]:
+match 'pattern_50' at 5 [0|4]:
+match 'pattern_50' at 32 [0|34]:
+match 'pattern_50' at 59 [0|64]:
+match 'pattern_50' at 67 [0|72]:
+match 'pattern_50' at 71 [0|77]:
+match 'pattern_50' at 86 [0|95]:
+match 'pattern_51' at 10 [0|9]:
+match 'pattern_51' at 18 [0|17]:
+match 'pattern_51' at 52 [0|55]:
+match 'pattern_51' at 53 [0|56]:
+match 'pattern_51' at 65 [0|70]:
+match 'pattern_51' at 88 [0|97]:
+match 'pattern_51' at 89 [0|98]:
+match 'pattern_54' at 5 [0|4]:
+match 'pattern_54' at 32 [0|34]:
+match 'pattern_54' at 59 [0|64]:
+match 'pattern_54' at 67 [0|72]:
+match 'pattern_54' at 71 [0|77]:
+match 'pattern_54' at 86 [0|95]:
+match 'pattern_6' at 5 [0|4]:
+match 'pattern_6' at 32 [0|34]:
+match 'pattern_6' at 59 [0|64]:
+match 'pattern_6' at 67 [0|72]:
+match 'pattern_6' at 71 [0|77]:
+match 'pattern_6' at 86 [0|95]:
+match 'pattern_63' at 5 [0|4]:
+match 'pattern_63' at 32 [0|34]:
+match 'pattern_63' at 59 [0|64]:
+match 'pattern_63' at 67 [0|72]:
+match 'pattern_63' at 71 [0|77]:
+match 'pattern_63' at 86 [0|95]:
+match 'pattern_66' at 2 [0|1]:
+match 'pattern_66' at 11 [0|10]:
+match 'pattern_66' at 12 [0|11]:
+match 'pattern_66' at 25 [0|26]:
+match 'pattern_66' at 30 [0|32]:
+match 'pattern_66' at 31 [0|33]:
+match 'pattern_66' at 36 [0|38]:
+match 'pattern_66' at 38 [0|40]:
+match 'pattern_66' at 39 [0|41]:
+match 'pattern_66' at 43 [0|45]:
+match 'pattern_66' at 44 [0|46]:
+match 'pattern_66' at 46 [0|49]:
+match 'pattern_66' at 63 [0|68]:
+match 'pattern_66' at 64 [0|69]:
+match 'pattern_66' at 76 [0|83]:
+match 'pattern_66' at 77 [0|84]:
+match 'pattern_66' at 79 [0|86]:
+match 'pattern_66' at 85 [0|94]:
+match 'pattern_66' at 94 [0|103]:
+match 'pattern_71' at 2 [0|1]:
+match 'pattern_71' at 11 [0|10]:
+match 'pattern_71' at 12 [0|11]:
+match 'pattern_71' at 25 [0|26]:
+match 'pattern_71' at 30 [0|32]:
+match 'pattern_71' at 31 [0|33]:
+match 'pattern_71' at 36 [0|38]:
+match 'pattern_71' at 38 [0|40]:
+match 'pattern_71' at 39 [0|41]:
+match 'pattern_71' at 43 [0|45]:
+match 'pattern_71' at 44 [0|46]:
+match 'pattern_71' at 46 [0|49]:
+match 'pattern_71' at 63 [0|68]:
+match 'pattern_71' at 64 [0|69]:
+match 'pattern_71' at 76 [0|83]:
+match 'pattern_71' at 77 [0|84]:
+match 'pattern_71' at 79 [0|86]:
+match 'pattern_71' at 85 [0|94]:
+match 'pattern_73' at 33 [0|35]:
+match 'pattern_73' at 50 [0|53]:
+match 'pattern_73' at 100 [0|109]:
+match 'pattern_91' at 94 [0|103]: V6 [94, 0|103..0|104]
+match 'pattern_92' at 10 [0|9]: V1 [15, 0|14..0|15]
+match 'pattern_92' at 65 [0|70]: V1 [67, 0|72..0|73]
+match 'pattern_97' at 2 [0|1]:
+match 'pattern_97' at 11 [0|10]:
+match 'pattern_97' at 12 [0|11]:
+match 'pattern_97' at 25 [0|26]:
+match 'pattern_97' at 30 [0|32]:
+match 'pattern_97' at 31 [0|33]:
+match 'pattern_97' at 36 [0|38]:
+match 'pattern_97' at 38 [0|40]:
+match 'pattern_97' at 39 [0|41]:
+match 'pattern_97' at 43 [0|45]:
+match 'pattern_97' at 44 [0|46]:
+match 'pattern_97' at 46 [0|49]:
+match 'pattern_97' at 63 [0|68]:
+match 'pattern_97' at 64 [0|69]:
+match 'pattern_97' at 76 [0|83]:
+match 'pattern_97' at 77 [0|84]:
+match 'pattern_97' at 79 [0|86]:
+match 'pattern_97' at 85 [0|94]:
+match 'pattern_97' at 94 [0|103]:
