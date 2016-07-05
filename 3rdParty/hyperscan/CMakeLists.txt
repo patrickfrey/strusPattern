@@ -6,7 +6,7 @@ set (HS_MINOR_VERSION 2)
 set (HS_PATCH_VERSION 0)
 set (HS_VERSION ${HS_MAJOR_VERSION}.${HS_MINOR_VERSION}.${HS_PATCH_VERSION})
 
-string (TIMESTAMP BUILD_DATE "%Y-%m-%d")
+execute_process( COMMAND date  '+%Y-%m-%d'  OUTPUT_VARIABLE  BUILD_DATE  )
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include(CheckCCompilerFlag)
