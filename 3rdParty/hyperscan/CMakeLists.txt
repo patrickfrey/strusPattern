@@ -6,7 +6,7 @@ set (HS_MINOR_VERSION 2)
 set (HS_PATCH_VERSION 0)
 set (HS_VERSION ${HS_MAJOR_VERSION}.${HS_MINOR_VERSION}.${HS_PATCH_VERSION})
 
-execute_process( COMMAND date  '+%Y-%m-%d'  OUTPUT_VARIABLE  BUILD_DATE  )
+execute_process( COMMAND date  +%Y-%m-%d  OUTPUT_VARIABLE  BUILD_DATE  OUTPUT_STRIP_TRAILING_WHITESPACE )
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include(CheckCCompilerFlag)
@@ -70,6 +70,7 @@ set(BOOST_MINVERSION 1.57.0)
 set(BOOST_NO_BOOST_CMAKE ON)
 
 # first check for Boost installed on the system
+set( BOOST_ROOT "${PROJECT_SOURCE_DIR}/3rdParty/hyperscan/" )
 find_package(Boost ${BOOST_MINVERSION})
 if(NOT Boost_FOUND)
     # we might have boost in tree, so provide a hint and try again
