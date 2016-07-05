@@ -57,7 +57,7 @@ namespace textwolf {
 template <class IOCharset, class AppCharset,class BufferType>
 class XMLPrinter
 {
-private:
+public:
 	/// \brief Prints a character string to an STL back insertion sequence buffer in the IO character set encoding
 	/// \param [in] src pointer to string to print
 	/// \param [in] srcsize size of src in bytes
