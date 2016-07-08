@@ -16,6 +16,8 @@ namespace strus
 
 /// \brief Forward declaration
 class TokenMarkupContextInterface;
+/// \brief Forward declaration
+class SegmenterMarkupContextInterface;
 
 /// \brief Interface for building the automaton for detecting patterns of tokens in a document stream
 class TokenMarkupInstanceInterface
@@ -24,10 +26,10 @@ public:
 	/// \brief Destructor
 	virtual ~TokenMarkupInstanceInterface(){}
 
-	/// \brief Create the context to process a document with the pattern matcher
-	/// \return the pattern matcher context
+	/// \brief Create the context to markup tokens or spans in a document
+	/// \return the token markup context
 	/// \remark The context cannot be reset. So the context has to be recreated for every processed unit (document)
-	virtual TokenPatternMatchContextInterface* createContext() const=0;
+	virtual TokenMarkupContextInterface* createContext() const=0;
 };
 
 } //namespace

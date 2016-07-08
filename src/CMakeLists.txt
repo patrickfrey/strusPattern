@@ -11,6 +11,7 @@ set( source_files
 	tokenPatternMatch.cpp
 	charRegexMatch.cpp
 	patternMatchProgram.cpp
+	tokenMarkup.cpp
 	lexems.cpp
 )
 
