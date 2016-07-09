@@ -827,7 +827,7 @@ void StateMachine::fireSignal(
 			}
 			if (slot.resultHandle)
 			{
-				m_results.add( Result( slot.resultHandle, rule.eventDataReferenceIdx, slot.start_ordpos, slot.start_origseg, slot.start_origpos));
+				m_results.add( Result( slot.resultHandle, rule.eventDataReferenceIdx, slot.start_ordpos, slot.start_origseg, slot.start_origpos, data.end_origseg, data.end_origpos));
 				if (rule.eventDataReferenceIdx)
 				{
 					referenceEventData( rule.eventDataReferenceIdx);

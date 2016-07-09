@@ -120,7 +120,7 @@ public:
 				{
 					gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
 				}
-				rt.push_back( TokenPatternMatchResult( resultName, result.ordpos, result.origseg, result.origpos, rtitemlist));
+				rt.push_back( TokenPatternMatchResult( resultName, result.ordpos, result.start_origseg, result.start_origpos, result.end_origseg, result.end_origpos, rtitemlist));
 			}
 			return rt;
 		}

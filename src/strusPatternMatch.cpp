@@ -431,14 +431,16 @@ public:
 			ri = results.begin(), re = results.end();
 		for (; ri != re; ++ri)
 		{
-			out << ri->name() << " [" << ri->ordpos() << ", " << ri->origseg() << "|" << ri->origpos() << "]:";
+			std::size_t start_segpos = segmentposmap[ ri->start_origseg()].segpos;
+			std::size_t end_segpos = segmentposmap[ ri->end_origseg()].segpos;
+			out << ri->name() << " [" << ri->ordpos() << ", " << start_segpos << "|" << ri->start_origpos() << " .. " << end_segpos << "|" << ri->end_origpos() << "]:";
 			std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
 				ei = ri->items().begin(), ee = ri->items().end();
 
 			for (; ei != ee; ++ei)
 			{
-				std::size_t start_segpos = segmentposmap[ ei->start_origseg()].segpos;
-				std::size_t end_segpos = segmentposmap[ ei->end_origseg()].segpos;
+				start_segpos = segmentposmap[ ei->start_origseg()].segpos;
+				end_segpos = segmentposmap[ ei->end_origseg()].segpos;
 				out << " " << ei->name() << " [" << ei->ordpos()
 						<< ", " << start_segpos << "|" << ei->start_origpos() << " .. " << end_segpos << "|" << ei->end_origpos() << "]";
 				if (src)
