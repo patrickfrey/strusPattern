@@ -19,6 +19,8 @@ class CharRegexMatchInterface;
 /// \brief Forward declaration
 class TokenPatternMatchInterface;
 /// \brief Forward declaration
+class TokenMarkupInstanceInterface;
+/// \brief Forward declaration
 class PatternMatchProgramInterface;
 /// \brief Forward declaration
 class ErrorBufferInterface;
@@ -29,6 +31,10 @@ CharRegexMatchInterface* createCharRegexMatch_standard(
 
 /// \brief Create the interface for pattern matching on a stream of tokens
 TokenPatternMatchInterface* createTokenPatternMatch_standard(
+		ErrorBufferInterface* errorhnd);
+
+/// \brief Create the interface for markup of tokens in a document text
+TokenMarkupInstanceInterface* createTokenMarkup_standard(
 		ErrorBufferInterface* errorhnd);
 
 /// \brief Create the interface for loading programs from source that define patterns to match

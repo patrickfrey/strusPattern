@@ -41,7 +41,7 @@ public:
 			unsigned int level);
 
 	virtual std::string markupDocument(
-			SegmenterInstanceInterface* segmenter,
+			const SegmenterInstanceInterface* segmenter,
 			const DocumentClass& dclass,
 			const std::string& content) const;
 

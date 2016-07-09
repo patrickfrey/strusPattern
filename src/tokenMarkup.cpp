@@ -56,7 +56,7 @@ void TokenMarkupContext::writeOpenMarkup( SegmenterMarkupContextInterface* marku
 }
 
 std::string TokenMarkupContext::markupDocument(
-		SegmenterInstanceInterface* segmenter,
+		const SegmenterInstanceInterface* segmenter,
 		const DocumentClass& dclass,
 		const std::string& content) const
 {
@@ -132,6 +132,6 @@ TokenMarkupContextInterface* TokenMarkupInstance::createContext() const
 	{
 		return new TokenMarkupContext( m_errorhnd);
 	}
-	CATCH_ERROR_MAP_RETURN( _TXT("failed to create token markup instance: %s"), *m_errorhnd, 0);
+	CATCH_ERROR_MAP_RETURN( _TXT("failed to create token markup: %s"), *m_errorhnd, 0);
 }
 

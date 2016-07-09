@@ -88,7 +88,7 @@ public:
 	/// \param[in] content content string of document to markup
 	/// \return the marked up document content
 	virtual std::string markupDocument(
-			SegmenterInstanceInterface* segmenter,
+			const SegmenterInstanceInterface* segmenter,
 			const DocumentClass& dclass,
 			const std::string& content) const=0;
 };

@@ -7,8 +7,8 @@
  */
 /// \brief Interface for putting annotations into text documents
 /// \file "tokenMarkupInstanceInterface.hpp"
-#ifndef _STRUS_STREAM_TOKEN_MARKUP_INTERFACE_HPP_INCLUDED
-#define _STRUS_STREAM_TOKEN_MARKUP_INTERFACE_HPP_INCLUDED
+#ifndef _STRUS_STREAM_TOKEN_MARKUP_INSTANCE_INTERFACE_HPP_INCLUDED
+#define _STRUS_STREAM_TOKEN_MARKUP_INSTANCE_INTERFACE_HPP_INCLUDED
 #include <string>
 
 namespace strus
@@ -20,11 +20,11 @@ class TokenMarkupContextInterface;
 class SegmenterMarkupContextInterface;
 
 /// \brief Interface for building the automaton for detecting patterns of tokens in a document stream
-class TokenMarkupInterface
+class TokenMarkupInstanceInterface
 {
 public:
 	/// \brief Destructor
-	virtual ~TokenMarkupInterface(){}
+	virtual ~TokenMarkupInstanceInterface(){}
 
 	/// \brief Create the context to markup tokens or spans in a document
 	/// \return the token markup context
