@@ -34,7 +34,7 @@ TokenPatternMatchInterface* createTokenPatternMatch_standard(
 		ErrorBufferInterface* errorhnd);
 
 /// \brief Create the interface for markup of tokens in a document text
-TokenMarkupInstanceInterface* createTokenMarkup_standard(
+TokenMarkupInstanceInterface* createTokenMarkupInstance_standard(
 		ErrorBufferInterface* errorhnd);
 
 /// \brief Create the interface for loading programs from source that define patterns to match

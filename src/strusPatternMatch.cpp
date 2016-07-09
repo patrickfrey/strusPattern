@@ -272,7 +272,7 @@ public:
 			if (m_segmenter_cjson.get()) m_segmenter_cjson->defineSelectorExpression( eidx, *ei);
 			if (m_segmenter_textwolf.get()) m_segmenter_textwolf->defineSelectorExpression( eidx, *ei);
 		}
-		m_tokenMarkup.reset( strus::createTokenMarkup_standard( g_errorBuffer));
+		m_tokenMarkup.reset( strus::createTokenMarkupInstance_standard( g_errorBuffer));
 		if (g_errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("global context initialization failed"));
@@ -473,7 +473,7 @@ public:
 		}
 		else
 		{
-			markupResults( std::cout, segmentposmap, results, documentClass, source, segmenterInstance);
+			markupResults( std::cout, results, documentClass, content, segmenterInstance);
 		}
 	}
 
@@ -503,7 +503,7 @@ public:
 		}
 	}
 
-	void markupResults( std::ostream& out, const std::vector<PositionInfo>& segmentposmap,
+	void markupResults( std::ostream& out,
 				const std::vector<strus::stream::TokenPatternMatchResult>& results,
 				const strus::DocumentClass& documentClass, const std::string& src,
 				const strus::SegmenterInstanceInterface* segmenterInstance)
@@ -517,10 +517,9 @@ public:
 			std::map<std::string,int>::const_iterator mi = m_globalContext->markups().find( ri->name());
 			if (mi != m_globalContext->markups().end())
 			{
-				std::size_t start_segpos = segmentposmap[ ri->start_origseg()].segpos;
-				std::size_t end_segpos = segmentposmap[ ri->end_origseg()].segpos;
 				markupContext->putMarkup(
-					start_segpos, ri->start_origpos(), end_segpos, ri->end_origpos(),
+					ri->start_origseg(), ri->start_origpos(),
+					ri->end_origseg(), ri->end_origpos(),
 					strus::TokenMarkup( ri->name()), mi->second);
 			}
 			std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
@@ -531,10 +530,9 @@ public:
 				std::map<std::string,int>::const_iterator mi = m_globalContext->markups().find( ei->name());
 				if (mi != m_globalContext->markups().end())
 				{
-					std::size_t start_segpos = segmentposmap[ ei->start_origseg()].segpos;
-					std::size_t end_segpos = segmentposmap[ ei->end_origseg()].segpos;
 					markupContext->putMarkup(
-						start_segpos, ri->start_origpos(), end_segpos, ri->end_origpos(),
+						ei->start_origseg(), ei->start_origpos(),
+						ei->end_origseg(), ei->end_origpos(),
 						strus::TokenMarkup( ri->name()), mi->second);
 				}
 			}
