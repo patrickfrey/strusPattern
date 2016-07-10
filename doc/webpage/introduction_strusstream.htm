@@ -333,6 +333,14 @@ Currently you have to formulate your 'within' rules as all possible permutations
 (2 patterns "((A B) A)" and "(A (A B))", if you have 'within' rules with non disjunct accepted sets.
 Sequences do not have this problem.
 </p>
+<h4>Symbols and identifiers</h4>
+<p id="description">It does not make sense to implement every symbol or identifier as item in
+the regular expression automaton. For representing ordinary words, we need the possibility
+to declare identifiers in our rule language. The <a href="http://patrickfrey.github.io/strusStream/doc/doxygen/html/classstrus_1_1CharRegexMatchInstanceInterface.html">CharRegexMatchInstanceInterface</a>
+already has a method to declare such a symbol with the method <i>defineSymbol</i>. 
+But this is one feature not tested yet and not available in our example language.
+</p>
+
 
 <h2>Testing</h2>
 <p id="description">We tested the token pattern matching of <i>StrusStream</i> with random generated
