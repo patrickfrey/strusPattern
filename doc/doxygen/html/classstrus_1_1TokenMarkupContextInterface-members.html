@@ -64,15 +64,14 @@
 
 <p>This is the complete list of members for <a class="el" href="classstrus_1_1TokenMarkupContextInterface.html">strus::TokenMarkupContextInterface</a>, including all inherited members.</p>
 <table class="directory">
-  <tr class="even"><td class="entry"><a class="el" href="classstrus_1_1TokenMarkupContextInterface.html#aaea5429c15b00cbf66dfaf600d3d8785">declareSegment</a>(std::size_t position, const char *segment, std::size_t segmentsize)=0</td><td class="entry"><a class="el" href="classstrus_1_1TokenMarkupContextInterface.html">strus::TokenMarkupContextInterface</a></td><td class="entry"><span class="mlabel">pure virtual</span></td></tr>
-  <tr><td class="entry"><a class="el" href="classstrus_1_1TokenMarkupContextInterface.html#ae9f889df1530557c853b1f1e4557ea67">getContent</a>() const =0</td><td class="entry"><a class="el" href="classstrus_1_1TokenMarkupContextInterface.html">strus::TokenMarkupContextInterface</a></td><td class="entry"><span class="mlabel">pure virtual</span></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="classstrus_1_1TokenMarkupContextInterface.html#a70468bc2653f220b5eebe1d7cda71523">putMarkup</a>(std::size_t start_origseg, std::size_t start_origpos, std::size_t size, const std::string &amp;openMarker, const std::string &amp;closeMarker, unsigned int level)=0</td><td class="entry"><a class="el" href="classstrus_1_1TokenMarkupContextInterface.html">strus::TokenMarkupContextInterface</a></td><td class="entry"><span class="mlabel">pure virtual</span></td></tr>
-  <tr><td class="entry"><a class="el" href="classstrus_1_1TokenMarkupContextInterface.html#aaffbbc5977af4a3b5f1474c9aa81ddab">~TokenMarkupContextInterface</a>()</td><td class="entry"><a class="el" href="classstrus_1_1TokenMarkupContextInterface.html">strus::TokenMarkupContextInterface</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">virtual</span></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classstrus_1_1TokenMarkupContextInterface.html#a7a64eecc819b2f8d6e2d2b9ae64f8187">markupDocument</a>(const SegmenterInstanceInterface *segmenter, const DocumentClass &amp;dclass, const std::string &amp;content) const =0</td><td class="entry"><a class="el" href="classstrus_1_1TokenMarkupContextInterface.html">strus::TokenMarkupContextInterface</a></td><td class="entry"><span class="mlabel">pure virtual</span></td></tr>
+  <tr><td class="entry"><a class="el" href="classstrus_1_1TokenMarkupContextInterface.html#a9d21119113df745980df339d4c69fbd2">putMarkup</a>(const SegmenterPosition &amp;start_segpos, std::size_t start_ofs, const SegmenterPosition &amp;end_segpos, std::size_t end_ofs, const TokenMarkup &amp;markup, unsigned int level)=0</td><td class="entry"><a class="el" href="classstrus_1_1TokenMarkupContextInterface.html">strus::TokenMarkupContextInterface</a></td><td class="entry"><span class="mlabel">pure virtual</span></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classstrus_1_1TokenMarkupContextInterface.html#aaffbbc5977af4a3b5f1474c9aa81ddab">~TokenMarkupContextInterface</a>()</td><td class="entry"><a class="el" href="classstrus_1_1TokenMarkupContextInterface.html">strus::TokenMarkupContextInterface</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">virtual</span></td></tr>
 </table></div><!-- contents -->
 <!-- HTML footer for doxygen 1.8.6-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Jul 6 2016 10:25:51 for strusStream by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jul 10 2016 19:44:47 for strusStream by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

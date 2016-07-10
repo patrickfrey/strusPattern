@@ -75,15 +75,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aaffbbc5977af4a3b5f1474c9aa81ddab"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1TokenMarkupContextInterface.html#aaffbbc5977af4a3b5f1474c9aa81ddab">~TokenMarkupContextInterface</a> ()</td></tr>
 <tr class="memdesc:aaffbbc5977af4a3b5f1474c9aa81ddab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor.  <a href="#aaffbbc5977af4a3b5f1474c9aa81ddab">More...</a><br/></td></tr>
 <tr class="separator:aaffbbc5977af4a3b5f1474c9aa81ddab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaea5429c15b00cbf66dfaf600d3d8785"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1TokenMarkupContextInterface.html#aaea5429c15b00cbf66dfaf600d3d8785">declareSegment</a> (std::size_t position, const char *segment, std::size_t segmentsize)=0</td></tr>
-<tr class="memdesc:aaea5429c15b00cbf66dfaf600d3d8785"><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare a document segment.  <a href="#aaea5429c15b00cbf66dfaf600d3d8785">More...</a><br/></td></tr>
-<tr class="separator:aaea5429c15b00cbf66dfaf600d3d8785"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a70468bc2653f220b5eebe1d7cda71523"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1TokenMarkupContextInterface.html#a70468bc2653f220b5eebe1d7cda71523">putMarkup</a> (std::size_t start_origseg, std::size_t start_origpos, std::size_t size, const std::string &amp;openMarker, const std::string &amp;closeMarker, unsigned int level)=0</td></tr>
-<tr class="memdesc:a70468bc2653f220b5eebe1d7cda71523"><td class="mdescLeft">&#160;</td><td class="mdescRight">Define a marker in the text.  <a href="#a70468bc2653f220b5eebe1d7cda71523">More...</a><br/></td></tr>
-<tr class="separator:a70468bc2653f220b5eebe1d7cda71523"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae9f889df1530557c853b1f1e4557ea67"><td class="memItemLeft" align="right" valign="top">virtual std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1TokenMarkupContextInterface.html#ae9f889df1530557c853b1f1e4557ea67">getContent</a> () const =0</td></tr>
-<tr class="memdesc:ae9f889df1530557c853b1f1e4557ea67"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the original document content with all markups declared inserted.  <a href="#ae9f889df1530557c853b1f1e4557ea67">More...</a><br/></td></tr>
-<tr class="separator:ae9f889df1530557c853b1f1e4557ea67"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9d21119113df745980df339d4c69fbd2"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1TokenMarkupContextInterface.html#a9d21119113df745980df339d4c69fbd2">putMarkup</a> (const SegmenterPosition &amp;start_segpos, std::size_t start_ofs, const SegmenterPosition &amp;end_segpos, std::size_t end_ofs, const <a class="el" href="classstrus_1_1TokenMarkup.html">TokenMarkup</a> &amp;markup, unsigned int level)=0</td></tr>
+<tr class="memdesc:a9d21119113df745980df339d4c69fbd2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Define a marker for a span in the text.  <a href="#a9d21119113df745980df339d4c69fbd2">More...</a><br/></td></tr>
+<tr class="separator:a9d21119113df745980df339d4c69fbd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a64eecc819b2f8d6e2d2b9ae64f8187"><td class="memItemLeft" align="right" valign="top">virtual std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1TokenMarkupContextInterface.html#a7a64eecc819b2f8d6e2d2b9ae64f8187">markupDocument</a> (const SegmenterInstanceInterface *segmenter, const DocumentClass &amp;dclass, const std::string &amp;content) const =0</td></tr>
+<tr class="memdesc:a7a64eecc819b2f8d6e2d2b9ae64f8187"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the original document content with all markups declared inserted.  <a href="#a7a64eecc819b2f8d6e2d2b9ae64f8187">More...</a><br/></td></tr>
+<tr class="separator:a7a64eecc819b2f8d6e2d2b9ae64f8187"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface for annotation of text in one document. </p>
@@ -114,7 +111,7 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="aaea5429c15b00cbf66dfaf600d3d8785"></a>
+<a class="anchor" id="a7a64eecc819b2f8d6e2d2b9ae64f8187"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -122,60 +119,27 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual void strus::TokenMarkupContextInterface::declareSegment </td>
+          <td class="memname">virtual std::string strus::TokenMarkupContextInterface::markupDocument </td>
           <td>(</td>
-          <td class="paramtype">std::size_t&#160;</td>
-          <td class="paramname"><em>position</em>, </td>
+          <td class="paramtype">const SegmenterInstanceInterface *&#160;</td>
+          <td class="paramname"><em>segmenter</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>segment</em>, </td>
+          <td class="paramtype">const DocumentClass &amp;&#160;</td>
+          <td class="paramname"><em>dclass</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::size_t&#160;</td>
-          <td class="paramname"><em>segmentsize</em>&#160;</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>content</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Declare a document segment. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">byte</td><td>position of the segment in the original source </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">segment</td><td>poiner to segment processed </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">segmentsize</td><td>size of 'segment' in bytes </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a class="anchor" id="ae9f889df1530557c853b1f1e4557ea67"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual std::string strus::TokenMarkupContextInterface::getContent </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
+          <td></td><td> const</td>
         </tr>
       </table>
   </td>
@@ -186,11 +150,19 @@ Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Get the original document content with all markups declared inserted. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">segmenter</td><td>segmenter to use for inserting document markup tags </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dclass</td><td>document class of document to markup </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">content</td><td>content string of document to markup </td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="section return"><dt>Returns</dt><dd>the marked up document content </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a70468bc2653f220b5eebe1d7cda71523"></a>
+<a class="anchor" id="a9d21119113df745980df339d4c69fbd2"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -200,32 +172,32 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="memname">virtual void strus::TokenMarkupContextInterface::putMarkup </td>
           <td>(</td>
-          <td class="paramtype">std::size_t&#160;</td>
-          <td class="paramname"><em>start_origseg</em>, </td>
+          <td class="paramtype">const SegmenterPosition &amp;&#160;</td>
+          <td class="paramname"><em>start_segpos</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">std::size_t&#160;</td>
-          <td class="paramname"><em>start_origpos</em>, </td>
+          <td class="paramname"><em>start_ofs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const SegmenterPosition &amp;&#160;</td>
+          <td class="paramname"><em>end_segpos</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">std::size_t&#160;</td>
-          <td class="paramname"><em>size</em>, </td>
+          <td class="paramname"><em>end_ofs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>openMarker</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>closeMarker</em>, </td>
+          <td class="paramtype">const <a class="el" href="classstrus_1_1TokenMarkup.html">TokenMarkup</a> &amp;&#160;</td>
+          <td class="paramname"><em>markup</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -246,13 +218,14 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Define a marker in the text. </p>
+<p>Define a marker for a span in the text. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">startpos</td><td>absolute position where the token to mark has been defined (this position is not the absolute byte position in the document, but the absolute byte position of the segment where the token has been found plus the relative byte position of the token in the segment with all encoded entities or escaping resolved. The real absolute byte position can be calculated by this markup class by mapping the offset in the segment with encoded entities to the offset in the original segnment.) </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>size of the token to mark in bytes (with all encoded entities decoded. The real size in the original document has to be calculated for a correct markup) </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">openMarker</td><td>string to put as start of the markup </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">closeMarker</td><td>string to put as end of the markup </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">start_segpos</td><td>absolute segment position where the start of the token to mark has been defined (this position is not the absolute byte position in the document, but the absolute byte position of the segment where the token has been found plus the relative byte position of the token in the segment with all encoded entities or escaping resolved. The real absolute byte position can be calculated by this markup class by mapping the offset in the segment with encoded entities to the offset in the original segnment.) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">start_ofs</td><td>offset of the token to mark in bytes in the segment processed </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">end_segpos</td><td>absolute segment position where the end of the to mark has been defined (this position is not the absolute byte position in the document, but the absolute byte position of the segment where the token has been found plus the relative byte position of the token in the segment with all encoded entities or escaping resolved. The real absolute byte position can be calculated by this markup class by mapping the offset in the segment with encoded entities to the offset in the original segnment.) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">start_ofs</td><td>offset of the token to mark in bytes in the segment processed </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">markup</td><td>tag structure to use for markup </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">level</td><td>sort of priority (areas with a higher level markup are superseding the ones with lovel level. It is also used as criterion to resolve conflicts) </td></tr>
   </table>
   </dd>
@@ -267,7 +240,7 @@ Public Member Functions</h2></td></tr>
 <!-- HTML footer for doxygen 1.8.6-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Jul 6 2016 10:25:51 for strusStream by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jul 10 2016 19:44:47 for strusStream by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

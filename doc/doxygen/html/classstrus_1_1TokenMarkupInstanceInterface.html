@@ -75,10 +75,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a8aa688cf6ec9e4b0159b7fbdc1dd5526"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1TokenMarkupInstanceInterface.html#a8aa688cf6ec9e4b0159b7fbdc1dd5526">~TokenMarkupInstanceInterface</a> ()</td></tr>
 <tr class="memdesc:a8aa688cf6ec9e4b0159b7fbdc1dd5526"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor.  <a href="#a8aa688cf6ec9e4b0159b7fbdc1dd5526">More...</a><br/></td></tr>
 <tr class="separator:a8aa688cf6ec9e4b0159b7fbdc1dd5526"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f770dd035e4947fdbb64a251b5a9ec0"><td class="memItemLeft" align="right" valign="top">virtual <br class="typebreak"/>
-<a class="el" href="classstrus_1_1TokenPatternMatchContextInterface.html">TokenPatternMatchContextInterface</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1TokenMarkupInstanceInterface.html#a8f770dd035e4947fdbb64a251b5a9ec0">createContext</a> () const =0</td></tr>
-<tr class="memdesc:a8f770dd035e4947fdbb64a251b5a9ec0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create the context to process a document with the pattern matcher.  <a href="#a8f770dd035e4947fdbb64a251b5a9ec0">More...</a><br/></td></tr>
-<tr class="separator:a8f770dd035e4947fdbb64a251b5a9ec0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab544d12891031862627492fed289caa3"><td class="memItemLeft" align="right" valign="top">virtual <br class="typebreak"/>
+<a class="el" href="classstrus_1_1TokenMarkupContextInterface.html">TokenMarkupContextInterface</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1TokenMarkupInstanceInterface.html#ab544d12891031862627492fed289caa3">createContext</a> () const =0</td></tr>
+<tr class="memdesc:ab544d12891031862627492fed289caa3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create the context to markup tokens or spans in a document.  <a href="#ab544d12891031862627492fed289caa3">More...</a><br/></td></tr>
+<tr class="separator:ab544d12891031862627492fed289caa3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface for building the automaton for detecting patterns of tokens in a document stream. </p>
@@ -109,7 +109,7 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a8f770dd035e4947fdbb64a251b5a9ec0"></a>
+<a class="anchor" id="ab544d12891031862627492fed289caa3"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -117,7 +117,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual <a class="el" href="classstrus_1_1TokenPatternMatchContextInterface.html">TokenPatternMatchContextInterface</a>* strus::TokenMarkupInstanceInterface::createContext </td>
+          <td class="memname">virtual <a class="el" href="classstrus_1_1TokenMarkupContextInterface.html">TokenMarkupContextInterface</a>* strus::TokenMarkupInstanceInterface::createContext </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -130,8 +130,8 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Create the context to process a document with the pattern matcher. </p>
-<dl class="section return"><dt>Returns</dt><dd>the pattern matcher context </dd></dl>
+<p>Create the context to markup tokens or spans in a document. </p>
+<dl class="section return"><dt>Returns</dt><dd>the token markup context </dd></dl>
 <dl class="section remark"><dt>Remarks</dt><dd>The context cannot be reset. So the context has to be recreated for every processed unit (document) </dd></dl>
 
 </div>
@@ -143,7 +143,7 @@ Public Member Functions</h2></td></tr>
 <!-- HTML footer for doxygen 1.8.6-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Jul 6 2016 10:25:51 for strusStream by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jul 10 2016 19:44:47 for strusStream by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

@@ -78,9 +78,9 @@ Public Types</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a1adab23540a02048afeee8ddfbb8854b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1stream_1_1TokenPatternMatchResult.html#a1adab23540a02048afeee8ddfbb8854b">TokenPatternMatchResult</a> (const char *name_, unsigned int ordpos_, uint16_t origseg_, uint16_t origpos_, const std::vector&lt; <a class="el" href="classstrus_1_1stream_1_1TokenPatternMatchResult.html#a819e6e59775d7e50cc610f873cd1e9bb">Item</a> &gt; &amp;itemlist_=std::vector&lt; <a class="el" href="classstrus_1_1stream_1_1TokenPatternMatchResult.html#a819e6e59775d7e50cc610f873cd1e9bb">Item</a> &gt;())</td></tr>
-<tr class="memdesc:a1adab23540a02048afeee8ddfbb8854b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor.  <a href="#a1adab23540a02048afeee8ddfbb8854b">More...</a><br/></td></tr>
-<tr class="separator:a1adab23540a02048afeee8ddfbb8854b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a56e4956c61f2d8cdccfca20897e349f6"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1stream_1_1TokenPatternMatchResult.html#a56e4956c61f2d8cdccfca20897e349f6">TokenPatternMatchResult</a> (const char *name_, unsigned int ordpos_, uint16_t start_origseg_, uint16_t start_origpos_, uint16_t end_origseg_, uint16_t end_origpos_, const std::vector&lt; <a class="el" href="classstrus_1_1stream_1_1TokenPatternMatchResult.html#a819e6e59775d7e50cc610f873cd1e9bb">Item</a> &gt; &amp;itemlist_=std::vector&lt; <a class="el" href="classstrus_1_1stream_1_1TokenPatternMatchResult.html#a819e6e59775d7e50cc610f873cd1e9bb">Item</a> &gt;())</td></tr>
+<tr class="memdesc:a56e4956c61f2d8cdccfca20897e349f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor.  <a href="#a56e4956c61f2d8cdccfca20897e349f6">More...</a><br/></td></tr>
+<tr class="separator:a56e4956c61f2d8cdccfca20897e349f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adfe0211cd30e5f9a176095f508cfcd7b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1stream_1_1TokenPatternMatchResult.html#adfe0211cd30e5f9a176095f508cfcd7b">TokenPatternMatchResult</a> (const <a class="el" href="classstrus_1_1stream_1_1TokenPatternMatchResult.html">TokenPatternMatchResult</a> &amp;o)</td></tr>
 <tr class="memdesc:adfe0211cd30e5f9a176095f508cfcd7b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy constructor.  <a href="#adfe0211cd30e5f9a176095f508cfcd7b">More...</a><br/></td></tr>
 <tr class="separator:adfe0211cd30e5f9a176095f508cfcd7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -93,12 +93,18 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ae2d6f7df0d4748d08bfdf24e064e1ef8"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1stream_1_1TokenPatternMatchResult.html#ae2d6f7df0d4748d08bfdf24e064e1ef8">ordpos</a> () const </td></tr>
 <tr class="memdesc:ae2d6f7df0d4748d08bfdf24e064e1ef8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Ordinal (counting) position of the match (resp. the first term of the match)  <a href="#ae2d6f7df0d4748d08bfdf24e064e1ef8">More...</a><br/></td></tr>
 <tr class="separator:ae2d6f7df0d4748d08bfdf24e064e1ef8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a65f179adba3d51105ea290b450a80609"><td class="memItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1stream_1_1TokenPatternMatchResult.html#a65f179adba3d51105ea290b450a80609">origseg</a> () const </td></tr>
-<tr class="memdesc:a65f179adba3d51105ea290b450a80609"><td class="mdescLeft">&#160;</td><td class="mdescRight">Original segment index of the start of the result item in the source.  <a href="#a65f179adba3d51105ea290b450a80609">More...</a><br/></td></tr>
-<tr class="separator:a65f179adba3d51105ea290b450a80609"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3887fbdf2952e64d3523bfffbfa6e993"><td class="memItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1stream_1_1TokenPatternMatchResult.html#a3887fbdf2952e64d3523bfffbfa6e993">origpos</a> () const </td></tr>
-<tr class="memdesc:a3887fbdf2952e64d3523bfffbfa6e993"><td class="mdescLeft">&#160;</td><td class="mdescRight">Original byte position start of the result item in the source segment as UTF-8 specified with start_origseg.  <a href="#a3887fbdf2952e64d3523bfffbfa6e993">More...</a><br/></td></tr>
-<tr class="separator:a3887fbdf2952e64d3523bfffbfa6e993"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3a80286aac5af76572bb32333a171b69"><td class="memItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1stream_1_1TokenPatternMatchResult.html#a3a80286aac5af76572bb32333a171b69">start_origseg</a> () const </td></tr>
+<tr class="memdesc:a3a80286aac5af76572bb32333a171b69"><td class="mdescLeft">&#160;</td><td class="mdescRight">Original segment index of the start of the result in the source.  <a href="#a3a80286aac5af76572bb32333a171b69">More...</a><br/></td></tr>
+<tr class="separator:a3a80286aac5af76572bb32333a171b69"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a753c7345881eafb1345188a64d73cff1"><td class="memItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1stream_1_1TokenPatternMatchResult.html#a753c7345881eafb1345188a64d73cff1">start_origpos</a> () const </td></tr>
+<tr class="memdesc:a753c7345881eafb1345188a64d73cff1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Original byte position start of the result in the source segment as UTF-8 specified with start_origseg.  <a href="#a753c7345881eafb1345188a64d73cff1">More...</a><br/></td></tr>
+<tr class="separator:a753c7345881eafb1345188a64d73cff1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9d9e300dc98255539da6d3fe49bb22e"><td class="memItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1stream_1_1TokenPatternMatchResult.html#af9d9e300dc98255539da6d3fe49bb22e">end_origseg</a> () const </td></tr>
+<tr class="memdesc:af9d9e300dc98255539da6d3fe49bb22e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Original segment index of the end of the result in the source.  <a href="#af9d9e300dc98255539da6d3fe49bb22e">More...</a><br/></td></tr>
+<tr class="separator:af9d9e300dc98255539da6d3fe49bb22e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52f73bc05441073966f0402e912479e2"><td class="memItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1stream_1_1TokenPatternMatchResult.html#a52f73bc05441073966f0402e912479e2">end_origpos</a> () const </td></tr>
+<tr class="memdesc:a52f73bc05441073966f0402e912479e2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Original byte position end of the result in the source segment as UTF-8 specified with start_origseg.  <a href="#a52f73bc05441073966f0402e912479e2">More...</a><br/></td></tr>
+<tr class="separator:a52f73bc05441073966f0402e912479e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a535694a63eacdf09ab67258b12363b47"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="classstrus_1_1stream_1_1TokenPatternMatchResult.html#a819e6e59775d7e50cc610f873cd1e9bb">Item</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1stream_1_1TokenPatternMatchResult.html#a535694a63eacdf09ab67258b12363b47">items</a> () const </td></tr>
 <tr class="memdesc:a535694a63eacdf09ab67258b12363b47"><td class="mdescLeft">&#160;</td><td class="mdescRight">List of result items defined by variables assigned to nodes of the pattern of the match.  <a href="#a535694a63eacdf09ab67258b12363b47">More...</a><br/></td></tr>
 <tr class="separator:a535694a63eacdf09ab67258b12363b47"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -119,7 +125,7 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a class="anchor" id="a1adab23540a02048afeee8ddfbb8854b"></a>
+<a class="anchor" id="a56e4956c61f2d8cdccfca20897e349f6"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -142,13 +148,25 @@ Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>origseg_</em>, </td>
+          <td class="paramname"><em>start_origseg_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>origpos_</em>, </td>
+          <td class="paramname"><em>start_origpos_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>end_origseg_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>end_origpos_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -225,6 +243,56 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a52f73bc05441073966f0402e912479e2"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::size_t strus::stream::TokenPatternMatchResult::end_origpos </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Original byte position end of the result in the source segment as UTF-8 specified with start_origseg. </p>
+
+</div>
+</div>
+<a class="anchor" id="af9d9e300dc98255539da6d3fe49bb22e"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::size_t strus::stream::TokenPatternMatchResult::end_origseg </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Original segment index of the end of the result in the source. </p>
+
+</div>
+</div>
 <a class="anchor" id="a535694a63eacdf09ab67258b12363b47"></a>
 <div class="memitem">
 <div class="memproto">
@@ -300,7 +368,7 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a3887fbdf2952e64d3523bfffbfa6e993"></a>
+<a class="anchor" id="a753c7345881eafb1345188a64d73cff1"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -308,7 +376,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::size_t strus::stream::TokenPatternMatchResult::origpos </td>
+          <td class="memname">std::size_t strus::stream::TokenPatternMatchResult::start_origpos </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -321,11 +389,11 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Original byte position start of the result item in the source segment as UTF-8 specified with start_origseg. </p>
+<p>Original byte position start of the result in the source segment as UTF-8 specified with start_origseg. </p>
 
 </div>
 </div>
-<a class="anchor" id="a65f179adba3d51105ea290b450a80609"></a>
+<a class="anchor" id="a3a80286aac5af76572bb32333a171b69"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -333,7 +401,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::size_t strus::stream::TokenPatternMatchResult::origseg </td>
+          <td class="memname">std::size_t strus::stream::TokenPatternMatchResult::start_origseg </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -346,7 +414,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Original segment index of the start of the result item in the source. </p>
+<p>Original segment index of the start of the result in the source. </p>
 
 </div>
 </div>
@@ -357,7 +425,7 @@ Public Member Functions</h2></td></tr>
 <!-- HTML footer for doxygen 1.8.6-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Jul 6 2016 10:25:51 for strusStream by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jul 10 2016 19:44:47 for strusStream by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
