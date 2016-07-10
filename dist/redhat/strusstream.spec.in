@@ -281,6 +281,9 @@ make test
 %{_includedir}/strus/base/*.hpp
 
 %changelog
+* Sun Jul 10 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.10.1-0.1
+- adapt interface changes in analyzer (segmenter document markup interface)
+
 * Tue Jul 5 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.10.0-0.1
 - version increment along other strus projects (for dependency rules)
 - many bugfixes and added tests -- development still in progress

@@ -20,7 +20,12 @@
 	text processing with a competitive performance, suitable for processing large sets of patterns.
 	It can be used for detecting multipart entities or structures in text. In a bigger context it can
 	support NLP and entity recognition.<br/>
-	Patterns are describable as expression trees with basic tokens as leafs, that are recognized with regular expressions on text.
+	The current implementation status allows us to detect patterns that are describable as expression 
+	trees with basic tokens as leafs. The basic tokens are recognized with regular expressions on text.<br/>
+	We are aware that this is only one part of the field, but an important one. But for the support
+	of statistical classifiers we have only ideas floating around till now. We are trying to find
+	good connectors to existing libraries for maschine learning and to provide the universe for
+	processing and storing features for retrieval in this context.
 	</p>
 
 	<h2>Justification of the name StrusStream</h2>
@@ -32,7 +37,7 @@
 	that process streams of huge amount of events with a big flow rate under many different constraints as 
 	latency, throughput, fault tolerance and uniqueness guarantees makes the name <i>StrusStream</i> a 
 	sort of a misnamer.<br/>
-	I just did not find a better name yet.
+	We just did not find a better name yet.
 	</p>
 
 	<h2>The Intel hyperscan library</h3>
@@ -86,6 +91,7 @@
 	<h4>Token pattern matching operators</h4>
 	<ol>
 	<li><b>any</b>: Matches if any of the argument subexpressions or tokens matches.</li>
+	<li><b>and</b>: Matches if all of the argument subexpressions or tokens match with the same ordinal position.</li>
 	<li><b>sequence</b>: Matches if the argument subexpressions or tokens appear in the order as the arguments within a proximity range of ordinal positions specified.</li>
 	<li><b>sequence_imm</b>: <i>imm</i> means immediate. Same as sequence, but the elements have no gaps in between. No gap means that the oridinal position of the follower element in the sequence is the end ordinal position of the predecessor plus 1.</li>
 	<li><b>sequence_struct</b>: Matches if the argument subexpressions or tokens appear in the order as the arguments within a proximity range of ordinal positions specified without a structure delimiter (e.g. end of sentence token), specified as first argument, within the span of a match.</li>
@@ -128,16 +134,16 @@ Contact		= sequence_struct( SENT, Name, email=EMAIL | 10 );
 	</pre>
 	<p id="description">
 	A "Name" is defined as a sequence of two words with capitalized first letter in a proximity distance of 2 (ordinal position distance, number of tokens)
-	In this example the variable assignment of firstname gets the weight 0.75 assigned. Weigths are not
+	In this example the variable assignment of firstname gets the weight 0.75 assigned. Weigths are currently not
 	interpreted or used by <i>StrusStream</i>. They are there for the user if part or the interpretation of the result.
 	<br/>
 	A "PersonMail" is defined as sequence of a name as we defined it and an email address in in a proximity
 	distance of maximum 10 tokens, without an end of sentence marker appearing in between a candidate match.
 	</p>
 	<h4>Define the patterns in C++</h4>
-	<p id="description"> ... </p>
+	<p id="description"><font color=red>No documentation available yet.</font></p>
 	<h4>Define the patterns in Python</h4>
-	<p id="description"> ... </p>
+	<p id="description"><font color=red>Python bindings not available yet.</font></p>
 
 	<h3>Example input</h3>
 	<pre>
@@ -321,12 +327,20 @@ pattern matching the elements "(A B)" and "A" in any order and the source "ABA".
 is that the pattern matcher recognizes "A" as "A" and does not accept a signal for "AB" anymore at the
 same position for this pattern.
 <br/>
-There are straightforward solutions to this problem, but I did not find yet a good one.
-I am aware of that problem and I know that it cannot be neglected.
+There are straightforward solutions to this problem, but we did not find yet a good one.
+We are aware of this problem and we know that it cannot be neglected.
 Currently you have to formulate your 'within' rules as all possible permutations of sequences
 (2 patterns "((A B) A)" and "(A (A B))", if you have 'within' rules with non disjunct accepted sets.
 Sequences do not have this problem.
 </p>
+<h4>Symbols and identifiers</h4>
+<p id="description">It does not make sense to implement every symbol or identifier as item in
+the regular expression automaton. For representing ordinary words, we need the possibility
+to declare identifiers in our rule language. The <a href="http://patrickfrey.github.io/strusStream/doc/doxygen/html/classstrus_1_1CharRegexMatchInstanceInterface.html">CharRegexMatchInstanceInterface</a>
+already has a method to declare such a symbol with the method <i>defineSymbol</i>. 
+But this is one feature not tested yet and not available in our example language.
+</p>
+
 
 <h2>Testing</h2>
 <p id="description">We tested the token pattern matching of <i>StrusStream</i> with random generated
@@ -351,17 +365,15 @@ the restriction condition, then the result is emitted, even if a restriction eve
 that should overrule the decision, happens thereafter. Another anomaly of this kind can happen, when the 
 restricting element of a rule occurrs with the same position, but before the key event triggering the pattern.
 <br/>
-Practically I do not see too bad consequences of this behaviour, because structure delimiters usually get their
+Practically we do not see too bad consequences of this behaviour, because structure delimiters usually get their
 own ordinal position assigned. But it might be needed in the future to treat these cases differently.
 <br/>
-At the moment I just premention the expected behaviour.
+At the moment we just premention the expected behaviour.
 </p>
 
 <h2>Resume</h2>
 <p id="description"><i>StrusStream</i> provides token pattern matching in a competitive performance for
-large sets of rules sutable for <a href="https://en.wikipedia.org/wiki/Named-entity_recognition">NER</a>,
-<a href="https://en.wikipedia.org/wiki/Natural_language_processing">NLP</a> and other structured entity 
-detection on text.
+matching large sets of patterns. <br/>
 The implementation is maybe not optimal in numbers of reads and writes of memory and in 
 numbers of branching instructions, but it is software with a good flow. It has
 simple operations mainly operating on local (near, on chip) memory, able to use SIMD capabilities

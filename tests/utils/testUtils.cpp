@@ -129,16 +129,20 @@ void utils::printResults( std::ostream& out, const std::vector<strus::SegmenterP
 		ri = results.begin(), re = results.end();
 	for (; ri != re; ++ri)
 	{
-		std::size_t start_origsegsrcpos = segmentposmap.empty()?ri->origseg():segmentposmap[ ri->origseg()];
+		std::size_t start_origsegsrcpos = segmentposmap.empty()?ri->start_origseg():segmentposmap[ ri->start_origseg()];
+		std::size_t end_origsegsrcpos = segmentposmap.empty()?ri->end_origseg():segmentposmap[ ri->end_origseg()];
 
-		out << "match '" << ri->name() << "' at " << ri->ordpos() << " [" << start_origsegsrcpos << "|" << ri->origpos() << "]:";
+		out << "match '" << ri->name() << "' at " << ri->ordpos() << " ["
+		    << start_origsegsrcpos << "|" << ri->start_origpos() << ".."
+		    << end_origsegsrcpos << "|" << ri->end_origpos()
+		    << "]:";
 		std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
 			ei = ri->items().begin(), ee = ri->items().end();
 	
 		for (; ei != ee; ++ei)
 		{
-			std::size_t start_origsegsrcpos = segmentposmap.empty()?ei->start_origseg():segmentposmap[ ei->start_origseg()];
-			std::size_t end_origsegsrcpos = segmentposmap.empty()?ei->end_origseg():segmentposmap[ ei->end_origseg()];
+			start_origsegsrcpos = segmentposmap.empty()?ei->start_origseg():segmentposmap[ ei->start_origseg()];
+			end_origsegsrcpos = segmentposmap.empty()?ei->end_origseg():segmentposmap[ ei->end_origseg()];
 
 			out << " " << ei->name() << " [" << ei->ordpos()
 					<< ", " << start_origsegsrcpos << "|" << ei->start_origpos()

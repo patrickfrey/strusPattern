@@ -268,13 +268,15 @@ struct Result
 	uint32_t resultHandle;
 	uint32_t eventDataReferenceIdx;
 	uint32_t ordpos;
-	uint16_t origseg;
-	uint16_t origpos;
+	uint16_t start_origseg;
+	uint16_t start_origpos;
+	uint16_t end_origseg;
+	uint16_t end_origpos;
 
-	Result( uint32_t resultHandle_, uint32_t eventDataReferenceIdx_, uint32_t ordpos_, uint16_t origseg_, uint16_t origpos_)
-		:resultHandle(resultHandle_),eventDataReferenceIdx(eventDataReferenceIdx_),ordpos(ordpos_),origseg(origseg_),origpos(origpos_){}
+	Result( uint32_t resultHandle_, uint32_t eventDataReferenceIdx_, uint32_t ordpos_, uint16_t start_origseg_, uint16_t start_origpos_, uint16_t end_origseg_, uint16_t end_origpos_)
+		:resultHandle(resultHandle_),eventDataReferenceIdx(eventDataReferenceIdx_),ordpos(ordpos_),start_origseg(start_origseg_),start_origpos(start_origpos_),end_origseg(end_origseg_),end_origpos(end_origpos_){}
 	Result( const Result& o)
-		:resultHandle(o.resultHandle),eventDataReferenceIdx(o.eventDataReferenceIdx),ordpos(o.ordpos),origseg(o.origseg),origpos(o.origpos){}
+		:resultHandle(o.resultHandle),eventDataReferenceIdx(o.eventDataReferenceIdx),ordpos(o.ordpos),start_origseg(o.start_origseg),start_origpos(o.start_origpos),end_origseg(o.end_origseg),end_origpos(o.end_origpos){}
 };
 
 struct ActionSlotDef
