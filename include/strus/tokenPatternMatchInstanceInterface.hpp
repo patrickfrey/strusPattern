@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// \brief StrusStream interface for building the automaton for detecting patterns of tokens in a document stream
+/// \brief Interface for building the automaton for detecting patterns of tokens in a document stream
 /// \file "tokenPatternMatchInstanceInterface.hpp"
 #ifndef _STRUS_STREAM_TOKEN_PATTERN_MATCH_INSTANCE_INTERFACE_HPP_INCLUDED
 #define _STRUS_STREAM_TOKEN_PATTERN_MATCH_INSTANCE_INTERFACE_HPP_INCLUDED
@@ -38,10 +38,12 @@ public:
 	enum JoinOperation
 	{
 		OpSequence,		///< The argument patterns must appear in the specified (strict) order (ordinal span) within a specified proximity range of ordinal positions for the completion of the rule.
+		OpSequenceImm,		///< Same as OpSequence, but does not allow any gap in between the elements.
 		OpSequenceStruct,	///< The argument patterns must appear in the specified (strict) order (ordinal span) within a specified proximity range of ordinal positions for the completion of the rule without a structure element appearing before the last argument pattern needed for then completion of the rule.
 		OpWithin,		///< The argument patterns must appear within a specified proximity range of ordinal positions without overlapping ordinal spans for the completion of the rule.
 		OpWithinStruct,		///< The argument patterns must appear within a specified proximity range of ordinal positions without overlapping ordinal spans for the completion of the rule without a structure element appearing before the last element for then completion of the rule.
-		OpAny			///< At least one of the argument patterns must appear for the completion of the rule.
+		OpAny,			///< At least one of the argument patterns must appear for the completion of the rule.
+		OpAnd			///< All of the argument patterns must appear for the completion of the rule at the same ordinal position.
 	};
 
 	/// \brief Take the topmost elements from the stack, build an expression out of them and replace the argument elements with the created element on the stack

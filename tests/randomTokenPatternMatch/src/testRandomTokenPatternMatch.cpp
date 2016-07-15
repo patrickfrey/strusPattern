@@ -145,7 +145,7 @@ static unsigned int processDocument( const strus::TokenPatternMatchInstanceInter
 	unsigned int didx = 0;
 	for (; di != de; ++di,++didx)
 	{
-		mt->putInput( strus::stream::PatternMatchToken( di->termid, di->pos, didx, 1));
+		mt->putInput( strus::stream::PatternMatchToken( di->termid, di->pos, 0/*segpos*/, didx, 1));
 	}
 	if (g_errorBuffer->hasError())
 	{
@@ -159,6 +159,7 @@ static unsigned int processDocument( const strus::TokenPatternMatchInstanceInter
 		li = stats.items().begin(), le = stats.items().end();
 	for (; li != le; ++li)
 	{
+		if (li->value() < 0.0) throw std::runtime_error("statistics got negative");
 		globalstats[ li->name()] += li->value();
 	}
 
@@ -221,7 +222,9 @@ public:
 			li = addstats.begin(), le = addstats.end();
 		for (; li != le; ++li)
 		{
-			stats[ li->first] += li->second;
+			if (li->second < 0.0) throw std::runtime_error("statistics got negative [part]");
+			double vv = stats[ li->first] += li->second;
+			if (vv < 0.0) throw std::runtime_error("statistics got negative [total]");
 		}
 		totalNofMatches += nofMatches;
 		totalNofDocs += nofDocs;

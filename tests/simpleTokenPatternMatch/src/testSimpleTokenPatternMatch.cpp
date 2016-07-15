@@ -13,6 +13,7 @@
 #include "strus/tokenPatternMatchInstanceInterface.hpp"
 #include "strus/tokenPatternMatchContextInterface.hpp"
 #include "strus/stream/patternMatchToken.hpp"
+#include "testUtils.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
@@ -29,7 +30,7 @@
 #include <cstring>
 #include <iomanip>
 
-#undef STRUS_LOWLEVEL_DEBUG
+#define STRUS_LOWLEVEL_DEBUG
 
 static void initRand()
 {
@@ -160,14 +161,14 @@ static std::vector<strus::stream::TokenPatternMatchResult>
 	unsigned int didx = 0;
 	for (; di != de; ++di,++didx)
 	{
-		mt->putInput( strus::stream::PatternMatchToken( di->termid, di->pos, didx, 1));
+		mt->putInput( strus::stream::PatternMatchToken( di->termid, di->pos, 0/*origseg*/, didx, 1));
 		if (g_errorBuffer->hasError()) throw std::runtime_error("error matching rules");
 	}
 	results = mt->fetchResults();
 
 #ifdef STRUS_LOWLEVEL_DEBUG
-	strus::utils::printResults( std::cout, results);
-	std::cout << "nof matches " << results.size();
+	strus::utils::printResults( std::cout, std::vector<strus::SegmenterPosition>(), results);
+	std::cout << "nof matches " << results.size() << std::endl;
 	strus::stream::TokenPatternMatchStatistics stats = mt->getStatistics();
 	strus::utils::printStatistics( std::cerr, stats);
 #endif

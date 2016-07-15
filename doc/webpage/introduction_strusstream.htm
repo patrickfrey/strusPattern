@@ -20,12 +20,24 @@
 	text processing with a competitive performance, suitable for processing large sets of patterns.
 	It can be used for detecting multipart entities or structures in text. In a bigger context it can
 	support NLP and entity recognition.<br/>
-	Patterns are describable as expression trees with basic tokens as 
-	leafs, that are recognized with regular expressions on text.</br></br>
+	The current implementation status allows us to detect patterns that are describable as expression 
+	trees with basic tokens as leafs. The basic tokens are recognized with regular expressions on text.<br/>
+	We are aware that this is only one part of the field, but an important one. But for the support
+	of statistical classifiers we have only ideas floating around till now. We are trying to find
+	good connectors to existing libraries for maschine learning and to provide the universe for
+	processing and storing features for retrieval in this context.
+	</p>
+
+	<h2>Justification of the name StrusStream</h2>
+	<p id="description">
 	The name <i>StrusStream</i> reflects its event or data flow driven processing of text.
 	Its programming paradigms borrow from concepts of <a href=https://en.wikipedia.org/wiki/Stream_processing">
 	stream processing</a>. But it is not related to modern stream processing frameworks for event
-	driven processing.
+	driven processing. The association to distributed systems (like for example <a href="http://flink.apache.org/">Apache Flink</a>)
+	that process streams of huge amount of events with a big flow rate under many different constraints as 
+	latency, throughput, fault tolerance and uniqueness guarantees makes the name <i>StrusStream</i> a 
+	sort of a misnamer.<br/>
+	We just did not find a better name yet.
 	</p>
 
 	<h2>The Intel hyperscan library</h3>
@@ -43,7 +55,9 @@
 		licensed under <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GPLv3</a>. 
 		API available for Java. Stanford <i>CoreNLP</i> covers much more than simple pattern
 		matching. It provides a workbench for all aspects of natural language processing accompanied
-		by a huge knowledge base on the topic. (See for example the <a href="https://class.coursera.org/nlp/lecture">Standford video lectures</a>).
+		by a huge knowledge base on the topic.
+	</li>
+	<li><a href="https://github.com/mit-nlp">https://github.com/mit-nlp</a>
 	</li>
 	<li>The <a href="https://uima.apache.org/ruta.html">Uima Ruta</a> workbench for rule-based text annotation,
 	licensed under the <a href="http://www.apache.org/licenses">Apache license</a>.
@@ -61,7 +75,10 @@
 	But rather than subsequently executing a program, it installs for every pattern node triggered a small set
 	of triggers and a slot with an expiration time. Signals are fired to the slot when an event matching
 	a trigger occurrs in the subsequent event stream. The completion all awaited signals of a slot leads
-	to an emission of a signal for other slots waiting for it and/or the production of a result.
+	to an emission of a signal for other slots waiting for it and/or the production of a result.<br/>
+	This pattern of processing can also be found in other form in event driven stream processing libraries:
+	A node waits untils all conditions of a rule all fulfilled and emits an event that is forwarded to another
+	node. If a timeout for the rule occurrs, then the rule is discarded.
 	</p>
 
 	<h3>Operators</h3>
@@ -74,7 +91,9 @@
 	<h4>Token pattern matching operators</h4>
 	<ol>
 	<li><b>any</b>: Matches if any of the argument subexpressions or tokens matches.</li>
+	<li><b>and</b>: Matches if all of the argument subexpressions or tokens match with the same ordinal position.</li>
 	<li><b>sequence</b>: Matches if the argument subexpressions or tokens appear in the order as the arguments within a proximity range of ordinal positions specified.</li>
+	<li><b>sequence_imm</b>: <i>imm</i> means immediate. Same as sequence, but the elements have no gaps in between. No gap means that the oridinal position of the follower element in the sequence is the end ordinal position of the predecessor plus 1.</li>
 	<li><b>sequence_struct</b>: Matches if the argument subexpressions or tokens appear in the order as the arguments within a proximity range of ordinal positions specified without a structure delimiter (e.g. end of sentence token), specified as first argument, within the span of a match.</li>
 	<li><b>within</b>: Matches if the argument subexpressions or tokens appear in arbitrary order within a proximity range of ordinal positions specified.</li>
 	<li><b>within_struct</b>: Matches if the argument subexpressions or tokens appear in arbitrary order within a proximity range of ordinal positions specified without a structure delimiter (e.g. end of sentence token), specified as first argument, within the span of a match.</li>
@@ -86,8 +105,8 @@
 	</p>
 	<h3>Example patterns defined</h3>
 	<h4>Define the patterns with in a configuration file</h4>
-	<p id="description">We define the example rules defined in the following listing.
-	The declarations with an identifier followed by a ':' specify the tokens defined by regular expressions. The counting of the different token start positions defines the ordinal positions of the tokens. The number following a '^' after the name of the token defines its level, a sort of priorization. Tokens covered completely by a token of a higher level are not part of the output and for ordinal position assignments. We use the possibiliy to superseed rules in our example to define a hierarchy <b>SENT</b> (end of sentence) &lt; <b>ABBREV</b> (abbreviation) &lt; <b>URL</b> &lt; <b>EMAIL</b>. It means that a dot is an end of sentence marker if not part of an abbreviation, URL or email address. An abbreviation is not recognized as such, if part of an URL. An URL is not an URL, if part of an email address, etc.
+	<p id="description">We define the example rules defined in the following listing in a file "example.rul".
+	The declarations with an identifier followed by a ':' specify the tokens defined by regular expressions. The counting of the different token start positions defines the ordinal positions of the tokens. The number following a '^' after the name of the token defines its level, a sort of priorization. Tokens covered completely by a token of a higher level are not part of the output and for ordinal position assignments. We use the possibiliy to supersede rules. In our example we define a hierarchy <b>SENT</b> (end of sentence) &lt; <b>ABBREV</b> (abbreviation) &lt; <b>URL</b> &lt; <b>EMAIL</b>. It means that a dot is an end of sentence marker if not part of an abbreviation, URL or email address. An abbreviation is not recognized as such, if part of an URL. An URL is not an URL, if part of an email address, etc.
 	<br/>The declarations with an identifier followed by a '=' specify the patterns defined on tokens with the ordinal position as position reference for proximity range specifications.
 	</p>
 	<pre>
@@ -98,78 +117,103 @@ ABBREV ^3	: /\b[aA]bbr[\.]/ | /\b[aA]d[cjv][\.]/ | /\b[oO]bj[\.]/ | /\b[pP]seud[
 		| /\b[mM]rs[\.]/ | /\b[pP]rof[\.]/ | /\b[rR]ev[\.]/ | /\b[hH]on[\.]/ | /\b[hH]rs[\.]/
 		| /\b[A-Za-z][btlsr][\.]/ | /\b[gG]en[\.]/ | /\b[sS]ing[\.]/ | /\b[sS]yn[\.]/
 		| /\b[aA]ve[\.]/ | /\b[d]dD]ept[\.]/ | /\b[eE]st[\.]/ | /\b[fF]ig[\.]/ | /\b[iI]nc[\.]/
-		| /\b[oO]z[\.]/ | /\b[nN]o[\.]/ | /\b[sS]q[\.]/ | /\b[aA]ssn[\.]/ | /\b[tT]rans[\.]/;
+		| /\b[oO]z[\.]/ | /\b[nN]o[\.]/ | /\b[sS]q[\.]/ | /\b[aA]ssn[\.]/ | /\b[tT]rans[\.]/
+		| /\b[A-Z][\.]/
+		;
 ABBREV ^4	: /\bet\sal[\.]/ | /\b[rR][\.][iI][\.][pP]\b/;
 URL ^5		: @([^\s/?\.#-][^\s/?\.#-]+\.)(aero|asia|biz|cat|com|coop|edu|gov|info|int|jobs|mil|mobi|museum|name|net|org|pro|tel|travel|ac|ad|ae|af|ag|ai|al|am|an|ao|aq|ar|as|at|au|aw|ax|az|ba|bb|bd|be|bf|bg|bh|bi|bj|bm|bn|bo|br|bs|bt|bv|bw|by|bz|ca|cc|cd|cf|cg|ch|ci|ck|cl|cm|cn|co|cr|cu|cv|cx|cy|cz|cz|de|dj|dk|dm|do|dz|ec|ee|eg|er|es|et|eu|fi|fj|fk|fm|fo|fr|ga|gb|gd|ge|gf|gg|gh|gi|gl|gm|gn|gp|gq|gr|gs|gt|gu|gw|gy|hk|hm|hn|hr|ht|hu|id|ie|il|im|in|io|iq|ir|is|it|je|jm|jo|jp|ke|kg|kh|ki|km|kn|kp|kr|kw|ky|kz|la|lb|lc|li|lk|lr|ls|lt|lu|lv|ly|ma|mc|md|me|mg|mh|mk|ml|mn|mn|mo|mp|mr|ms|mt|mu|mv|mw|mx|my|mz|na|nc|ne|nf|ng|ni|nl|no|np|nr|nu|nz|nom|pa|pe|pf|pg|ph|pk|pl|pm|pn|pr|ps|pt|pw|py|qa|re|ra|rs|ru|rw|sa|sb|sc|sd|se|sg|sh|si|sj|sj|sk|sl|sm|sn|so|sr|st|su|sv|sy|sz|tc|td|tf|tg|th|tj|tk|tl|tm|tn|to|tp|tr|tt|tv|tw|tz|ua|ug|uk|us|uy|uz|va|vc|ve|vg|vi|vn|vu|wf|ws|xyz|ye|yt|yu|za|zm|zw|arpa)@;
 URL ^6		: @\b(https?://|ftp://)?([^\s/?\.#-]+\.)([^\s/?\.#-]+\.)([a-z]{2,6})(/[^\s]*)?@;
 EMAIL ^7	: /\b([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})\b/;
-CAPWORD ^1	: /\b\p{Lu}\p{Ll}+\b/;
+CAPWORD ^1	: /\b\p{Lu}\p{Ll}*\b/;
+LOWORD ^1	: /\b\p{Ll}+\b/;
 
-Name		= sequence( firstname=[0.75]CAPWORD, surname=CAPWORD | 2 );
+Name		= sequence_imm( firstname=[0.75]CAPWORD, surname=CAPWORD | 2 );
+Name		= sequence_imm( firstname=[0.75]CAPWORD, surname=ABBREV | 2 );
+Name		= sequence_imm( Name, surname=CAPWORD | 10 );
 Contact		= sequence_struct( SENT, Name, email=EMAIL | 10 );
 	</pre>
 	<p id="description">
 	A "Name" is defined as a sequence of two words with capitalized first letter in a proximity distance of 2 (ordinal position distance, number of tokens)
-	In this example the variable assignment of firstname gets the weight 0.75 assigned. Weigths are not
+	In this example the variable assignment of firstname gets the weight 0.75 assigned. Weigths are currently not
 	interpreted or used by <i>StrusStream</i>. They are there for the user if part or the interpretation of the result.
 	<br/>
-	A "Contact" is defined as sequence of a name as we defined it and an email address in in a proximity
+	A "PersonMail" is defined as sequence of a name as we defined it and an email address in in a proximity
 	distance of maximum 10 tokens, without an end of sentence marker appearing in between a candidate match.
 	</p>
 	<h4>Define the patterns in C++</h4>
-	<p id="description"> ... </p>
+	<p id="description"><font color=red>No documentation available yet.</font></p>
 	<h4>Define the patterns in Python</h4>
-	<p id="description"> ... </p>
+	<p id="description"><font color=red>Python bindings not available yet.</font></p>
 
 	<h3>Example input</h3>
 	<pre>
-This is an example document about Prof. John Doe, contact mail@etc.com, or visit www.etc.ch.
+&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;
+&lt;doc&gt;
+&lt;text&gt;This is an example document about Prof. John P. Doe, contact mail@etc.com, or visit www.etc.ch.
 He is responsible for development, etc..
+&lt;/text&gt;
+&lt;/doc&gt;
 	</pre>
 	<h3>Tokenization</h3>
-	<p id="description">The following output shows the tokens recognized with our set of patterns defined:
-	</p>
+	<p id="description">We call the program <i>strusPatternMatch</i> with the following command line:
 	<pre>
-token WORD(1) at 1[0:4] 'This'
-token CAPWORD(6) at 1[0:4] 'This'
-token WORD(1) at 2[5:2] 'is'
-token WORD(1) at 3[8:2] 'an'
-token WORD(1) at 4[11:7] 'example'
-token WORD(1) at 5[19:8] 'document'
-token WORD(1) at 6[28:5] 'about'
-token ABBREV(3) at 7[34:5] 'Prof.'
-token WORD(1) at 8[40:4] 'John'
-token CAPWORD(6) at 8[40:4] 'John'
-token WORD(1) at 9[45:3] 'Doe'
-token CAPWORD(6) at 9[45:3] 'Doe'
-token WORD(1) at 10[50:7] 'contact'
-token EMAIL(5) at 11[58:12] 'mail@etc.com'
-token WORD(1) at 12[72:2] 'or'
-token WORD(1) at 13[75:5] 'visit'
-token URL(4) at 14[81:10] 'www.etc.ch'
-token SENT(2) at 15[91:1] '.'
-token WORD(1) at 16[93:2] 'He'
-token CAPWORD(6) at 16[93:2] 'He'
-token WORD(1) at 17[96:2] 'is'
-token WORD(1) at 18[99:11] 'responsible'
-token WORD(1) at 19[111:3] 'for'
-token WORD(1) at 20[115:11] 'development'
-token ABBREV(3) at 21[128:4] 'etc.'
-token SENT(2) at 22[132:1] '.'
+strusPatternMatch -K -p examples/config/program1.rul examples/data/input.xml
 	</pre>
-
-	<h3>Rule matching</h3>
-	<p id="description">The following output of the program <i>strusPatternMatch</i> shows the entities recognized with our example patterns:
+	</p>
+	<p id="description">The option -K tells the program also to print the tokens recognized.
+	The following output shows the tokens recognized with our set of patterns defined:
 	</p>
 	<pre>
-result Name at 8:
-        item surname at 9 [45:3] 1 'Doe'
-        item firstname at 8 [40:4] 0.75 'John'
-
-result Contact at 8:
-        item email at 11 [58:12] 1 'mail@etc.com'
-        item firstname at 8 [40:4] 0.75 'John'
-        item surname at 9 [45:3] 1 'Doe'
+1: WORD This
+1: CAPWORD This
+2: WORD is
+2: LOWORD is
+3: WORD an
+3: LOWORD an
+4: WORD example
+4: LOWORD example
+5: WORD document
+5: LOWORD document
+6: WORD about
+6: LOWORD about
+7: ABBREV Prof.
+8: WORD John
+8: CAPWORD John
+9: ABBREV P.
+10: WORD Doe
+10: CAPWORD Doe
+11: WORD contact
+11: LOWORD contact
+12: EMAIL mail@etc.com
+13: WORD or
+13: LOWORD or
+14: WORD visit
+14: LOWORD visit
+15: URL www.etc.ch
+16: SENT .
+17: WORD He
+17: CAPWORD He
+18: WORD is
+18: LOWORD is
+19: WORD responsible
+19: LOWORD responsible
+20: WORD for
+20: LOWORD for
+21: WORD development
+21: LOWORD development
+22: ABBREV etc.
+23: SENT .
+	</pre>
+	<h3>Rule matching</h3>
+	<p id="description">As output of our command line call we get also the entities recognized with our example patterns:
+	</p>
+	<pre>
+examples/data/input.xml:
+Name [8, 108]: surname [9, 113, 2] 'P.' firstname [8, 108, 4] 'John'
+Name [8, 108]: surname [10, 116, 3] 'Doe' firstname [8, 108, 4] 'John' surname [9, 113, 2] 'P.'
+Contact [8, 108]: email [12, 129, 12] 'mail@etc.com' firstname [8, 108, 4] 'John' surname [9, 113, 2] 'P.'
+Contact [8, 108]: email [12, 129, 12] 'mail@etc.com' surname [9, 113, 2] 'P.' firstname [8, 108, 4] 'John' surname [10, 116, 3] 'Doe'
+OK done
 	</pre>
 
 	<h2>Performance measurements on an Intel NUC (NUC6i3SYK)</h2>
@@ -267,8 +311,6 @@ statistiscs:
 <li><b>nofSignalsFired</b>: Tells how many signals were fired during the whole processing of the 100 documents. An active pattern listens for signals fired on a slot. The pattern matches on a completion condition on the slot.</li>
 </ol>
 </p>
-</div>
-</div>
 <h4>Performance measurement plot</h4>
 <p id="description">The following plot shows the measured execution time against the number of sequence 
 rule nodes evaluated.
@@ -285,18 +327,33 @@ pattern matching the elements "(A B)" and "A" in any order and the source "ABA".
 is that the pattern matcher recognizes "A" as "A" and does not accept a signal for "AB" anymore at the
 same position for this pattern.
 <br/>
-There are straightforward solutions to this problem, but I did not find yet a good one.
-I am aware of that problem and I know that it cannot be neglected.
+There are straightforward solutions to this problem, but we did not find yet a good one.
+We are aware of this problem and we know that it cannot be neglected.
 Currently you have to formulate your 'within' rules as all possible permutations of sequences
 (2 patterns "((A B) A)" and "(A (A B))", if you have 'within' rules with non disjunct accepted sets.
 Sequences do not have this problem.
 </p>
+<h4>Symbols and identifiers</h4>
+<p id="description">It does not make sense to implement every symbol or identifier as item in
+the regular expression automaton. For representing ordinary words, we need the possibility
+to declare identifiers in our rule language. The <a href="http://patrickfrey.github.io/strusStream/doc/doxygen/html/classstrus_1_1CharRegexMatchInstanceInterface.html">CharRegexMatchInstanceInterface</a>
+already has a method to declare such a symbol with the method <i>defineSymbol</i>. 
+But this is one feature not tested yet and not available in our example language.
+</p>
+
 
 <h2>Testing</h2>
 <p id="description">We tested the token pattern matching of <i>StrusStream</i> with random generated
-rules on random generated documents verified with an alternative implementation. Currently the
-tests fail because of differences due to the problems with operators on subexpressions with 
+rules on random generated documents verified with an alternative implementation.
+The test program can be run manually
+<pre>
+cd tests/randomExpressionTreeMatch
+src/testRandomExpressionTreeMatch 100 100 100 100 ./
+</pre>
+And the differences can be inspected with a diff of the res.txt with the exp.txt file.
+Currently the tests fail because of small differences due to the problems with operators on subexpressions with 
 non disjuct sets of accepted input. We are working on the problem.
+</pre>
 </p>
 
 <h2>Caveats</h2>
@@ -308,17 +365,15 @@ the restriction condition, then the result is emitted, even if a restriction eve
 that should overrule the decision, happens thereafter. Another anomaly of this kind can happen, when the 
 restricting element of a rule occurrs with the same position, but before the key event triggering the pattern.
 <br/>
-Practically I do not see too bad consequences of this behaviour, because structure delimiters usually get their
+Practically we do not see too bad consequences of this behaviour, because structure delimiters usually get their
 own ordinal position assigned. But it might be needed in the future to treat these cases differently.
 <br/>
-At the moment I just premention the expected behaviour.
+At the moment we just premention the expected behaviour.
 </p>
 
 <h2>Resume</h2>
 <p id="description"><i>StrusStream</i> provides token pattern matching in a competitive performance for
-large sets of rules sutable for <a href="https://en.wikipedia.org/wiki/Named-entity_recognition">NER</a>,
-<a href="https://en.wikipedia.org/wiki/Natural_language_processing">NLP</a> and other structured entity 
-detection on text.
+matching large sets of patterns. <br/>
 The implementation is maybe not optimal in numbers of reads and writes of memory and in 
 numbers of branching instructions, but it is software with a good flow. It has
 simple operations mainly operating on local (near, on chip) memory, able to use SIMD capabilities
@@ -327,6 +382,8 @@ of modern CPUs and it accesses new (far away) memory mainly for feeding the syst
 For users that do not need arbitrary programs to define patterns and for users, that can live with 
 the restrictions of the model of <i>StrusStream</i>, the prospect of the performance may be convincing.
 </p>
+</div>
+</div>
 </body>
 </html>
 

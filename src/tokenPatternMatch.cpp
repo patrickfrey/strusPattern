@@ -67,12 +67,20 @@ public:
 			{
 				m_statemachine.setCurrentPos( m_curPosition = term.ordpos());
 			}
-			else if (term.origpos() + term.origsize() >= (std::size_t)std::numeric_limits<uint32_t>::max())
+			else if (term.origsize() >= (std::size_t)std::numeric_limits<uint16_t>::max())
 			{
-				throw strus::runtime_error(_TXT("term event orig position and length out of range"));
+				throw strus::runtime_error(_TXT("term event orig size out of range"));
+			}
+			else if (term.origseg() >= (std::size_t)std::numeric_limits<uint16_t>::max())
+			{
+				throw strus::runtime_error(_TXT("term event orig segment number out of range"));
+			}
+			else if (term.origpos() >= (std::size_t)std::numeric_limits<uint16_t>::max())
+			{
+				throw strus::runtime_error(_TXT("term event orig segment byte position out of range"));
 			}
 			uint32_t eventid = eventHandle( TermEvent, term.id());
-			EventData data( term.origpos(), term.origsize(), term.ordpos(), 0/*subdataref*/);
+			EventData data( term.origseg(), term.origpos(), term.origseg(), term.origpos() + term.origsize(), term.ordpos(), 0/*subdataref*/);
 			m_statemachine.doTransition( eventid, data);
 			++m_nofEvents;
 		}
@@ -86,7 +94,7 @@ public:
 		while (0!=(item=m_statemachine.nextResultItem( itemList)))
 		{
 			const char* itemName = m_data->variableMap.key( item->variable);
-			TokenPatternMatchResultItem rtitem( itemName, item->data.ordpos, item->data.origpos, item->data.origsize, item->weight);
+			TokenPatternMatchResultItem rtitem( itemName, item->data.ordpos, item->data.start_origseg, item->data.start_origpos, item->data.end_origseg, item->data.end_origpos, item->weight);
 			resitemlist.push_back( rtitem);
 			if (item->data.subdataref)
 			{
@@ -112,7 +120,7 @@ public:
 				{
 					gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
 				}
-				rt.push_back( TokenPatternMatchResult( resultName, result.ordpos, result.origpos, rtitemlist));
+				rt.push_back( TokenPatternMatchResult( resultName, result.ordpos, result.start_origseg, result.start_origpos, result.end_origseg, result.end_origpos, rtitemlist));
 			}
 			return rt;
 		}
@@ -205,6 +213,10 @@ public:
 					slot_sigtype = Trigger::SigSequence;
 					slot_initsigval = argc;
 					break;
+				case OpSequenceImm:
+					slot_sigtype = Trigger::SigSequenceImm;
+					slot_initsigval = argc;
+					break;
 				case OpSequenceStruct:
 					slot_sigtype = Trigger::SigSequence;
 					slot_initsigval = argc-1;
@@ -230,6 +242,9 @@ public:
 				case OpAny:
 					slot_sigtype = Trigger::SigAny;
 					slot_initcount = cardinality?(uint32_t)cardinality:(uint32_t)1;
+					break;
+				case OpAnd:
+					slot_sigtype = Trigger::SigAnd;
 					break;
 			}
 			ActionSlotDef actionSlotDef( slot_initsigval, slot_initcount, slot_event, slot_resultHandle);
@@ -271,11 +286,21 @@ public:
 						trigger_sigval = argc-ai;
 						isKeyEvent = (ai == 0);
 						break;
+					case OpSequenceImm:
+						if (ai == 0)
+						{
+							//... first element has no predecessor
+							trigger_sigtype = Trigger::SigSequence;
+						}
+						trigger_sigval = argc-ai;
+						isKeyEvent = (ai == 0);
+						break;
 					case OpWithin:
 						trigger_sigval = 1 << (argc-ai-1);
 						isKeyEvent = true;
 						break;
 					case OpAny:
+					case OpAnd:
 						isKeyEvent = true;
 						break;
 				}

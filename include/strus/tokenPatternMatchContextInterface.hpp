@@ -25,7 +25,7 @@ public:
 	virtual ~TokenPatternMatchContextInterface(){}
 
 	/// \brief Feed the next input token
-	/// \brief token the token to feed
+	/// \param[in] token the token to feed
 	/// \remark The input terms must be fed in ascending order of 'ordpos'
 	virtual void putInput( const stream::PatternMatchToken& token)=0;
 

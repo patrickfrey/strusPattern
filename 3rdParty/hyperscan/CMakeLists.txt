@@ -6,7 +6,7 @@ set (HS_MINOR_VERSION 2)
 set (HS_PATCH_VERSION 0)
 set (HS_VERSION ${HS_MAJOR_VERSION}.${HS_MINOR_VERSION}.${HS_PATCH_VERSION})
 
-string (TIMESTAMP BUILD_DATE "%Y-%m-%d")
+execute_process( COMMAND date  +%Y-%m-%d  OUTPUT_VARIABLE  BUILD_DATE  OUTPUT_STRIP_TRAILING_WHITESPACE )
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include(CheckCCompilerFlag)
@@ -70,6 +70,7 @@ set(BOOST_MINVERSION 1.57.0)
 set(BOOST_NO_BOOST_CMAKE ON)
 
 # first check for Boost installed on the system
+set( BOOST_ROOT "${PROJECT_SOURCE_DIR}/3rdParty/hyperscan/" )
 find_package(Boost ${BOOST_MINVERSION})
 if(NOT Boost_FOUND)
     # we might have boost in tree, so provide a hint and try again
@@ -354,8 +355,8 @@ if (EXISTS ${CMAKE_SOURCE_DIR}/tools/CMakeLists.txt)
 endif()
 
 # do substitutions
-configure_file(${CMAKE_MODULE_PATH}/config.h.in ${PROJECT_BINARY_DIR}/config.h)
-configure_file(src/hs_version.h.in ${PROJECT_BINARY_DIR}/hs_version.h)
+configure_file(${CMAKE_MODULE_PATH}/config.h.in ${PROJECT_SOURCE_DIR}/config.h)
+configure_file(src/hs_version.h.in ${PROJECT_SOURCE_DIR}/hs_version.h)
 
 if (NOT WIN32)
     # expand out library names for pkgconfig static link info
@@ -367,8 +368,8 @@ if (NOT WIN32)
     endforeach()
 
     configure_file(libhs.pc.in ${PROJECT_BINARY_DIR}/libhs.pc @ONLY) # only replace @ quoted vars
-    install(FILES ${PROJECT_BINARY_DIR}/libhs.pc
-            DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")
+#    install(FILES ${PROJECT_BINARY_DIR}/libhs.pc
+#            DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")
 endif()
 
 # only set these after all tests are done

@@ -21,6 +21,8 @@
 #include "strus/tokenPatternMatchInstanceInterface.hpp"
 #include "strus/tokenPatternMatchContextInterface.hpp"
 #include "strus/tokenPatternMatchInterface.hpp"
+#include "strus/tokenMarkupInstanceInterface.hpp"
+#include "strus/tokenMarkupContextInterface.hpp"
 #include "strus/charRegexMatchInstanceInterface.hpp"
 #include "strus/charRegexMatchContextInterface.hpp"
 #include "strus/charRegexMatchInterface.hpp"
@@ -35,16 +37,18 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <map>
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
 #include <memory>
+#include <limits>
 #include "hs_version.h"
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 
-#define STRUS_LOWLEVEL_DEBUG
+#undef STRUS_LOWLEVEL_DEBUG
 
 static void printIntelBsdLicense()
 {
@@ -83,6 +87,8 @@ static void printUsage()
 	std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 	std::cout << "-v|--version" << std::endl;
 	std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
+	std::cout << "-K|--tokens" << std::endl;
+	std::cout << "    " << _TXT("Print the tokenization used for pattern matching too") << std::endl;
 	std::cout << "--intel-bsd-license" << std::endl;
 	std::cout << "    " << _TXT("Print the BSD license text of the Intel hyperscan library") << std::endl;
 	std::cout << "-t|--threads <N>" << std::endl;
@@ -95,6 +101,10 @@ static void printUsage()
 	std::cout << "    " << _TXT("Specify the character set encoding of all files to process as <ENC>") << std::endl;
 	std::cout << "-e|--expression <EXP>" << std::endl;
 	std::cout << "    " << _TXT("Define a selection expression <EXP> for the content to process") << std::endl;
+	std::cout << "-H|--markup <NAME>" << std::endl;
+	std::cout << "    " << _TXT("Output the content with markups of the rules or variables with name <NAME>") << std::endl;
+	std::cout << "-Z|--marker <MRK>" << std::endl;
+	std::cout << "    " << _TXT("Define a character sequence inserted before every result declaration") << std::endl;
 	std::cout << "-p|--program <PRG>" << std::endl;
 	std::cout << "    " << _TXT("Load program <PRG> with patterns to process") << std::endl;
 	std::cout << "<inputfile>  : " << _TXT("input file or directory to process") << std::endl;
@@ -119,10 +129,16 @@ static void loadFileNames( std::vector<std::string>& result, const std::string& 
 {
 	if (strus::isDir( path))
 	{
-		unsigned int ec = strus::readDirFiles( path, fileext, result);
+		std::vector<std::string> filenames;
+		unsigned int ec = strus::readDirFiles( path, fileext, filenames);
 		if (ec)
 		{
 			throw strus::runtime_error( _TXT( "could not read directory to process '%s' (errno %u)"), path.c_str(), ec);
+		}
+		std::vector<std::string>::const_iterator fi = filenames.begin(), fe = filenames.end();
+		for (; fi != fe; ++fi)
+		{
+			result.push_back( path + strus::dirSeparator() + *fi);
 		}
 		std::vector<std::string> subdirs;
 		ec = strus::readDirSubDirs( path, subdirs);
@@ -133,7 +149,7 @@ static void loadFileNames( std::vector<std::string>& result, const std::string& 
 		std::vector<std::string>::const_iterator si = subdirs.begin(), se = subdirs.end();
 		for (; si != se; ++si)
 		{
-			loadFileNames( result, *si, fileext);
+			loadFileNames( result, path + strus::dirSeparator() + *si, fileext);
 		}
 	}
 	else
@@ -148,16 +164,24 @@ class GlobalContext
 {
 public:
 	explicit GlobalContext(
+			const strus::PatternMatchProgramInstanceInterface* program_,
 			const strus::TokenPatternMatchInstanceInterface* ptinst_,
 			const strus::CharRegexMatchInstanceInterface* crinst_,
 			const std::vector<std::string>& selectexpr,
 			const std::string& path,
 			const std::string& fileext,
 			const std::string& mimetype,
-			const std::string& encoding)
-		:m_ptinst(ptinst_)
+			const std::string& encoding,
+			const std::map<std::string,int>& markups_,
+			const std::string& resultMarker_,
+			bool printTokens_)
+		:m_program(program_)
+		,m_ptinst(ptinst_)
 		,m_crinst(crinst_)
 		,m_segmenter(0)
+		,m_markups(markups_)
+		,m_resultMarker(resultMarker_)
+		,m_printTokens(printTokens_)
 	{
 		loadFileNames( m_files, path, fileext);
 		m_fileitr = m_files.begin();
@@ -248,31 +272,35 @@ public:
 			if (m_segmenter_cjson.get()) m_segmenter_cjson->defineSelectorExpression( eidx, *ei);
 			if (m_segmenter_textwolf.get()) m_segmenter_textwolf->defineSelectorExpression( eidx, *ei);
 		}
+		m_tokenMarkup.reset( strus::createTokenMarkupInstance_standard( g_errorBuffer));
 		if (g_errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("global context initialization failed"));
 		}
 	}
 
-	strus::SegmenterContextInterface* createSegmenterContext( const std::string& content) const
+	strus::SegmenterContextInterface* createSegmenterContext( const std::string& content, strus::SegmenterInstanceInterface*& segmenter, strus::DocumentClass& documentClass) const
 	{
 		if (m_segmenter)
 		{
+			segmenter = m_segmenter;
+			documentClass = m_documentClass;
 			return m_segmenter->createContext( m_documentClass);
 		}
 		else
 		{
-			strus::DocumentClass documentClass;
 			if (!m_documentClassDetector->detect( documentClass, content.c_str(), content.size()))
 			{
 				throw strus::runtime_error(_TXT("failed to detect document class"));
 			}
 			if (documentClass.mimeType() == "application/xml")
 			{
+				segmenter = m_segmenter_textwolf.get();
 				return m_segmenter_textwolf->createContext( documentClass);
 			}
 			else if (documentClass.mimeType() == "application/json")
 			{
+				segmenter = m_segmenter_cjson.get();
 				return m_segmenter_cjson->createContext( documentClass);
 			}
 			else
@@ -282,8 +310,21 @@ public:
 		}
 	}
 
+	strus::TokenMarkupContextInterface* createTokenMarkupContext() const
+	{
+		strus::TokenMarkupContextInterface* rt = m_tokenMarkup->createContext();
+		if (!rt)
+		{
+			throw strus::runtime_error(_TXT("failed to create token markup context"));
+		}
+		return rt;
+	}
+
 	const strus::TokenPatternMatchInstanceInterface* tokenPatternMatchInstance() const	{return m_ptinst;}
 	const strus::CharRegexMatchInstanceInterface* charRegexMatchInstance() const		{return m_crinst;}
+
+	bool printTokens() const								{return m_printTokens;}
+	const char* tokenName( unsigned int id) const						{return m_program->tokenName( id);}
 
 	void fetchError()
 	{
@@ -309,22 +350,35 @@ public:
 		return m_errors;
 	}
 
+	const std::map<std::string,int>& markups() const
+	{
+		return m_markups;
+	}
+	const std::string& resultMarker() const
+	{
+		return m_resultMarker;
+	}
+
 public:
 	ThreadContext* createThreadContext() const;
 
 private:
 	boost::mutex m_mutex;
+	const strus::PatternMatchProgramInstanceInterface* m_program;
 	const strus::TokenPatternMatchInstanceInterface* m_ptinst;
 	const strus::CharRegexMatchInstanceInterface* m_crinst;
 	strus::SegmenterInstanceInterface* m_segmenter;
 	std::auto_ptr<strus::SegmenterInstanceInterface> m_segmenter_textwolf;
 	std::auto_ptr<strus::SegmenterInstanceInterface> m_segmenter_cjson;
 	std::auto_ptr<strus::DocumentClassDetectorInterface> m_documentClassDetector;
-	
+	std::auto_ptr<strus::TokenMarkupInstanceInterface> m_tokenMarkup;
+	std::map<std::string,int> m_markups;
+	std::string m_resultMarker;
 	strus::DocumentClass m_documentClass;
 	std::vector<std::string> m_errors;
 	std::vector<std::string> m_files;
 	std::vector<std::string>::const_iterator m_fileitr;
+	bool m_printTokens;
 };
 
 class ThreadContext
@@ -333,26 +387,61 @@ public:
 	explicit ThreadContext( GlobalContext* globalContext_)
 		:m_globalContext(globalContext_){}
 
+	struct PositionInfo
+	{
+		strus::SegmenterPosition segpos;
+		std::size_t srcpos;
+
+		PositionInfo( strus::SegmenterPosition segpos_, std::size_t srcpos_)
+			:segpos(segpos_),srcpos(srcpos_){}
+		PositionInfo( const PositionInfo& o)
+			:segpos(o.segpos),srcpos(o.srcpos){}
+	};
+
 	void processDocument( const std::string& filename)
 	{
 		std::string content;
 
-		unsigned int ec = strus::readFile( filename, content);
+		unsigned int ec;
+		if (filename == "-")
+		{
+			ec = strus::readStdin( content);
+		}
+		else
+		{
+			ec = strus::readFile( filename, content);
+		}
 		if (ec)
 		{
-			throw strus::runtime_error(_TXT("error (%u) reading rule file: %s"), ec, ::strerror(ec));
+			throw strus::runtime_error(_TXT("error (%u) reading document %s: %s"), ec, filename.c_str(), ::strerror(ec));
 		}
 		std::auto_ptr<strus::TokenPatternMatchContextInterface> mt( m_globalContext->tokenPatternMatchInstance()->createContext());
 		std::auto_ptr<strus::CharRegexMatchContextInterface> crctx( m_globalContext->charRegexMatchInstance()->createContext());
-		std::auto_ptr<strus::SegmenterContextInterface> segmenter( m_globalContext->createSegmenterContext( content));
+		strus::SegmenterInstanceInterface* segmenterInstance;
+		strus::DocumentClass documentClass;
+		std::auto_ptr<strus::SegmenterContextInterface> segmenter( m_globalContext->createSegmenterContext( content, segmenterInstance, documentClass));
 
 		segmenter->putInput( content.c_str(), content.size(), true);
 		int id;
 		strus::SegmenterPosition segmentpos;
 		const char* segment;
 		std::size_t segmentsize;
+		std::vector<PositionInfo> segmentposmap;
+		std::string source;
+		std::size_t segmentidx;
+		strus::SegmenterPosition prev_segmentpos = (strus::SegmenterPosition)std::numeric_limits<std::size_t>::max();
 		while (segmenter->getNext( id, segmentpos, segment, segmentsize))
 		{
+			segmentidx = segmentposmap.size();
+			if (prev_segmentpos != segmentpos)
+			{
+				segmentposmap.push_back( PositionInfo( segmentpos, source.size()));
+				source.append( segment, segmentsize);
+			}
+			else
+			{
+				segmentposmap.push_back( PositionInfo( segmentpos, segmentposmap.back().srcpos));
+			}
 #ifdef STRUS_LOWLEVEL_DEBUG
 			std::cerr << "processing segment " << id << " [" << std::string(segment,segmentsize) << "] at " << segmentpos << std::endl;
 #endif
@@ -361,48 +450,95 @@ public:
 			{
 				throw std::runtime_error( "failed to scan for tokens with char regex match automaton");
 			}
-			std::vector<strus::stream::PatternMatchToken>::const_iterator ti = crmatches.begin(), te = crmatches.end();
+			std::vector<strus::stream::PatternMatchToken>::iterator ti = crmatches.begin(), te = crmatches.end();
 			for (; ti != te; ++ti)
 			{
-				strus::stream::PatternMatchToken tok( strus::stream::PatternMatchToken( ti->id(), ti->ordpos(), ti->origpos()+segmentpos, ti->origsize()));
-				mt->putInput( tok);
+				ti->setOrigseg( segmentidx);
+				if (m_globalContext->printTokens())
+				{
+					std::cout << ti->ordpos() << ": " << m_globalContext->tokenName(ti->id()) << " " << std::string( segment+ti->origpos(), ti->origsize()) << std::endl;
+				}
+				mt->putInput( *ti);
 			}
 		}
 		if (g_errorBuffer->hasError())
 		{
 			throw std::runtime_error("error matching rules");
 		}
-		std::vector<strus::stream::TokenPatternMatchResult> result = mt->fetchResults();
-		output( filename, result, content.c_str());
+		std::cout << m_globalContext->resultMarker() << filename << ":" << std::endl;
+		std::vector<strus::stream::TokenPatternMatchResult> results = mt->fetchResults();
+		if (m_globalContext->markups().empty())
+		{
+			printResults( std::cout, segmentposmap, results, source);
+		}
+		else
+		{
+			markupResults( std::cout, results, documentClass, content, segmenterInstance);
+		}
 	}
 
-	void printResults( std::ostream& out, const std::vector<strus::stream::TokenPatternMatchResult>& results, const char* src)
+	void printResults( std::ostream& out, const std::vector<PositionInfo>& segmentposmap, const std::vector<strus::stream::TokenPatternMatchResult>& results, const std::string& src)
 	{
 		std::vector<strus::stream::TokenPatternMatchResult>::const_iterator
 			ri = results.begin(), re = results.end();
 		for (; ri != re; ++ri)
 		{
-			out << ri->name() << " [" << ri->ordpos() << ", " << ri->origpos() << "]:";
+			std::size_t start_segpos = segmentposmap[ ri->start_origseg()].segpos;
+			std::size_t end_segpos = segmentposmap[ ri->end_origseg()].segpos;
+			out << ri->name() << " [" << ri->ordpos() << ", " << start_segpos << "|" << ri->start_origpos() << " .. " << end_segpos << "|" << ri->end_origpos() << "]:";
 			std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
 				ei = ri->items().begin(), ee = ri->items().end();
-		
+
 			for (; ei != ee; ++ei)
 			{
+				start_segpos = segmentposmap[ ei->start_origseg()].segpos;
+				end_segpos = segmentposmap[ ei->end_origseg()].segpos;
 				out << " " << ei->name() << " [" << ei->ordpos()
-						<< ", " << ei->origpos() << ", " << ei->origsize() << "]";
-				if (src)
-				{
-					out << " '" << std::string( src+ei->origpos(), ei->origsize()) << "'";
-				}
+						<< ", " << start_segpos << "|" << ei->start_origpos() << " .. " << end_segpos << "|" << ei->end_origpos() << "]";
+				std::size_t start_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->start_origpos();
+				std::size_t end_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->end_origpos();
+				out << " '" << std::string( src.c_str() + start_srcpos, end_srcpos - start_srcpos) << "'";
 			}
 			out << std::endl;
 		}
 	}
 
-	void output( const std::string& filename, const std::vector<strus::stream::TokenPatternMatchResult>& results, const char* src)
+	void markupResults( std::ostream& out,
+				const std::vector<strus::stream::TokenPatternMatchResult>& results,
+				const strus::DocumentClass& documentClass, const std::string& src,
+				const strus::SegmenterInstanceInterface* segmenterInstance)
 	{
-		std::cout << filename << ":" << std::endl;
-		printResults( std::cout, results, src);
+		std::auto_ptr<strus::TokenMarkupContextInterface> markupContext( m_globalContext->createTokenMarkupContext());
+
+		std::vector<strus::stream::TokenPatternMatchResult>::const_iterator
+			ri = results.begin(), re = results.end();
+		for (; ri != re; ++ri)
+		{
+			std::map<std::string,int>::const_iterator mi = m_globalContext->markups().find( ri->name());
+			if (mi != m_globalContext->markups().end())
+			{
+				markupContext->putMarkup(
+					ri->start_origseg(), ri->start_origpos(),
+					ri->end_origseg(), ri->end_origpos(),
+					strus::TokenMarkup( ri->name()), mi->second);
+			}
+			std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
+				ei = ri->items().begin(), ee = ri->items().end();
+
+			for (; ei != ee; ++ei)
+			{
+				std::map<std::string,int>::const_iterator mi = m_globalContext->markups().find( ei->name());
+				if (mi != m_globalContext->markups().end())
+				{
+					markupContext->putMarkup(
+						ei->start_origseg(), ei->start_origpos(),
+						ei->end_origseg(), ei->end_origpos(),
+						strus::TokenMarkup( ri->name()), mi->second);
+				}
+			}
+		}
+		std::string content = markupContext->markupDocument( segmenterInstance, documentClass, src);
+		out << content << std::endl;
 	}
 
 	void run()
@@ -453,7 +589,10 @@ int main( int argc, const char* argv[])
 		std::string encoding;
 		std::vector<std::string> programfiles;
 		std::vector<std::string> selectexpr;
+		std::map<std::string,int> markups;
+		std::string resultmarker;
 		unsigned int nofThreads = 0;
+		bool printTokens = false;
 
 		// Parsing arguments:
 		for (; argi < argc; ++argi)
@@ -541,6 +680,10 @@ int main( int argc, const char* argv[])
 				++argi;
 				selectexpr.push_back( argv[argi]);
 			}
+			else if (0==std::strcmp( argv[argi], "-K") || 0==std::strcmp( argv[argi], "--tokens"))
+			{
+				printTokens = true;
+			}
 			else if (0==std::strcmp( argv[argi], "-p") || 0==std::strcmp( argv[argi], "--program"))
 			{
 				if (argi == argc || argv[argi+1][0] == '-')
@@ -549,6 +692,28 @@ int main( int argc, const char* argv[])
 				}
 				++argi;
 				programfiles.push_back( argv[argi]);
+			}
+			else if (0==std::strcmp( argv[argi], "-H") || 0==std::strcmp( argv[argi], "--markup"))
+			{
+				if (argi == argc || argv[argi+1][0] == '-')
+				{
+					throw strus::runtime_error( _TXT("no argument given to option --markup"));
+				}
+				++argi;
+				markups.insert( std::pair<std::string, int>( argv[argi], markups.size()+1));
+			}
+			else if (0==std::strcmp( argv[argi], "-Z") || 0==std::strcmp( argv[argi], "--marker"))
+			{
+				if (argi == argc || argv[argi+1][0] == '-')
+				{
+					throw strus::runtime_error( _TXT("no argument given to option --marker"));
+				}
+				++argi;
+				if (!resultmarker.empty())
+				{
+					throw strus::runtime_error( _TXT("option --marker specified twice"));
+				}
+				resultmarker = argv[argi];
 			}
 			else if (0==std::strcmp( argv[argi], "-t") || 0==std::strcmp( argv[argi], "--threads"))
 			{
@@ -566,6 +731,14 @@ int main( int argc, const char* argv[])
 				{
 					throw strus::runtime_error( _TXT("number of threafs option --threads is 0"));
 				}
+			}
+			else if (argv[argi][0] == '-' && argv[argi][1] == '-' && !argv[argi][2])
+			{
+				break;
+			}
+			else if (argv[argi][0] == '-' && !argv[argi][1])
+			{
+				break;
 			}
 			else if (argv[argi][0] == '-')
 			{
@@ -604,6 +777,7 @@ int main( int argc, const char* argv[])
 		std::auto_ptr<strus::PatternMatchProgramInstanceInterface> pii( ppi->createInstance());
 		if (!pii.get()) throw std::runtime_error("failed to create pattern program loader instance");
 
+		std::cerr << "loading programs ..." << std::endl;
 		std::vector<std::string>::const_iterator pi = programfiles.begin(), pe = programfiles.end();
 		for (; pi != pe; ++pi)
 		{
@@ -611,7 +785,7 @@ int main( int argc, const char* argv[])
 			unsigned int ec = strus::readFile( *pi, programsrc);
 			if (ec)
 			{
-				throw strus::runtime_error(_TXT("error (%u) reading rule file: %s"), ec, ::strerror(ec));
+				throw strus::runtime_error(_TXT("error (%u) reading rule file %s: %s"), ec, pi->c_str(), ::strerror(ec));
 			}
 			if (!pii->load( programsrc))
 			{
@@ -633,10 +807,13 @@ int main( int argc, const char* argv[])
 			selectexpr.push_back( "//()");
 		}
 		GlobalContext globalContext(
+				pii.get(),
 				pii->getTokenPatternMatchInstance(),
 				pii->getCharRegexMatchInstance(),
-				selectexpr, inputpath, fileext, mimetype, encoding);
+				selectexpr, inputpath, fileext, mimetype, encoding,
+				markups, resultmarker, printTokens);
 
+		std::cerr << "start matching ..." << std::endl;
 		if (nofThreads)
 		{
 			fprintf( stderr, _TXT("starting %u threads for evaluation ...\n"), nofThreads);
@@ -668,14 +845,14 @@ int main( int argc, const char* argv[])
 			{
 				std::cerr << _TXT("error in thread: ") << *ei << std::endl;
 			}
+			throw std::runtime_error( "error processing documents");
 		}
-
 		// Check for reported error an terminate regularly:
 		if (g_errorBuffer->hasError())
 		{
 			throw strus::runtime_error( _TXT("error processing resize blocks"));
 		}
-		std::cerr << _TXT("OK") << std::endl;
+		std::cerr << _TXT("OK done") << std::endl;
 		return 0;
 	}
 	catch (const std::exception& e)

@@ -514,11 +514,11 @@ public:
 					case CharRegexMatchInstanceInterface::BindContent:
 						ordpos = 1;
 						origpos = mi->origpos;
-						rt.push_back( stream::PatternMatchToken( mi->id, 1, mi->origpos, mi->origsize));
+						rt.push_back( stream::PatternMatchToken( mi->id, 1, 0/*origseg*/, mi->origpos, mi->origsize));
 						++mi;
 						goto EXITLOOP;
 					case CharRegexMatchInstanceInterface::BindSuccessor:
-						rt.push_back( stream::PatternMatchToken( mi->id, 1, mi->origpos, mi->origsize));
+						rt.push_back( stream::PatternMatchToken( mi->id, 1, 0/*origseg*/, mi->origpos, mi->origsize));
 						break;
 					case CharRegexMatchInstanceInterface::BindPredecessor:
 						break;
@@ -539,13 +539,13 @@ public:
 							origpos = mi->origpos;
 							++ordpos;
 						}
-						rt.push_back( stream::PatternMatchToken( mi->id, ordpos, mi->origpos, mi->origsize));
+						rt.push_back( stream::PatternMatchToken( mi->id, ordpos, 0/*origseg*/, mi->origpos, mi->origsize));
 						break;
 					case CharRegexMatchInstanceInterface::BindSuccessor:
-						rt.push_back( stream::PatternMatchToken( mi->id, ordpos+1, mi->origpos, mi->origsize));
+						rt.push_back( stream::PatternMatchToken( mi->id, ordpos+1, 0/*origseg*/, mi->origpos, mi->origsize));
 						break;
 					case CharRegexMatchInstanceInterface::BindPredecessor:
-						rt.push_back( stream::PatternMatchToken( mi->id, ordpos, mi->origpos, mi->origsize));
+						rt.push_back( stream::PatternMatchToken( mi->id, ordpos, 0/*origseg*/, mi->origpos, mi->origsize));
 						break;
 				}
 			}

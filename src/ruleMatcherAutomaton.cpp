@@ -13,9 +13,13 @@
 #include <algorithm>
 #include <iostream>
 #include <new>
+
+#if !defined (__APPLE__) && !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(_WIN32)
 #ifdef __SSE__
 #include <emmintrin.h>
 #define STRUS_USE_SSE_SCAN_TRIGGERS
+#endif
+#define HAVE_BUILTIN_ASSUME_ALIGNED
 #endif
 #undef STRUS_LOWLEVEL_DEBUG
 
@@ -198,7 +202,7 @@ void EventTriggerTable::getTriggers( TriggerRefList& triggers, uint32_t event) c
 	Trigger const** tar = triggers.reserve( rec.m_size);
 	std::size_t nofresults = 0;
 
-#if __GNUC__ >= 4
+#if __GNUC__ >= 4 && defined(HAVE_BUILTIN_ASSUME_ALIGNED)
 	const uint32_t* eventAr = (const uint32_t*)__builtin_assume_aligned( rec.m_eventAr, EventArrayMemoryAlignment);
 #else
 	const uint32_t* eventAr = rec.m_eventAr;
@@ -330,7 +334,28 @@ uint32_t ProgramTable::getAltEventId( uint32_t eventid, uint32_t triggerListIdx)
 			case Trigger::SigAny:
 				// ... For SigAny all events are key events, so no alternative can be chosen
 				return 0;
+			case Trigger::SigAnd:
+			{
+				if (sigtype == trigger->sigtype)
+				{
+					if (trigger->event != eventid)
+					{
+						eventid_selected = trigger->event;
+						sigtype = (Trigger::SigType)trigger->sigtype;
+					}
+				}
+				else if (sigtype == Trigger::SigAny && trigger->event != eventid)
+				{
+					eventid_selected = trigger->event;
+					sigtype = (Trigger::SigType)trigger->sigtype;
+				}
+				else
+				{
+					return 0;
+				}
+			}
 			case Trigger::SigSequence:
+			case Trigger::SigSequenceImm:
 			case Trigger::SigWithin:
 			{
 				if (sigtype == trigger->sigtype)
@@ -669,8 +694,43 @@ void StateMachine::fireSignal(
 				finished = (slot.count == 0);
 			}
 			break;
+		case Trigger::SigAnd:
+			if (slot.count > 0)
+			{
+				if (!slot.value)
+				{
+					slot.value = data.ordpos;
+				}
+				if (slot.value == data.ordpos)
+				{
+					slot.end_ordpos = m_curpos;
+					match = true;
+					--slot.count;
+					finished = (slot.count == 0);
+					takeEventData = true;
+				}
+			}
+			break;
 		case Trigger::SigSequence:
 			if (trigger.sigval() == slot.value && slot.end_ordpos < data.ordpos)
+			{
+				slot.end_ordpos = m_curpos;
+				slot.value = trigger.sigval()-1;
+				if (slot.count > 0)
+				{
+					--slot.count;
+					match = (slot.count == 0);
+				}
+				else
+				{
+					match = true;
+				}
+				finished = (slot.value == 0);
+				takeEventData = true;
+			}
+			break;
+		case Trigger::SigSequenceImm:
+			if (trigger.sigval() == slot.value && slot.end_ordpos+1 == data.ordpos)
 			{
 				slot.end_ordpos = m_curpos;
 				slot.value = trigger.sigval()-1;
@@ -748,7 +808,8 @@ void StateMachine::fireSignal(
 		if (slot.start_ordpos == 0 || slot.start_ordpos > data.ordpos)
 		{
 			slot.start_ordpos = data.ordpos;
-			slot.start_origpos = data.origpos;
+			slot.start_origseg = data.start_origseg;
+			slot.start_origpos = data.start_origpos;
 		}
 	}
 	if (match)
@@ -757,8 +818,7 @@ void StateMachine::fireSignal(
 		{
 			if (slot.event)
 			{
-				std::size_t eventOrigSize = data.origpos + data.origsize - slot.start_origpos;
-				EventStruct followEventData( EventData( slot.start_origpos, eventOrigSize, slot.start_ordpos, rule.eventDataReferenceIdx), slot.event);
+				EventStruct followEventData( EventData( slot.start_origseg, slot.start_origpos, data.end_origseg, data.end_origpos, slot.start_ordpos, rule.eventDataReferenceIdx), slot.event);
 				if (rule.eventDataReferenceIdx)
 				{
 					referenceEventData( rule.eventDataReferenceIdx);
@@ -767,7 +827,7 @@ void StateMachine::fireSignal(
 			}
 			if (slot.resultHandle)
 			{
-				m_results.add( Result( slot.resultHandle, rule.eventDataReferenceIdx, slot.start_ordpos, slot.start_origpos));
+				m_results.add( Result( slot.resultHandle, rule.eventDataReferenceIdx, slot.start_ordpos, slot.start_origseg, slot.start_origpos, data.end_origseg, data.end_origpos));
 				if (rule.eventDataReferenceIdx)
 				{
 					referenceEventData( rule.eventDataReferenceIdx);
