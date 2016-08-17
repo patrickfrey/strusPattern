@@ -722,7 +722,7 @@ int main( int argc, const char* argv[])
 					throw strus::runtime_error( _TXT("no argument given to option --threads"));
 				}
 				++argi;
-				if (!nofThreads)
+				if (nofThreads)
 				{
 					throw strus::runtime_error( _TXT("number of threads option --threads specified twice"));
 				}
