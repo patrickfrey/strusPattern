@@ -378,6 +378,11 @@ public:
 				}
 			}
 			unsigned int patternid = patternDef.id();
+			if (patternDef.symtabref())
+			{
+				unsigned int symid = THIS->m_data->patternTable.symbolId( patternDef.symtabref(), THIS->m_src + from, (uint32_t)(to-from));
+				if (symid) patternid = symid;
+			}
 			MatchEvent matchEvent( patternid, patternDef.level(), patternDef.posbind(), (uint32_t)from, (uint32_t)(to-from));
 			if (THIS->m_matchEventAr.empty())
 			{
