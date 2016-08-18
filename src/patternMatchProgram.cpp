@@ -84,6 +84,26 @@ static JoinOperation joinOperation( const std::string& name)
 	throw strus::runtime_error( _TXT("unknown join operation: '%s'"), name.c_str());
 }
 
+uint32_t PatternMatchProgramInstance::getOrCreateSymbol( unsigned int regexid, const std::string& name)
+{
+	enum {MOD=64};
+	static const char cd[MOD+1] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_-";
+	std::string symid;
+	for (;regexid > 0; regexid /= 64)
+	{
+		symid.push_back( cd[ regexid % 64]);
+	}
+	symid.push_back( '\r');
+	symid.append( name);
+	unsigned int id = m_identifierSymbolTab.get( symid);
+	if (!id)
+	{
+		id = m_identifierSymbolTab.getOrCreate( symid);
+		m_charRegexMatch->defineSymbol( id+SymbolOffset, regexid, name);
+	}
+	return id+SymbolOffset;
+}
+
 void PatternMatchProgramInstance::loadExpressionNode( const std::string& name, char const*& si)
 {
 	if (isOpenOvalBracket( *si))
@@ -153,6 +173,11 @@ void PatternMatchProgramInstance::loadExpressionNode( const std::string& name, c
 		unsigned int id = m_regexNameSymbolTab.get( name);
 		if (id)
 		{
+			if (isStringQuote(*si))
+			{
+				std::string symbol( parse_STRING( si));
+				id = getOrCreateSymbol( id, symbol);
+			}
 			m_tokenPatternMatch->pushTerm( id);
 		}
 		else
@@ -402,6 +427,11 @@ bool PatternMatchProgramInstance::compile()
 {
 	try
 	{
+		if (m_errorhnd->hasError())
+		{
+			m_errorhnd->explain( _TXT("error before compile (while building program): %s"));
+			return false;
+		}
 		if (!m_unresolvedPatternNameSet.empty())
 		{
 			std::ostringstream unresolved;
