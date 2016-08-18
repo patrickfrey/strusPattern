@@ -232,18 +232,10 @@ public:
 		m_symidmap.push_back( symbolid);
 	}
 
-	unsigned int symbolId( unsigned int id, const std::string& value) const
+	unsigned int symbolId( uint8_t symtabref, const char* keystr, std::size_t keylen) const
 	{
-		uint8_t symtabref = m_defar[ id].symtabref();
-		if (symtabref)
-		{
-			uint32_t symidx = m_symtabmap[ symtabref-1]->get( value);
-			if (symidx)
-			{
-				return m_symidmap[ symidx-1];
-			}
-		}
-		return id;
+		uint32_t symidx = m_symtabmap[ symtabref-1]->get( keystr, keylen);
+		return (symidx)?m_symidmap[ symidx-1]:0;
 	}
 
 	const PatternDef& patternDef( unsigned int id) const
@@ -385,7 +377,13 @@ public:
 					return 0;
 				}
 			}
-			MatchEvent matchEvent( patternDef.id(), patternDef.level(), patternDef.posbind(), (uint32_t)from, (uint32_t)(to-from));
+			unsigned int patternid = patternDef.id();
+			if (patternDef.symtabref())
+			{
+				unsigned int symid = THIS->m_data->patternTable.symbolId( patternDef.symtabref(), THIS->m_src + from, (uint32_t)(to-from));
+				if (symid) patternid = symid;
+			}
+			MatchEvent matchEvent( patternid, patternDef.level(), patternDef.posbind(), (uint32_t)from, (uint32_t)(to-from));
 			if (THIS->m_matchEventAr.empty())
 			{
 				THIS->m_matchEventAr.push_back( matchEvent);

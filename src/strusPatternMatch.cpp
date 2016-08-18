@@ -48,7 +48,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 
-#undef STRUS_LOWLEVEL_DEBUG
+#define STRUS_LOWLEVEL_DEBUG
 
 static void printIntelBsdLicense()
 {
@@ -429,6 +429,7 @@ public:
 		std::vector<PositionInfo> segmentposmap;
 		std::string source;
 		std::size_t segmentidx;
+		unsigned int ordposOffset = 0;
 		strus::SegmenterPosition prev_segmentpos = (strus::SegmenterPosition)std::numeric_limits<std::size_t>::max();
 		while (segmenter->getNext( id, segmentpos, segment, segmentsize))
 		{
@@ -437,28 +438,29 @@ public:
 			{
 				segmentposmap.push_back( PositionInfo( segmentpos, source.size()));
 				source.append( segment, segmentsize);
-			}
-			else
-			{
-				segmentposmap.push_back( PositionInfo( segmentpos, segmentposmap.back().srcpos));
-			}
 #ifdef STRUS_LOWLEVEL_DEBUG
-			std::cerr << "processing segment " << id << " [" << std::string(segment,segmentsize) << "] at " << segmentpos << std::endl;
+				std::cerr << "processing segment " << id << " [" << std::string(segment,segmentsize) << "] at " << segmentpos << std::endl;
 #endif
-			std::vector<strus::stream::PatternMatchToken> crmatches = crctx->match( segment, segmentsize);
-			if (crmatches.size() == 0 && g_errorBuffer->hasError())
-			{
-				throw std::runtime_error( "failed to scan for tokens with char regex match automaton");
-			}
-			std::vector<strus::stream::PatternMatchToken>::iterator ti = crmatches.begin(), te = crmatches.end();
-			for (; ti != te; ++ti)
-			{
-				ti->setOrigseg( segmentidx);
-				if (m_globalContext->printTokens())
+				std::vector<strus::stream::PatternMatchToken> crmatches = crctx->match( segment, segmentsize);
+				if (crmatches.size() == 0 && g_errorBuffer->hasError())
 				{
-					std::cout << ti->ordpos() << ": " << m_globalContext->tokenName(ti->id()) << " " << std::string( segment+ti->origpos(), ti->origsize()) << std::endl;
+					throw std::runtime_error( "failed to scan for tokens with char regex match automaton");
 				}
-				mt->putInput( *ti);
+				std::vector<strus::stream::PatternMatchToken>::iterator ti = crmatches.begin(), te = crmatches.end();
+				for (; ti != te; ++ti)
+				{
+					ti->setOrigseg( segmentidx);
+					ti->setOrdpos( ti->ordpos() + ordposOffset);
+					if (m_globalContext->printTokens())
+					{
+						std::cout << ti->ordpos() << ": " << m_globalContext->tokenName(ti->id()) << " " << std::string( segment+ti->origpos(), ti->origsize()) << std::endl;
+					}
+					mt->putInput( *ti);
+				}
+				if (crmatches.size() > 0)
+				{
+					ordposOffset = crmatches.back().ordpos();
+				}
 			}
 		}
 		if (g_errorBuffer->hasError())

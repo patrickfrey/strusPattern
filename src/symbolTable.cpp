@@ -96,8 +96,9 @@ uint32_t SymbolTable::getOrCreate( const std::string& key)
 	return getOrCreate( key.c_str(), key.size());
 }
 
-uint32_t SymbolTable::getOrCreate( const char* key, std::size_t keysize)
+uint32_t SymbolTable::getOrCreate( const char* keystr, std::size_t keylen)
 {
+	Key key( keystr, keylen);
 	Map::const_iterator itr = m_map.find( key);
 	if (itr == m_map.end())
 	{
@@ -105,8 +106,8 @@ uint32_t SymbolTable::getOrCreate( const char* key, std::size_t keysize)
 		{
 			throw std::bad_alloc();
 		}
-		m_invmap.push_back( m_keystring_blocks.allocKey( key, keysize));
-		m_map[ m_invmap.back()] = m_invmap.size();
+		m_invmap.push_back( m_keystring_blocks.allocKey( key.str, key.len));
+		m_map[ Key( m_invmap.back(), key.len)] = m_invmap.size();
 		return m_invmap.size();
 	}
 	else
@@ -120,8 +121,9 @@ uint32_t SymbolTable::get( const std::string& key) const
 	return get( key.c_str(), key.size());
 }
 
-uint32_t SymbolTable::get( const char* key, std::size_t) const
+uint32_t SymbolTable::get( const char* keystr, std::size_t keylen) const
 {
+	Key key( keystr, keylen);
 	Map::const_iterator itr = m_map.find( key);
 	if (itr != m_map.end())
 	{

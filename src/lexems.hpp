@@ -110,7 +110,7 @@ static inline bool isStringQuote( char ch)
 }
 static inline bool isSpace( char ch)
 {
-	return ch == ' ' || ch == '\t' || ch == '\n';
+	return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r';
 }
 static inline void skipToEoln( char const*& src)
 {
