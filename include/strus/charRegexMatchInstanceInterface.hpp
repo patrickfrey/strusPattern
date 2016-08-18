@@ -57,6 +57,15 @@ public:
 			unsigned int patternid,
 			const std::string& name)=0;
 
+	/// \brief Get the value of a defined symbol
+	/// \param[in] patternid identifier of the pattern this symbol belongs to
+	/// \param[in] name name (value string) of the symbol
+	/// \return the symbol identifier or 0, if not defined
+	/// \remark this function is needed because symbols are most likely implicitely defined on demand by reference
+	virtual unsigned int getSymbol(
+			unsigned int patternid,
+			const std::string& name) const=0;
+
 	/// \brief Compile all patterns and symbols defined
 	/// \return true on success, false on error (error reported in error buffer)
 	/// \remark This function has to be called in order to make the patterns active, resp. before calling 'createContext()'

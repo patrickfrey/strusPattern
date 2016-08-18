@@ -232,6 +232,22 @@ public:
 		m_symidmap.push_back( symbolid);
 	}
 
+	unsigned int getSymbol( unsigned int patternid, const std::string& name) const
+	{
+		uint8_t symtabref;
+		IdSymTabMap::const_iterator yi = m_idsymtabmap.find( patternid);
+		if (yi == m_idsymtabmap.end())
+		{
+			return 0;
+		}
+		else
+		{
+			symtabref = yi->second;
+			uint32_t symidx = m_symtabmap[ symtabref-1]->get( name);
+			return symidx==0?0:m_symidmap[ symidx-1];
+		}
+	}
+
 	unsigned int symbolId( uint8_t symtabref, const char* keystr, std::size_t keylen) const
 	{
 		uint32_t symidx = m_symtabmap[ symtabref-1]->get( keystr, keylen);
@@ -621,7 +637,17 @@ public:
 			}
 			m_data.patternTable.defineSymbol( symbolid, patternid, name);
 		}
-		CATCH_ERROR_MAP( _TXT("failed to define term match regular expression pattern: %s"), *m_errorhnd);
+		CATCH_ERROR_MAP( _TXT("failed to define regular expression pattern symbol: %s"), *m_errorhnd);
+	}
+	virtual unsigned int getSymbol(
+			unsigned int patternid,
+			const std::string& name) const
+	{
+		try
+		{
+			return m_data.patternTable.getSymbol( patternid, name);
+		}
+		CATCH_ERROR_MAP_RETURN( _TXT("failed to retrieve regular expression pattern symbol: %s"), *m_errorhnd, 0);
 	}
 
 	virtual bool compile( const CharRegexMatchOptions& opts)

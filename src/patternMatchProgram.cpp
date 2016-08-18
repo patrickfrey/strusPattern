@@ -86,22 +86,19 @@ static JoinOperation joinOperation( const std::string& name)
 
 uint32_t PatternMatchProgramInstance::getOrCreateSymbol( unsigned int regexid, const std::string& name)
 {
-	enum {MOD=64};
-	static const char cd[MOD+1] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_-";
-	std::string symid;
-	for (;regexid > 0; regexid /= 64)
-	{
-		symid.push_back( cd[ regexid % 64]);
-	}
-	symid.push_back( '\r');
-	symid.append( name);
-	unsigned int id = m_identifierSymbolTab.get( symid);
+	unsigned int id = m_charRegexMatch->getSymbol( regexid, name);
 	if (!id)
 	{
-		id = m_identifierSymbolTab.getOrCreate( symid);
-		m_charRegexMatch->defineSymbol( id+MaxRegularExpressionNameId, regexid, name);
+		m_symbolRegexIdList.push_back( regexid);
+		id = m_symbolRegexIdList.size() + MaxRegularExpressionNameId;
+		m_charRegexMatch->defineSymbol( id, regexid, name);
 	}
-	return id+MaxRegularExpressionNameId;
+	return id;
+}
+
+const char* PatternMatchProgramInstance::getSymbolRegexId( unsigned int id) const
+{
+	return m_regexNameSymbolTab.key( m_symbolRegexIdList[ id - MaxRegularExpressionNameId -1]);
 }
 
 void PatternMatchProgramInstance::loadExpressionNode( const std::string& name, char const*& si)
@@ -466,6 +463,18 @@ const CharRegexMatchInstanceInterface* PatternMatchProgramInstance::getCharRegex
 const TokenPatternMatchInstanceInterface* PatternMatchProgramInstance::getTokenPatternMatchInstance() const
 {
 	return m_tokenPatternMatch.get();
+}
+
+const char* PatternMatchProgramInstance::tokenName( unsigned int id) const
+{
+	if (id < MaxRegularExpressionNameId)
+	{
+		return m_regexNameSymbolTab.key( id);
+	}
+	else
+	{
+		return getSymbolRegexId( id);
+	}
 }
 
 PatternMatchProgramInstanceInterface* PatternMatchProgram::createInstance() const
