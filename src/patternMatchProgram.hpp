@@ -58,8 +58,10 @@ private:
 	void loadOption( char const*& si);
 	void loadExpression( char const*& si);
 	void loadExpressionNode( const std::string& name, char const*& si);
+	uint32_t getOrCreateSymbol( unsigned int regexid, const std::string& name);
 
 private:
+	enum {SymbolOffset=(1<<31)};
 	ErrorBufferInterface* m_errorhnd;
 	std::vector<std::string> m_tokenPatternMatchOptionNames;
 	std::vector<std::string> m_charRegexMatchOptionNames;
@@ -69,6 +71,7 @@ private:
 	Reference<CharRegexMatchInstanceInterface> m_charRegexMatch;
 	SymbolTable m_regexNameSymbolTab;
 	SymbolTable m_patternNameSymbolTab;
+	SymbolTable m_identifierSymbolTab;
 	std::set<uint32_t> m_unresolvedPatternNameSet;
 };
 
