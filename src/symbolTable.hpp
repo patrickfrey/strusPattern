@@ -56,29 +56,43 @@ private:
 class SymbolTable
 {
 private:
+	struct Key
+	{
+		const char* str;
+		std::size_t len;
+
+		Key()
+			:str(0),len(0){}
+		Key( const char* str_, std::size_t len_)
+			:str(str_),len(len_){}
+		Key( const Key& o)
+			:str(o.str),len(o.len){}
+	};
 	struct MapKeyLess
 	{
-		bool operator()( char const *a, char const *b) const
+		bool operator()( const Key& a, const Key& b) const
 		{
-			return std::strcmp( a, b) < 0;
+			if (a.len < b.len) return true;
+			if (a.len > b.len) return false;
+			return std::memcmp( a.str, b.str, a.len) < 0;
 		}
 	};
 	struct MapKeyEqual
 	{
-		bool operator()( char const *a, char const *b) const
+		bool operator()( const Key& a, const Key& b) const
 		{
-			return std::strcmp( a, b) == 0;
+			return a.len == b.len && std::memcmp( a.str, b.str, a.len) == 0;
 		}
 	};
 	struct HashFunc{
-		int operator()( const char * str)const
+		int operator()( const Key& key)const
 		{
-			return utils::Crc32::calc( str);
+			return utils::Crc32::calc( key.str, key.len);
 		}
 	};
 
-	typedef boost::unordered_map<const char*,uint32_t,HashFunc,MapKeyEqual> Map;
-	typedef boost::unordered_map<const char*,uint32_t,HashFunc,MapKeyEqual>::const_iterator const_iterator;
+	typedef boost::unordered_map<Key,uint32_t,HashFunc,MapKeyEqual> Map;
+	typedef boost::unordered_map<Key,uint32_t,HashFunc,MapKeyEqual>::const_iterator const_iterator;
 
 public:
 	SymbolTable(){}
