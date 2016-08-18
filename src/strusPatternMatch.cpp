@@ -101,6 +101,7 @@ static void printUsage()
 	std::cout << "    " << _TXT("Specify the character set encoding of all files to process as <ENC>") << std::endl;
 	std::cout << "-e|--expression <EXP>" << std::endl;
 	std::cout << "    " << _TXT("Define a selection expression <EXP> for the content to process") << std::endl;
+	std::cout << "    " << _TXT("  (default if nothing specified is \"//()\"") << std::endl;
 	std::cout << "-H|--markup <NAME>" << std::endl;
 	std::cout << "    " << _TXT("Output the content with markups of the rules or variables with name <NAME>") << std::endl;
 	std::cout << "-Z|--marker <MRK>" << std::endl;

@@ -378,10 +378,19 @@ public:
 				}
 			}
 			unsigned int patternid = patternDef.id();
-			MatchEvent matchEvent( patternid, patternDef.level(), patternDef.posbind(), (uint32_t)from, (uint32_t)(to-from));
+			if (patternDef.symtabref())
+			{
+				unsigned int symid = THIS->m_data->patternTable.symbolId( patternDef.symtabref(), THIS->m_src + from, (uint32_t)(to-from));
+				if (symid) patternid = symid;
+			}
+			MatchEvent matchEvent( patternDef.id(), patternDef.level(), patternDef.posbind(), (uint32_t)from, (uint32_t)(to-from));
 			if (THIS->m_matchEventAr.empty())
 			{
 				THIS->m_matchEventAr.push_back( matchEvent);
+				if (patternid != patternDef.id())
+				{
+					THIS->m_matchEventAr.push_back( MatchEvent( patternid, patternDef.level(), patternDef.posbind(), (uint32_t)from, (uint32_t)(to-from)));
+				}
 			}
 			else
 			{
@@ -423,16 +432,34 @@ public:
 					}
 				}
 				// Insert the new element with ascending order of origpos
-				THIS->m_matchEventAr.resize( THIS->m_matchEventAr.size()+1);
-				mi = THIS->m_matchEventAr.rbegin();
-				me = THIS->m_matchEventAr.rend();
-				std::vector<MatchEvent>::reverse_iterator prev_mi = mi;
-				for (++mi; mi != me && mi->origpos > matchEvent.origpos; prev_mi=mi++)
+				if (patternid == patternDef.id())
 				{
-					*prev_mi = *mi;
+					THIS->m_matchEventAr.resize( THIS->m_matchEventAr.size() + 1);
+					mi = THIS->m_matchEventAr.rbegin();
+					me = THIS->m_matchEventAr.rend();
+					std::vector<MatchEvent>::reverse_iterator prev_mi = mi;
+					for (++mi; mi != me && mi->origpos > matchEvent.origpos; prev_mi=mi++)
+					{
+						*prev_mi = *mi;
+					}
+					--mi;
+					*mi = matchEvent;
 				}
-				--mi;
-				*mi = matchEvent;
+				else
+				{
+					THIS->m_matchEventAr.resize( THIS->m_matchEventAr.size() + 2);
+					mi = THIS->m_matchEventAr.rbegin();
+					me = THIS->m_matchEventAr.rend();
+					std::vector<MatchEvent>::reverse_iterator prev_mi = mi;
+					for (mi+=2; mi != me && mi->origpos > matchEvent.origpos; prev_mi=mi++)
+					{
+						*prev_mi = *mi;
+					}
+					--mi;
+					*mi = matchEvent;
+					--mi;
+					*mi = MatchEvent( patternid, patternDef.level(), patternDef.posbind(), (uint32_t)from, (uint32_t)(to-from));
+				}
 			}
 			return 0;
 		}
