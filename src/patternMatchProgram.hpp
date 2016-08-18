@@ -61,7 +61,7 @@ private:
 	uint32_t getOrCreateSymbol( unsigned int regexid, const std::string& name);
 
 private:
-	enum {SymbolOffset=(1<<31)};
+	enum {MaxRegularExpressionNameId=(1<<24)};
 	ErrorBufferInterface* m_errorhnd;
 	std::vector<std::string> m_tokenPatternMatchOptionNames;
 	std::vector<std::string> m_charRegexMatchOptionNames;

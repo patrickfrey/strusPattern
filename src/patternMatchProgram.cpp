@@ -99,9 +99,9 @@ uint32_t PatternMatchProgramInstance::getOrCreateSymbol( unsigned int regexid, c
 	if (!id)
 	{
 		id = m_identifierSymbolTab.getOrCreate( symid);
-		m_charRegexMatch->defineSymbol( id+SymbolOffset, regexid, name);
+		m_charRegexMatch->defineSymbol( id+MaxRegularExpressionNameId, regexid, name);
 	}
-	return id+SymbolOffset;
+	return id+MaxRegularExpressionNameId;
 }
 
 void PatternMatchProgramInstance::loadExpressionNode( const std::string& name, char const*& si)
@@ -317,6 +317,10 @@ bool PatternMatchProgramInstance::load( const std::string& source)
 					std::string regex;
 					do
 					{
+						if (nameid > MaxRegularExpressionNameId)
+						{
+							throw strus::runtime_error(_TXT("too many regular expression tokens defined: %u"), nameid);
+						}
 						(void)parse_OPERATOR(si);
 
 						//... Regex pattern def -> name : regex ;

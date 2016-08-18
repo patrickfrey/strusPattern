@@ -17,6 +17,7 @@ LOWORD ^1	: /\b\p{Ll}+\b/;
 
 Name		= sequence_imm( firstname=[0.75]CAPWORD, surname=CAPWORD | 2 );
 Name		= sequence_imm( firstname=[0.75]CAPWORD, surname=ABBREV | 2 );
+ExplName	= sequence_imm( firstname=CAPWORD "John", surname=ABBREV | 2 );
 Name		= sequence_imm( Name, surname=CAPWORD | 10 );
 Contact		= sequence_struct( SENT, Name, email=EMAIL | 10 );
 

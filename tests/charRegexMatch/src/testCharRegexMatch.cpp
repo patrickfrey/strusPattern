@@ -119,6 +119,7 @@ static const TestDef g_tests[32] =
 		},
 		"The world was not created about 5000 years ago as some creationists still believe in the 21th century.",
 		{
+			{2,1,0,3},
 			{10,1,0,3},
 			{4,1,0,17},
 			{2,2,4,5},
@@ -145,6 +146,7 @@ static const TestDef g_tests[32] =
 			{4,12,55,29},
 			{2,13,68,5},
 			{4,13,68,20},
+			{2,14,74,7},
 			{10,14,74,7},
 			{4,14,74,19},
 			{2,15,82,2},
