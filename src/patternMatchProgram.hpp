@@ -49,16 +49,14 @@ public:
 	virtual const CharRegexMatchInstanceInterface* getCharRegexMatchInstance() const;
 	virtual const TokenPatternMatchInstanceInterface* getTokenPatternMatchInstance() const;
 
-	virtual const char* tokenName( unsigned int id) const
-	{
-		return m_regexNameSymbolTab.key( id);
-	}
+	virtual const char* tokenName( unsigned int id) const;
 
 private:
 	void loadOption( char const*& si);
 	void loadExpression( char const*& si);
 	void loadExpressionNode( const std::string& name, char const*& si);
 	uint32_t getOrCreateSymbol( unsigned int regexid, const std::string& name);
+	const char* getSymbolRegexId( unsigned int id) const;
 
 private:
 	enum {MaxRegularExpressionNameId=(1<<24)};
@@ -71,7 +69,7 @@ private:
 	Reference<CharRegexMatchInstanceInterface> m_charRegexMatch;
 	SymbolTable m_regexNameSymbolTab;
 	SymbolTable m_patternNameSymbolTab;
-	SymbolTable m_identifierSymbolTab;
+	std::vector<uint32_t> m_symbolRegexIdList;
 	std::set<uint32_t> m_unresolvedPatternNameSet;
 };
 

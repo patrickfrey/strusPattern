@@ -41,9 +41,9 @@ public:
 	/// \return this token pattern match instance
 	virtual const TokenPatternMatchInstanceInterface* getTokenPatternMatchInstance() const=0;
 
-	/// \brief Get the name of the token from its id
+	/// \brief Get the name of the token or its symbol string from its id
 	/// \param[in] id of the token
-	/// \return name of the token, or 0 if not defined
+	/// \return name of the token or symbol string, or 0 if not defined
 	virtual const char* tokenName( unsigned int id) const=0;
 };
 
