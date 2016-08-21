@@ -131,6 +131,7 @@ typedef PodStructTableBase<LinkedTrigger,uint32_t,LinkedTriggerTableFreeListElem
 class EventTriggerTable
 {
 public:
+	~EventTriggerTable(){}
 	EventTriggerTable();
 	EventTriggerTable( const EventTriggerTable& o);
 
@@ -156,6 +157,7 @@ private:
 		uint32_t m_size;
 
 		TriggerInd() :m_eventAr(0),m_ar(0),m_allocsize(0),m_size(0){}
+		~TriggerInd();
 		void expand( uint32_t newallocsize);
 	};
 	TriggerInd m_triggerIndAr[ EventHashTabSize];

@@ -54,6 +54,18 @@ EventTriggerTable::EventTriggerTable( const EventTriggerTable& o)
 	}
 }
 
+EventTriggerTable::TriggerInd::~TriggerInd()
+{
+	if (m_eventAr)
+	{
+		std::free( m_eventAr);
+	}
+	if (m_ar)
+	{
+		std::free( m_ar);
+	}
+}
+
 enum {EventArrayMemoryAlignment=64};
 void EventTriggerTable::TriggerInd::expand( uint32_t newallocsize)
 {
@@ -64,6 +76,7 @@ void EventTriggerTable::TriggerInd::expand( uint32_t newallocsize)
 	uint32_t* war = (uint32_t*)utils::aligned_malloc( newallocsize * sizeof(uint32_t), EventArrayMemoryAlignment);
 	if (!war) throw std::bad_alloc();
 	std::memcpy( war, m_eventAr, m_size * sizeof(uint32_t));
+	if (m_eventAr) std::free( m_eventAr);
 	m_eventAr = war;
 	uint32_t* far = (uint32_t*)std::realloc( m_ar, newallocsize * sizeof(uint32_t));
 	if (!far) throw std::bad_alloc();
