@@ -42,6 +42,8 @@
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <memory>
 #include <limits>
 #include "hs_version.h"
@@ -108,6 +110,8 @@ static void printUsage()
 	std::cout << "    " << _TXT("Define a character sequence inserted before every result declaration") << std::endl;
 	std::cout << "-p|--program <PRG>" << std::endl;
 	std::cout << "    " << _TXT("Load program <PRG> with patterns to process") << std::endl;
+	std::cout << "-o|--output <FILE>" << std::endl;
+	std::cout << "    " << _TXT("Write output to file (thread id is inserted before '.', if threads specified)") << std::endl;
 	std::cout << "<inputfile>  : " << _TXT("input file or directory to process") << std::endl;
 }
 
@@ -385,8 +389,51 @@ private:
 class ThreadContext
 {
 public:
-	explicit ThreadContext( GlobalContext* globalContext_)
-		:m_globalContext(globalContext_){}
+	~ThreadContext(){}
+
+	ThreadContext( const ThreadContext& o)
+		:m_globalContext(o.m_globalContext),m_threadid(o.m_threadid),m_outputfile(o.m_outputfile),m_outputfilestream(o.m_outputfilestream),m_output(o.m_output)
+	{}
+
+	ThreadContext( GlobalContext* globalContext_, unsigned int threadid_, const std::string& outputfile_="")
+		:m_globalContext(globalContext_),m_threadid(threadid_),m_outputfilestream(),m_output(0)
+	{
+		if (outputfile_.empty())
+		{
+			m_output = &std::cout;
+		}
+		else
+		{
+			if (m_threadid > 0)
+			{
+				std::ostringstream namebuf;
+				char const* substpos = std::strchr( outputfile_.c_str(), '.');
+				if (substpos)
+				{
+					namebuf << std::string( outputfile_.c_str(), substpos-outputfile_.c_str())
+						<< m_threadid << substpos;
+				}
+				else
+				{
+					namebuf << outputfile_ << m_threadid;
+				}
+				m_outputfile = namebuf.str();
+			}
+			else
+			{
+				m_outputfile = outputfile_;
+			}
+			try
+			{
+				m_outputfilestream.reset( new std::ofstream( m_outputfile.c_str()));
+			}
+			catch (const std::exception& err)
+			{
+				throw strus::runtime_error(_TXT("failed to open file '%s' for output: %s"), m_outputfile.c_str(), err.what());
+			}
+			m_output = m_outputfilestream.get();
+		}
+	}
 
 	struct PositionInfo
 	{
@@ -472,11 +519,12 @@ public:
 		std::vector<strus::stream::TokenPatternMatchResult> results = mt->fetchResults();
 		if (m_globalContext->markups().empty())
 		{
-			printResults( std::cout, segmentposmap, results, source);
+			(*m_output) << "# " << filename << ":" << std::endl;
+			printResults( *m_output, segmentposmap, results, source);
 		}
 		else
 		{
-			markupResults( std::cout, results, documentClass, content, segmenterInstance);
+			markupResults( *m_output, results, documentClass, content, segmenterInstance);
 		}
 	}
 
@@ -577,6 +625,10 @@ public:
 
 private:
 	GlobalContext* m_globalContext;
+	unsigned int m_threadid;
+	std::string m_outputfile;
+	strus::utils::SharedPtr<std::ofstream> m_outputfilestream;
+	std::ostream* m_output;
 };
 
 
@@ -587,6 +639,7 @@ int main( int argc, const char* argv[])
 	{
 		bool doExit = false;
 		int argi = 1;
+		std::string outputfile;
 		std::string fileext;
 		std::string mimetype;
 		std::string encoding;
@@ -735,6 +788,23 @@ int main( int argc, const char* argv[])
 					throw strus::runtime_error( _TXT("number of threafs option --threads is 0"));
 				}
 			}
+			else if (0==std::strcmp( argv[argi], "-o") || 0==std::strcmp( argv[argi], "--output"))
+			{
+				if (argi == argc || argv[argi+1][0] == '-')
+				{
+					throw strus::runtime_error( _TXT("no argument given to option --output"));
+				}
+				++argi;
+				if (!outputfile.empty())
+				{
+					throw strus::runtime_error( _TXT("output file option --output specified twice"));
+				}
+				outputfile = argv[argi];
+				if (outputfile.empty())
+				{
+					throw strus::runtime_error( _TXT("output file option --output argument is empty"));
+				}
+			}
 			else if (argv[argi][0] == '-' && argv[argi][1] == '-' && !argv[argi][2])
 			{
 				break;
@@ -824,7 +894,7 @@ int main( int argc, const char* argv[])
 			std::vector<ThreadContext> ctxar;
 			for (unsigned int ti=0; ti<nofThreads; ++ti)
 			{
-				ctxar.push_back( ThreadContext( &globalContext));
+				ctxar.push_back( ThreadContext( &globalContext, ti+1, outputfile));
 			}
 			{
 				boost::thread_group tgroup;
@@ -837,7 +907,7 @@ int main( int argc, const char* argv[])
 		}
 		else
 		{
-			ThreadContext ctx( &globalContext);
+			ThreadContext ctx( &globalContext, 0, outputfile);
 			ctx.run();
 		}
 		if (!globalContext.errors().empty())
