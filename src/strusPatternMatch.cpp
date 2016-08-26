@@ -333,9 +333,9 @@ public:
 
 	void fetchError()
 	{
-		boost::mutex::scoped_lock lock( m_mutex);
 		if (g_errorBuffer->hasError())
 		{
+			boost::mutex::scoped_lock lock( m_mutex);
 			m_errors.push_back( g_errorBuffer->fetchError());
 		}
 	}
