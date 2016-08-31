@@ -933,7 +933,10 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 
 void StateMachine::defineDisposeRule( uint32_t pos, uint32_t ruleidx)
 {
-	if (pos < m_curpos) throw strus::runtime_error(_TXT("illegal set of dispose rule"));
+	if (pos < m_curpos)
+	{
+		throw strus::runtime_error(_TXT("illegal definition of dispose rule at position %u (smaller than current %u)"), pos, m_curpos);
+	}
 	if (pos < m_curpos + DisposeWindowSize)
 	{
 		uint32_t widx = pos % DisposeWindowSize;
