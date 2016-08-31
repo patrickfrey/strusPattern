@@ -52,9 +52,19 @@ public:
 	virtual const char* tokenName( unsigned int id) const;
 
 private:
+	struct SubExpressionInfo
+	{
+		explicit SubExpressionInfo( unsigned int minrange_=0)
+			:minrange(minrange_){}
+		SubExpressionInfo( const SubExpressionInfo& o)
+			:minrange(o.minrange){}
+
+		unsigned int minrange;
+	};
+
 	void loadOption( char const*& si);
-	void loadExpression( char const*& si);
-	void loadExpressionNode( const std::string& name, char const*& si);
+	void loadExpression( char const*& si, SubExpressionInfo& exprinfo);
+	void loadExpressionNode( const std::string& name, char const*& si, SubExpressionInfo& exprinfo);
 	uint32_t getOrCreateSymbol( unsigned int regexid, const std::string& name);
 	const char* getSymbolRegexId( unsigned int id) const;
 

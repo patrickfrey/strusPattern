@@ -951,7 +951,10 @@ void StateMachine::defineDisposeRule( uint32_t pos, uint32_t ruleidx)
 
 void StateMachine::setCurrentPos( uint32_t pos)
 {
-	if (pos < m_curpos) throw strus::runtime_error(_TXT("illegal set of current pos (positions not ascending)"));
+	if (pos < m_curpos)
+	{
+		throw strus::runtime_error(_TXT("illegal definition of current pos (positions not ascending: %u ... %u)"), m_curpos, pos);
+	}
 	if (m_curpos == pos) return;
 #ifdef STRUS_LOWLEVEL_DEBUG
 	int disposeCount = 0;
@@ -1033,6 +1036,13 @@ static bool triggerDefNeedsInstall( const TriggerDef& triggerDef, const ActionSl
 void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& programTrigger, const EventData& data, EventStructList& followList, DisposeRuleList& disposeRuleList)
 {
 	const Program& program = (*m_programTable)[ programTrigger.programidx];
+	if (data.ordpos + program.positionRange < m_curpos)
+	{
+#ifdef STRUS_LOWLEVEL_DEBUG
+		std::cout << "failed to install program of rule that rule cannot match anymore because of expired maximum position " << (data.ordpos + program.positionRange) << std::endl;
+#endif
+		return; /*rule cannot match anymore because of expired maximum position*/
+	}
 	uint32_t ruleidx = createRule( data.ordpos + program.positionRange);
 	Rule& rule = m_ruleTable[ ruleidx];
 #ifdef STRUS_LOWLEVEL_DEBUG
