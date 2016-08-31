@@ -101,10 +101,13 @@ const char* PatternMatchProgramInstance::getSymbolRegexId( unsigned int id) cons
 	return m_regexNameSymbolTab.key( m_symbolRegexIdList[ id - MaxRegularExpressionNameId -1]);
 }
 
-void PatternMatchProgramInstance::loadExpressionNode( const std::string& name, char const*& si)
+void PatternMatchProgramInstance::loadExpressionNode( const std::string& name, char const*& si, SubExpressionInfo& exprinfo)
 {
+	exprinfo.minrange = 0;
 	if (isOpenOvalBracket( *si))
 	{
+		JoinOperation operation = joinOperation( name);
+
 		unsigned int cardinality = 0;
 		unsigned int range = 0;
 		unsigned int nofArguments = 0;
@@ -118,7 +121,44 @@ void PatternMatchProgramInstance::loadExpressionNode( const std::string& name, c
 		else do
 		{
 			(void)parse_OPERATOR( si);
-			loadExpression( si);
+			SubExpressionInfo argexprinfo;
+			loadExpression( si, argexprinfo);
+			switch (operation)
+			{
+				case TokenPatternMatchInstanceInterface::OpSequence:
+					exprinfo.minrange += argexprinfo.minrange;
+					break;
+				case TokenPatternMatchInstanceInterface::OpSequenceImm:
+					exprinfo.minrange += argexprinfo.minrange;
+					break;
+				case TokenPatternMatchInstanceInterface::OpSequenceStruct:
+					if (nofArguments)
+					{
+						exprinfo.minrange += argexprinfo.minrange;
+					}
+					break;
+				case TokenPatternMatchInstanceInterface::OpWithin:
+					exprinfo.minrange += argexprinfo.minrange;
+					break;
+				case TokenPatternMatchInstanceInterface::OpWithinStruct:
+					if (nofArguments)
+					{
+						exprinfo.minrange += argexprinfo.minrange;
+					}
+					break;
+				case TokenPatternMatchInstanceInterface::OpAny:
+					if (nofArguments == 0 || exprinfo.minrange < exprinfo.minrange)
+					{
+						exprinfo.minrange = argexprinfo.minrange;
+					}
+					break;
+				case TokenPatternMatchInstanceInterface::OpAnd:
+					if (argexprinfo.minrange > exprinfo.minrange)
+					{
+						exprinfo.minrange = argexprinfo.minrange;
+					}
+					break;
+			}
 			++nofArguments;
 			if (isOr( *si) || isExp( *si))
 			{
@@ -158,7 +198,34 @@ void PatternMatchProgramInstance::loadExpressionNode( const std::string& name, c
 			throw strus::runtime_error(_TXT("close bracket ')' expexted at end of join operation expression"));
 		}
 		(void)parse_OPERATOR( si);
-		JoinOperation operation = joinOperation( name);
+		switch (operation)
+		{
+			case TokenPatternMatchInstanceInterface::OpSequenceImm:
+				if (range == 0)
+				{
+					range = exprinfo.minrange;
+				}
+				else if (range < exprinfo.minrange)
+				{
+					throw strus::runtime_error(_TXT("rule cannot match in such a within such a small position range span: %u (required %u)"), range, exprinfo.minrange);
+				}
+				break;
+			case TokenPatternMatchInstanceInterface::OpSequence:
+			case TokenPatternMatchInstanceInterface::OpSequenceStruct:
+			case TokenPatternMatchInstanceInterface::OpWithin:
+			case TokenPatternMatchInstanceInterface::OpWithinStruct:
+			case TokenPatternMatchInstanceInterface::OpAny:
+			case TokenPatternMatchInstanceInterface::OpAnd:
+				if (range == 0)
+				{
+					throw strus::runtime_error(_TXT("position range span must be specified for one of the operators %s"), "{'any','and','within','within_struct','sequence','sequence_struct'}");
+				}
+				else if (range < exprinfo.minrange)
+				{
+					throw strus::runtime_error(_TXT("rule cannot match in such a small position range span specified: %u (required %u)"), range, exprinfo.minrange);
+				}
+				break;
+		}
 		m_tokenPatternMatch->pushExpression( operation, nofArguments, range, cardinality);
 	}
 	else if (isAssign(*si))
@@ -187,10 +254,11 @@ void PatternMatchProgramInstance::loadExpressionNode( const std::string& name, c
 			}
 			m_tokenPatternMatch->pushPattern( name);
 		}
+		exprinfo.minrange = 1;
 	}
 }
 
-void PatternMatchProgramInstance::loadExpression( char const*& si)
+void PatternMatchProgramInstance::loadExpression( char const*& si, SubExpressionInfo& exprinfo)
 {
 	std::string name = parse_IDENTIFIER( si);
 	if (isAssign(*si))
@@ -212,12 +280,12 @@ void PatternMatchProgramInstance::loadExpression( char const*& si)
 			(void)parse_OPERATOR( si);
 		}
 		std::string op = parse_IDENTIFIER( si);
-		loadExpressionNode( op, si);
+		loadExpressionNode( op, si, exprinfo);
 		m_tokenPatternMatch->attachVariable( name, weight);
 	}
 	else
 	{
-		loadExpressionNode( name, si);
+		loadExpressionNode( name, si, exprinfo);
 	}
 }
 
@@ -370,7 +438,8 @@ bool PatternMatchProgramInstance::load( const std::string& source)
 					{
 						//... Token pattern def -> name = expression ;
 						(void)parse_OPERATOR(si);
-						loadExpression( si);
+						SubExpressionInfo exprinfo;
+						loadExpression( si, exprinfo);
 						std::set<uint32_t>::iterator ui = m_unresolvedPatternNameSet.find( nameid);
 						if (ui != m_unresolvedPatternNameSet.end())
 						{
