@@ -147,13 +147,13 @@ void PatternMatchProgramInstance::loadExpressionNode( const std::string& name, c
 					}
 					break;
 				case TokenPatternMatchInstanceInterface::OpAny:
-					if (nofArguments == 0 || exprinfo.minrange < exprinfo.minrange)
+					if (nofArguments == 0 || exprinfo.minrange < argexprinfo.minrange)
 					{
 						exprinfo.minrange = argexprinfo.minrange;
 					}
 					break;
 				case TokenPatternMatchInstanceInterface::OpAnd:
-					if (argexprinfo.minrange > exprinfo.minrange)
+					if (exprinfo.minrange > argexprinfo.minrange)
 					{
 						exprinfo.minrange = argexprinfo.minrange;
 					}
