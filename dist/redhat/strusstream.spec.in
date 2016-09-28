@@ -281,6 +281,9 @@ make test
 %{_includedir}/strus/base/*.hpp
 
 %changelog
+* Wed Sep 28 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.11.0-0.1
+- keep version number in sync with core
+
 * Sun Jul 10 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.10.1-0.1
 - adapt interface changes in analyzer (segmenter document markup interface)
 
