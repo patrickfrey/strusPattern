@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 #include "testUtils.hpp"
-#include "strus/stream/tokenPatternMatchResultItem.hpp"
+#include "strus/analyzer/tokenPatternMatchResultItem.hpp"
 #include <iostream>
 #include <sstream>
 #include <limits>
@@ -123,9 +123,9 @@ unsigned int utils::getUintValue( const char* arg)
 	return rt;
 }
 
-void utils::printResults( std::ostream& out, const std::vector<strus::SegmenterPosition>& segmentposmap, const std::vector<strus::stream::TokenPatternMatchResult>& results, const char* src)
+void utils::printResults( std::ostream& out, const std::vector<strus::SegmenterPosition>& segmentposmap, const std::vector<strus::analyzer::TokenPatternMatchResult>& results, const char* src)
 {
-	std::vector<strus::stream::TokenPatternMatchResult>::const_iterator
+	std::vector<strus::analyzer::TokenPatternMatchResult>::const_iterator
 		ri = results.begin(), re = results.end();
 	for (; ri != re; ++ri)
 	{
@@ -136,7 +136,7 @@ void utils::printResults( std::ostream& out, const std::vector<strus::SegmenterP
 		    << start_origsegsrcpos << "|" << ri->start_origpos() << ".."
 		    << end_origsegsrcpos << "|" << ri->end_origpos()
 		    << "]:";
-		std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
+		std::vector<strus::analyzer::TokenPatternMatchResultItem>::const_iterator
 			ei = ri->items().begin(), ee = ri->items().end();
 	
 		for (; ei != ee; ++ei)
@@ -159,10 +159,10 @@ void utils::printResults( std::ostream& out, const std::vector<strus::SegmenterP
 	}
 }
 
-void utils::printStatistics( std::ostream& out, const strus::stream::TokenPatternMatchStatistics& stats)
+void utils::printStatistics( std::ostream& out, const strus::analyzer::TokenPatternMatchStatistics& stats)
 {
 	out << "Statistics:" << std::endl;
-	std::vector<strus::stream::TokenPatternMatchStatistics::Item>::const_iterator
+	std::vector<strus::analyzer::TokenPatternMatchStatistics::Item>::const_iterator
 		gi = stats.items().begin(), ge = stats.items().end();
 	for (; gi != ge; ++gi)
 	{

@@ -467,20 +467,20 @@ static std::vector<strus::utils::Document> createRandomDocuments( unsigned int c
 	return rt;
 }
 
-static std::vector<strus::stream::TokenPatternMatchResult> processDocument( const strus::TokenPatternMatchInstanceInterface* ptinst, const strus::utils::Document& doc, std::map<std::string,double>& globalstats)
+static std::vector<strus::analyzer::TokenPatternMatchResult> processDocument( const strus::TokenPatternMatchInstanceInterface* ptinst, const strus::utils::Document& doc, std::map<std::string,double>& globalstats)
 {
 	std::auto_ptr<strus::TokenPatternMatchContextInterface> mt( ptinst->createContext());
 	std::vector<strus::utils::DocumentItem>::const_iterator di = doc.itemar.begin(), de = doc.itemar.end();
 	unsigned int didx = 0;
 	for (; di != de; ++di,++didx)
 	{
-		mt->putInput( strus::stream::PatternMatchToken( di->termid, di->pos, 0/*origseg*/, didx, 1));
+		mt->putInput( strus::analyzer::IdToken( di->termid, di->pos, 0/*origseg*/, didx, 1));
 		if (g_errorBuffer->hasError()) throw std::runtime_error("error matching rules");
 	}
-	std::vector<strus::stream::TokenPatternMatchResult> results = mt->fetchResults();
+	std::vector<strus::analyzer::TokenPatternMatchResult> results = mt->fetchResults();
 
-	strus::stream::TokenPatternMatchStatistics stats = mt->getStatistics();
-	std::vector<strus::stream::TokenPatternMatchStatistics::Item>::const_iterator
+	strus::analyzer::TokenPatternMatchStatistics stats = mt->getStatistics();
+	std::vector<strus::analyzer::TokenPatternMatchStatistics::Item>::const_iterator
 		li = stats.items().begin(), le = stats.items().end();
 	for (; li != le; ++li)
 	{
@@ -522,7 +522,7 @@ struct TreeMatchResult
 	std::size_t endidx;
 	unsigned int ordpos;
 	unsigned int ordsize;
-	std::vector<strus::stream::TokenPatternMatchResultItem> itemar;
+	std::vector<strus::analyzer::TokenPatternMatchResultItem> itemar;
 	float weight;
 
 	TreeMatchResult()
@@ -737,17 +737,17 @@ static TreeMatchResult matchTree( const TreeNode* tree, const strus::utils::Docu
 	}
 	if (rt.valid && tree->variable())
 	{
-		strus::stream::TokenPatternMatchResultItem item( tree->variable(), rt.ordpos, 0/*start_origseg*/, rt.startidx, 0/*end_origseg*/, rt.endidx, rt.weight);
+		strus::analyzer::TokenPatternMatchResultItem item( tree->variable(), rt.ordpos, 0/*start_origseg*/, rt.startidx, 0/*end_origseg*/, rt.endidx, rt.weight);
 		rt.itemar.push_back( item);
 	}
 	return rt;
 }
 
 
-static std::vector<strus::stream::TokenPatternMatchResult>
+static std::vector<strus::analyzer::TokenPatternMatchResult>
 	processDocumentAlt( const KeyTokenMap& keytokenmap, const std::vector<TreeNode*> treear, const strus::utils::Document& doc)
 {
-	std::vector<strus::stream::TokenPatternMatchResult> rt;
+	std::vector<strus::analyzer::TokenPatternMatchResult> rt;
 	std::vector<strus::utils::DocumentItem>::const_iterator di = doc.itemar.begin(), de = doc.itemar.end();
 	for (std::size_t didx=0; di != de; ++di,++didx)
 	{
@@ -766,7 +766,7 @@ static std::vector<strus::stream::TokenPatternMatchResult>
 			TreeMatchResult match = matchTree( candidateTree, doc, didx, endpos, ri->first);
 			if (match.valid)
 			{
-				strus::stream::TokenPatternMatchResult result( candidateTree->name(), match.ordpos, 0/*start_origseg*/, match.startidx, 0/*end_origseg*/, match.endidx, match.itemar);
+				strus::analyzer::TokenPatternMatchResult result( candidateTree->name(), match.ordpos, 0/*start_origseg*/, match.startidx, 0/*end_origseg*/, match.endidx, match.itemar);
 				rt.push_back( result);
 			}
 		}
@@ -784,7 +784,7 @@ static void printUsage( int argc, const char* argv[])
 	std::cerr << "<nofpatterns> = number of patterns to use" << std::endl;
 }
 
-bool compareResultItem( const strus::stream::TokenPatternMatchResultItem &res1, const strus::stream::TokenPatternMatchResultItem &res2)
+bool compareResultItem( const strus::analyzer::TokenPatternMatchResultItem &res1, const strus::analyzer::TokenPatternMatchResultItem &res2)
 {
 	int cmp = std::strcmp( res1.name(), res2.name());
 	if (cmp) return cmp < 0;
@@ -796,7 +796,7 @@ bool compareResultItem( const strus::stream::TokenPatternMatchResultItem &res1, 
 	return true;
 }
 
-bool compareResult( const strus::stream::TokenPatternMatchResult &res1, const strus::stream::TokenPatternMatchResult &res2)
+bool compareResult( const strus::analyzer::TokenPatternMatchResult &res1, const strus::analyzer::TokenPatternMatchResult &res2)
 {
 	int cmp = std::strcmp( res1.name(), res2.name());
 	if (cmp) return cmp < 0;
@@ -806,7 +806,7 @@ bool compareResult( const strus::stream::TokenPatternMatchResult &res1, const st
 	if (res1.start_origpos() != res2.start_origpos()) return res1.start_origpos() < res2.start_origpos();
 	if (res1.end_origpos() != res2.end_origpos()) return res1.end_origpos() < res2.end_origpos();
 	if (res1.items().size() != res2.items().size()) return res1.items().size() < res2.items().size();
-	std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
+	std::vector<strus::analyzer::TokenPatternMatchResultItem>::const_iterator
 		i1 = res1.items().begin(), e1 = res1.items().end(),
 		i2 = res2.items().begin(), e2 = res2.items().end();
 	for (; i1 != e1 && i2 != e2; ++i1,++i2)
@@ -816,12 +816,12 @@ bool compareResult( const strus::stream::TokenPatternMatchResult &res1, const st
 	return true;
 }
 
-static std::vector<strus::stream::TokenPatternMatchResult>
-	eliminateDuplicates( const std::vector<strus::stream::TokenPatternMatchResult>& results)
+static std::vector<strus::analyzer::TokenPatternMatchResult>
+	eliminateDuplicates( const std::vector<strus::analyzer::TokenPatternMatchResult>& results)
 {
-	std::vector<strus::stream::TokenPatternMatchResult> rt;
-	std::vector<strus::stream::TokenPatternMatchResult>::const_iterator ri = results.begin(), re = results.end();
-	const strus::stream::TokenPatternMatchResult* prev = 0;
+	std::vector<strus::analyzer::TokenPatternMatchResult> rt;
+	std::vector<strus::analyzer::TokenPatternMatchResult>::const_iterator ri = results.begin(), re = results.end();
+	const strus::analyzer::TokenPatternMatchResult* prev = 0;
 	for (; ri != re; ++ri)
 	{
 		if (!prev || !compareResult( *ri, *prev)) rt.push_back( *ri);
@@ -830,16 +830,16 @@ static std::vector<strus::stream::TokenPatternMatchResult>
 	return rt;
 }
 
-static std::vector<strus::stream::TokenPatternMatchResult>
-	sortResults( const std::vector<strus::stream::TokenPatternMatchResult>& results)
+static std::vector<strus::analyzer::TokenPatternMatchResult>
+	sortResults( const std::vector<strus::analyzer::TokenPatternMatchResult>& results)
 {
-	std::vector<strus::stream::TokenPatternMatchResult> rt;
-	std::vector<strus::stream::TokenPatternMatchResult>::const_iterator ri = results.begin(), re = results.end();
+	std::vector<strus::analyzer::TokenPatternMatchResult> rt;
+	std::vector<strus::analyzer::TokenPatternMatchResult>::const_iterator ri = results.begin(), re = results.end();
 	for (; ri != re; ++ri)
 	{
-		std::vector<strus::stream::TokenPatternMatchResultItem> items = ri->items();
+		std::vector<strus::analyzer::TokenPatternMatchResultItem> items = ri->items();
 		std::sort( items.begin(), items.end(), compareResultItem);
-		rt.push_back( strus::stream::TokenPatternMatchResult( ri->name(), ri->ordpos(), ri->start_origseg(), ri->start_origpos(), ri->end_origseg(), ri->end_origpos(), items));
+		rt.push_back( strus::analyzer::TokenPatternMatchResult( ri->name(), ri->ordpos(), ri->start_origseg(), ri->start_origpos(), ri->end_origseg(), ri->end_origpos(), items));
 	}
 	std::sort( rt.begin(), rt.end(), compareResult);
 	return rt;
@@ -850,11 +850,11 @@ static std::vector<strus::stream::TokenPatternMatchResult>
 // that StrusStream stops with the first match (non generating all possible solutions).
 //
 #ifdef STRUS_TEST_RANDOM_EXPRESSION_TREE_COMPARE_RES_EXACT
-static bool compareResults( const std::vector<strus::stream::TokenPatternMatchResult>& results, const std::vector<strus::stream::TokenPatternMatchResult>& expectedResults)
+static bool compareResults( const std::vector<strus::analyzer::TokenPatternMatchResult>& results, const std::vector<strus::analyzer::TokenPatternMatchResult>& expectedResults)
 {
 	if (results.size() != expectedResults.size()) return false;
-	std::vector<strus::stream::TokenPatternMatchResult>::const_iterator ri = results.begin(), re = results.end();
-	std::vector<strus::stream::TokenPatternMatchResult>::const_iterator xi = expectedResults.begin(), xe = expectedResults.end();
+	std::vector<strus::analyzer::TokenPatternMatchResult>::const_iterator ri = results.begin(), re = results.end();
+	std::vector<strus::analyzer::TokenPatternMatchResult>::const_iterator xi = expectedResults.begin(), xe = expectedResults.end();
 	for (; xi != xe && ri != re; ++ri,++xi)
 	{
 		if (!compareResult( *ri, *xi)) return false;
@@ -862,10 +862,10 @@ static bool compareResults( const std::vector<strus::stream::TokenPatternMatchRe
 	return true;
 }
 #else
-static bool compareResults( const std::vector<strus::stream::TokenPatternMatchResult>& results, const std::vector<strus::stream::TokenPatternMatchResult>& expectedResults)
+static bool compareResults( const std::vector<strus::analyzer::TokenPatternMatchResult>& results, const std::vector<strus::analyzer::TokenPatternMatchResult>& expectedResults)
 {
-	std::vector<strus::stream::TokenPatternMatchResult>::const_iterator ri = results.begin(), re = results.end();
-	std::vector<strus::stream::TokenPatternMatchResult>::const_iterator xi = expectedResults.begin(), xe = expectedResults.end();
+	std::vector<strus::analyzer::TokenPatternMatchResult>::const_iterator ri = results.begin(), re = results.end();
+	std::vector<strus::analyzer::TokenPatternMatchResult>::const_iterator xi = expectedResults.begin(), xe = expectedResults.end();
 	std::set<std::string> set_res, set_exp;
 	for (; xi != xe; ++xi)
 	{
@@ -903,7 +903,7 @@ static unsigned int processDocuments( const strus::TokenPatternMatchInstanceInte
 #ifdef STRUS_LOWLEVEL_DEBUG
 		std::cout << "document " << di->tostring() << std::endl;
 #endif
-		std::vector<strus::stream::TokenPatternMatchResult>
+		std::vector<strus::analyzer::TokenPatternMatchResult>
 			results = eliminateDuplicates( sortResults( processDocument( ptinst, *di, stats)));
 
 		if (outputpath)
@@ -918,7 +918,7 @@ static unsigned int processDocuments( const strus::TokenPatternMatchInstanceInte
 
 			strus::writeFile( outputfile, out.str());
 		}
-		std::vector<strus::stream::TokenPatternMatchResult>
+		std::vector<strus::analyzer::TokenPatternMatchResult>
 			expectedResults = eliminateDuplicates( sortResults( processDocumentAlt( keytokenmap, treear, *di)));
 
 		if (outputpath)
@@ -1010,7 +1010,7 @@ int main( int argc, const char** argv)
 		createRules( ptinst.get(), &ctx, treear);
 		if (doOptimize)
 		{
-			ptinst->compile( strus::stream::TokenPatternMatchOptions());
+			ptinst->compile( strus::analyzer::TokenPatternMatchOptions());
 		}
 		if (g_errorBuffer->hasError())
 		{

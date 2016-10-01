@@ -11,6 +11,7 @@
 #define _STRUS_STREAM_TOKEN_MARKUP_IMPLEMENTATION_HPP_INCLUDED
 #include "strus/tokenMarkupContextInterface.hpp"
 #include "strus/tokenMarkupInstanceInterface.hpp"
+#include "strus/analyzer/tokenMarkup.hpp"
 
 namespace strus
 {
@@ -37,18 +38,18 @@ public:
 			std::size_t start_ofs,
 			const SegmenterPosition& end_segpos,
 			std::size_t end_ofs,
-			const TokenMarkup& markup,
+			const analyzer::TokenMarkup& markup,
 			unsigned int level);
 
 	virtual std::string markupDocument(
 			const SegmenterInstanceInterface* segmenter,
-			const DocumentClass& dclass,
+			const analyzer::DocumentClass& dclass,
 			const std::string& content) const;
 
 private:
 	static void writeOpenMarkup(
 			SegmenterMarkupContextInterface* markupdoc,
-			const SegmenterPosition& segpos, std::size_t ofs, const TokenMarkup& markup);
+			const SegmenterPosition& segpos, std::size_t ofs, const analyzer::TokenMarkup& markup);
 
 private:
 	struct MarkupElement
@@ -57,11 +58,11 @@ private:
 		std::size_t start_ofs;			///< segment byte offset of the start of the markup in the processed segment
 		SegmenterPosition end_segpos;		///< segment byte address of the end of the markup in the original document
 		std::size_t end_ofs;			///< segment byte offset of the end of the markup in the processed segment
-		TokenMarkup markup;			///< tag for markup in document
+		analyzer::TokenMarkup markup;		///< tag for markup in document
 		unsigned int level;			///< level deciding what markup superseds others when they are overlapping
 		unsigned int orderidx;			///< index to keep deterministic, stable ordering in sorted array
 
-		MarkupElement( SegmenterPosition start_segpos_, std::size_t start_ofs_, SegmenterPosition end_segpos_, std::size_t end_ofs_, const TokenMarkup& markup_, unsigned int level_, unsigned int orderidx_)
+		MarkupElement( SegmenterPosition start_segpos_, std::size_t start_ofs_, SegmenterPosition end_segpos_, std::size_t end_ofs_, const analyzer::TokenMarkup& markup_, unsigned int level_, unsigned int orderidx_)
 			:start_segpos(start_segpos_),start_ofs(start_ofs_),end_segpos(end_segpos_),end_ofs(end_ofs_),markup(markup_),level(level_),orderidx(orderidx_){}
 		MarkupElement( const MarkupElement& o)
 			:start_segpos(o.start_segpos),start_ofs(o.start_ofs),end_segpos(o.end_segpos),end_ofs(o.end_ofs),markup(o.markup),level(o.level),orderidx(o.orderidx){}

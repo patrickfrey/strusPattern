@@ -145,17 +145,17 @@ static unsigned int processDocument( const strus::TokenPatternMatchInstanceInter
 	unsigned int didx = 0;
 	for (; di != de; ++di,++didx)
 	{
-		mt->putInput( strus::stream::PatternMatchToken( di->termid, di->pos, 0/*segpos*/, didx, 1));
+		mt->putInput( strus::analyzer::IdToken( di->termid, di->pos, 0/*segpos*/, didx, 1));
 	}
 	if (g_errorBuffer->hasError())
 	{
 		throw std::runtime_error("error matching rules");
 	}
-	std::vector<strus::stream::TokenPatternMatchResult> results = mt->fetchResults();
+	std::vector<strus::analyzer::TokenPatternMatchResult> results = mt->fetchResults();
 	unsigned int nofMatches = results.size();
 
-	strus::stream::TokenPatternMatchStatistics stats = mt->getStatistics();
-	std::vector<strus::stream::TokenPatternMatchStatistics::Item>::const_iterator
+	strus::analyzer::TokenPatternMatchStatistics stats = mt->getStatistics();
+	std::vector<strus::analyzer::TokenPatternMatchStatistics::Item>::const_iterator
 		li = stats.items().begin(), le = stats.items().end();
 	for (; li != le; ++li)
 	{
@@ -166,7 +166,7 @@ static unsigned int processDocument( const strus::TokenPatternMatchInstanceInter
 #ifdef STRUS_LOWLEVEL_DEBUG
 	strus::utils::printResults( std::cout, results);
 	std::cout << "nof matches " << results.size();
-	strus::stream::TokenPatternMatchStatistics stats = mt->getStatistics();
+	strus::analyzer::TokenPatternMatchStatistics stats = mt->getStatistics();
 	strus::utils::printStatistics( std::cerr, stats);
 #endif
 	return nofMatches;
@@ -319,7 +319,7 @@ int main( int argc, const char** argv)
 		createRules( ptinst.get(), joinop, nofFeatures, nofPatterns);
 		if (doOpimize)
 		{
-			ptinst->compile( strus::stream::TokenPatternMatchOptions());
+			ptinst->compile( strus::analyzer::TokenPatternMatchOptions());
 		}
 		if (g_errorBuffer->hasError())
 		{

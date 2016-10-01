@@ -31,7 +31,7 @@ void TokenMarkupContext::putMarkup(
 		std::size_t start_ofs,
 		const SegmenterPosition& end_segpos,
 		std::size_t end_ofs,
-		const TokenMarkup& markup,
+		const analyzer::TokenMarkup& markup,
 		unsigned int level)
 {
 	try
@@ -41,13 +41,13 @@ void TokenMarkupContext::putMarkup(
 	CATCH_ERROR_MAP( _TXT("failed to put token markup in document: %s"), *m_errorhnd);
 }
 
-void TokenMarkupContext::writeOpenMarkup( SegmenterMarkupContextInterface* markupdoc, const SegmenterPosition& segpos, std::size_t ofs, const TokenMarkup& markup)
+void TokenMarkupContext::writeOpenMarkup( SegmenterMarkupContextInterface* markupdoc, const SegmenterPosition& segpos, std::size_t ofs, const analyzer::TokenMarkup& markup)
 {
 	if (!markup.name().empty())
 	{
 		markupdoc->putOpenTag( segpos, ofs, markup.name());
 	}
-	std::vector<TokenMarkup::Attribute>::const_iterator
+	std::vector<analyzer::TokenMarkup::Attribute>::const_iterator
 		ai = markup.attributes().begin(), ae = markup.attributes().end();
 	for (; ai != ae; ++ai)
 	{
@@ -57,7 +57,7 @@ void TokenMarkupContext::writeOpenMarkup( SegmenterMarkupContextInterface* marku
 
 std::string TokenMarkupContext::markupDocument(
 		const SegmenterInstanceInterface* segmenter,
-		const DocumentClass& dclass,
+		const analyzer::DocumentClass& dclass,
 		const std::string& content) const
 {
 	try
