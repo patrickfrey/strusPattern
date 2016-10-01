@@ -8,7 +8,8 @@
 /// \brief Implementation of detecting tokens defined as regular expressions on text
 /// \file "charRegexMatch.hpp"
 #include "charRegexMatch.hpp"
-#include "strus/stream/patternMatchToken.hpp"
+#include "strus/analyzer/idToken.hpp"
+#include "strus/analyzer/positionBind.hpp"
 #include "strus/charRegexMatchInstanceInterface.hpp"
 #include "strus/charRegexMatchContextInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
@@ -31,7 +32,7 @@
 #undef STRUS_LOWLEVEL_DEBUG
 
 using namespace strus;
-using namespace strus::stream;
+using namespace strus::analyzer;
 
 typedef unsigned long long unsigned_long_long;
 
@@ -44,14 +45,14 @@ public:
 		:m_expression()
 		,m_subexpref(0)
 		,m_id(0)
-		,m_posbind(CharRegexMatchInstanceInterface::BindContent)
+		,m_posbind(analyzer::BindContent)
 		,m_level(0)
 		,m_symtabref(0){}
 	PatternDef(
 			const std::string& expression_,
 			unsigned int subexpref_,
 			unsigned int id_,
-			CharRegexMatchInstanceInterface::PositionBind posbind_,
+			analyzer::PositionBind posbind_,
 			unsigned int level_,
 			unsigned int symtabref_=0)
 		:m_expression(expression_)
@@ -94,9 +95,9 @@ public:
 	{
 		return m_id;
 	}
-	CharRegexMatchInstanceInterface::PositionBind posbind() const
+	analyzer::PositionBind posbind() const
 	{
-		return (CharRegexMatchInstanceInterface::PositionBind)m_posbind;
+		return (analyzer::PositionBind)m_posbind;
 	}
 	unsigned int level() const
 	{
@@ -178,7 +179,7 @@ public:
 			const std::string& expression,
 			unsigned int resultIndex,
 			unsigned int level,
-			CharRegexMatchInstanceInterface::PositionBind posbind)
+			analyzer::PositionBind posbind)
 	{
 		unsigned int subexpref = 0;
 		if (resultIndex)
@@ -512,11 +513,11 @@ public:
 		}
 	}
 
-	virtual std::vector<stream::PatternMatchToken> match( const char* src, std::size_t srclen)
+	virtual std::vector<analyzer::IdToken> match( const char* src, std::size_t srclen)
 	{
 		try
 		{
-			std::vector<stream::PatternMatchToken> rt;
+			std::vector<analyzer::IdToken> rt;
 			unsigned int nofExpectedTokens = srclen / 4 + 10;
 			m_matchEventAr.reserve( nofExpectedTokens);
 			m_src = src;
@@ -545,18 +546,18 @@ public:
 			uint32_t origpos = 0;
 			for (; mi != me; ++mi)
 			{
-				switch ((CharRegexMatchInstanceInterface::PositionBind)mi->posbind)
+				switch ((analyzer::PositionBind)mi->posbind)
 				{
-					case CharRegexMatchInstanceInterface::BindContent:
+					case analyzer::BindContent:
 						ordpos = 1;
 						origpos = mi->origpos;
-						rt.push_back( stream::PatternMatchToken( mi->id, 1, 0/*origseg*/, mi->origpos, mi->origsize));
+						rt.push_back( analyzer::IdToken( mi->id, 1, 0/*origseg*/, mi->origpos, mi->origsize));
 						++mi;
 						goto EXITLOOP;
-					case CharRegexMatchInstanceInterface::BindSuccessor:
-						rt.push_back( stream::PatternMatchToken( mi->id, 1, 0/*origseg*/, mi->origpos, mi->origsize));
+					case analyzer::BindSuccessor:
+						rt.push_back( analyzer::IdToken( mi->id, 1, 0/*origseg*/, mi->origpos, mi->origsize));
 						break;
-					case CharRegexMatchInstanceInterface::BindPredecessor:
+					case analyzer::BindPredecessor:
 						break;
 				}
 			}
@@ -567,28 +568,28 @@ public:
 			}
 			for (; mi != me; ++mi)
 			{
-				switch ((CharRegexMatchInstanceInterface::PositionBind)mi->posbind)
+				switch ((analyzer::PositionBind)mi->posbind)
 				{
-					case CharRegexMatchInstanceInterface::BindContent:
+					case analyzer::BindContent:
 						if (mi->origpos > origpos)
 						{
 							origpos = mi->origpos;
 							++ordpos;
 						}
-						rt.push_back( stream::PatternMatchToken( mi->id, ordpos, 0/*origseg*/, mi->origpos, mi->origsize));
+						rt.push_back( analyzer::IdToken( mi->id, ordpos, 0/*origseg*/, mi->origpos, mi->origsize));
 						break;
-					case CharRegexMatchInstanceInterface::BindSuccessor:
-						rt.push_back( stream::PatternMatchToken( mi->id, ordpos+1, 0/*origseg*/, mi->origpos, mi->origsize));
+					case analyzer::BindSuccessor:
+						rt.push_back( analyzer::IdToken( mi->id, ordpos+1, 0/*origseg*/, mi->origpos, mi->origsize));
 						break;
-					case CharRegexMatchInstanceInterface::BindPredecessor:
-						rt.push_back( stream::PatternMatchToken( mi->id, ordpos, 0/*origseg*/, mi->origpos, mi->origsize));
+					case analyzer::BindPredecessor:
+						rt.push_back( analyzer::IdToken( mi->id, ordpos, 0/*origseg*/, mi->origpos, mi->origsize));
 						break;
 				}
 			}
 			m_matchEventAr.clear();
 			return rt;
 		}
-		CATCH_ERROR_MAP_RETURN( _TXT("failed to run pattern matching terms with regular expressions: %s"), *m_errorhnd, std::vector<stream::PatternMatchToken>());
+		CATCH_ERROR_MAP_RETURN( _TXT("failed to run pattern matching terms with regular expressions: %s"), *m_errorhnd, std::vector<analyzer::IdToken>());
 	}
 
 private:
@@ -614,7 +615,7 @@ public:
 			const std::string& expression,
 			unsigned int resultIndex,
 			unsigned int level,
-			PositionBind posbind)
+			analyzer::PositionBind posbind)
 	{
 		try
 		{

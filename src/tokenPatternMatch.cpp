@@ -12,8 +12,8 @@
 #include "utils.hpp"
 #include "errorUtils.hpp"
 #include "internationalization.hpp"
-#include "strus/stream/tokenPatternMatchResultItem.hpp"
-#include "strus/stream/tokenPatternMatchResult.hpp"
+#include "strus/analyzer/tokenPatternMatchResultItem.hpp"
+#include "strus/analyzer/tokenPatternMatchResult.hpp"
 #include "strus/tokenPatternMatchInstanceInterface.hpp"
 #include "strus/tokenPatternMatchContextInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
@@ -27,7 +27,7 @@
 #undef STRUS_LOWLEVEL_DEBUG
 
 using namespace strus;
-using namespace strus::stream;
+using namespace strus::analyzer;
 
 struct TokenPatternMatchData
 {
@@ -55,7 +55,7 @@ public:
 	virtual ~TokenPatternMatchContext()
 	{}
 
-	virtual void putInput( const PatternMatchToken& term)
+	virtual void putInput( const analyzer::IdToken& term)
 	{
 		try
 		{
@@ -103,11 +103,11 @@ public:
 		}
 	}
 
-	virtual std::vector<stream::TokenPatternMatchResult> fetchResults() const
+	virtual std::vector<analyzer::TokenPatternMatchResult> fetchResults() const
 	{
 		try
 		{
-			std::vector<stream::TokenPatternMatchResult> rt;
+			std::vector<analyzer::TokenPatternMatchResult> rt;
 			const StateMachine::ResultList& results = m_statemachine.results();
 			rt.reserve( results.size());
 			std::size_t ai = 0, ae = results.size();
@@ -124,10 +124,10 @@ public:
 			}
 			return rt;
 		}
-		CATCH_ERROR_MAP_RETURN( _TXT("failed to fetch pattern match result: %s"), *m_errorhnd, std::vector<stream::TokenPatternMatchResult>());
+		CATCH_ERROR_MAP_RETURN( _TXT("failed to fetch pattern match result: %s"), *m_errorhnd, std::vector<analyzer::TokenPatternMatchResult>());
 	}
 
-	virtual TokenPatternMatchStatistics getStatistics() const
+	virtual analyzer::TokenPatternMatchStatistics getStatistics() const
 	{
 		try
 		{
@@ -414,7 +414,7 @@ public:
 	}
 #endif
 
-	virtual bool compile( const stream::TokenPatternMatchOptions& opt)
+	virtual bool compile( const analyzer::TokenPatternMatchOptions& opt)
 	{
 		try
 		{
@@ -423,7 +423,7 @@ public:
 			printAutomatonStatistics();
 #endif
 			ProgramTable::OptimizeOptions popt;
-			stream::TokenPatternMatchOptions::const_iterator oi = opt.begin(), oe = opt.end();
+			analyzer::TokenPatternMatchOptions::const_iterator oi = opt.begin(), oe = opt.end();
 			for (; oi != oe; ++oi)
 			{
 				if (utils::caseInsensitiveEquals( oi->first, "stopwordOccurrenceFactor"))

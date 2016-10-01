@@ -18,8 +18,8 @@
 #include <new>
 
 using namespace strus;
-using namespace strus::stream;
 using namespace strus::parser;
+using namespace strus::analyzer;
 
 PatternMatchProgramInstance::PatternMatchProgramInstance( const TokenPatternMatchInterface* tpm, const CharRegexMatchInterface* crm, ErrorBufferInterface* errorhnd_)
 	:m_errorhnd(errorhnd_)
@@ -408,18 +408,18 @@ bool PatternMatchProgramInstance::load( const std::string& source)
 							}
 							(void)parse_OPERATOR(si);
 						}
-						CharRegexMatchInstanceInterface::PositionBind posbind = CharRegexMatchInstanceInterface::BindContent;
+						PositionBind posbind = BindContent;
 						if (isLeftArrow(si))
 						{
 							++si;
 							(void)parse_OPERATOR(si);
-							posbind = CharRegexMatchInstanceInterface::BindPredecessor;
+							posbind = BindPredecessor;
 						}
 						else if (isRightArrow(si))
 						{
 							++si;
 							(void)parse_OPERATOR(si);
-							posbind = CharRegexMatchInstanceInterface::BindSuccessor;
+							posbind = BindSuccessor;
 						}
 						m_charRegexMatch->definePattern(
 							nameid, regex, resultIndex, level, posbind);

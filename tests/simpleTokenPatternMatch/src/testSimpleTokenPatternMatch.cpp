@@ -12,7 +12,7 @@
 #include "strus/tokenPatternMatchInterface.hpp"
 #include "strus/tokenPatternMatchInstanceInterface.hpp"
 #include "strus/tokenPatternMatchContextInterface.hpp"
-#include "strus/stream/patternMatchToken.hpp"
+#include "strus/analyzer/idToken.hpp"
 #include "testUtils.hpp"
 #include <stdexcept>
 #include <iostream>
@@ -152,16 +152,16 @@ static void createPatterns( strus::TokenPatternMatchInstanceInterface* ptinst, c
 	}
 }
 
-static std::vector<strus::stream::TokenPatternMatchResult>
+static std::vector<strus::analyzer::TokenPatternMatchResult>
 	processDocument( strus::TokenPatternMatchInstanceInterface* ptinst, const Document& doc)
 {
-	std::vector<strus::stream::TokenPatternMatchResult> results;
+	std::vector<strus::analyzer::TokenPatternMatchResult> results;
 	std::auto_ptr<strus::TokenPatternMatchContextInterface> mt( ptinst->createContext());
 	std::vector<DocumentItem>::const_iterator di = doc.itemar.begin(), de = doc.itemar.end();
 	unsigned int didx = 0;
 	for (; di != de; ++di,++didx)
 	{
-		mt->putInput( strus::stream::PatternMatchToken( di->termid, di->pos, 0/*origseg*/, didx, 1));
+		mt->putInput( strus::analyzer::IdToken( di->termid, di->pos, 0/*origseg*/, didx, 1));
 		if (g_errorBuffer->hasError()) throw std::runtime_error("error matching rules");
 	}
 	results = mt->fetchResults();
@@ -169,7 +169,7 @@ static std::vector<strus::stream::TokenPatternMatchResult>
 #ifdef STRUS_LOWLEVEL_DEBUG
 	strus::utils::printResults( std::cout, std::vector<strus::SegmenterPosition>(), results);
 	std::cout << "nof matches " << results.size() << std::endl;
-	strus::stream::TokenPatternMatchStatistics stats = mt->getStatistics();
+	strus::analyzer::TokenPatternMatchStatistics stats = mt->getStatistics();
 	strus::utils::printStatistics( std::cerr, stats);
 #endif
 	return results;
@@ -241,7 +241,7 @@ int main( int argc, const char** argv)
 		std::auto_ptr<strus::TokenPatternMatchInstanceInterface> ptinst( pt->createInstance());
 		if (!ptinst.get()) throw std::runtime_error("failed to create pattern matcher instance");
 		createPatterns( ptinst.get(), testPatterns);
-		ptinst->compile( strus::stream::TokenPatternMatchOptions());
+		ptinst->compile( strus::analyzer::TokenPatternMatchOptions());
 
 		if (g_errorBuffer->hasError())
 		{
@@ -251,11 +251,11 @@ int main( int argc, const char** argv)
 		std::cerr << "starting rule evaluation ..." << std::endl;
 
 		// Evaluate results:
-		std::vector<strus::stream::TokenPatternMatchResult> 
+		std::vector<strus::analyzer::TokenPatternMatchResult> 
 			results = processDocument( ptinst.get(), doc);
 
 		// Verify results:
-		std::vector<strus::stream::TokenPatternMatchResult>::const_iterator
+		std::vector<strus::analyzer::TokenPatternMatchResult>::const_iterator
 			ri = results.begin(), re = results.end();
 
 		typedef std::pair<std::string,unsigned int> Match;

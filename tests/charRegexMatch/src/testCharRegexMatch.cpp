@@ -12,7 +12,7 @@
 #include "strus/charRegexMatchInterface.hpp"
 #include "strus/charRegexMatchInstanceInterface.hpp"
 #include "strus/charRegexMatchContextInterface.hpp"
-#include "strus/stream/patternMatchToken.hpp"
+#include "strus/analyzer/idToken.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
@@ -64,14 +64,14 @@ struct TestDef
 	ResultDef result[128];
 };
 
-static void compile( strus::CharRegexMatchInstanceInterface* ptinst, const PatternDef* par, const SymbolDef* sar, const strus::stream::CharRegexMatchOptions& opt)
+static void compile( strus::CharRegexMatchInstanceInterface* ptinst, const PatternDef* par, const SymbolDef* sar, const strus::analyzer::CharRegexMatchOptions& opt)
 {
 	std::size_t pi = 0;
 	for (; par[pi].expression; ++pi)
 	{
-		strus::CharRegexMatchInstanceInterface::PositionBind posbind = par[pi].haspos
-			? strus::CharRegexMatchInstanceInterface::BindContent
-			: strus::CharRegexMatchInstanceInterface::BindPredecessor;
+		strus::analyzer::PositionBind posbind = par[pi].haspos
+			? strus::analyzer::BindContent
+			: strus::analyzer::BindPredecessor;
 		ptinst->definePattern( par[pi].id, par[pi].expression, par[pi].resultIndex, par[pi].level, posbind);
 	}
 	for (pi=0; sar[pi].name; ++pi)
@@ -84,14 +84,14 @@ static void compile( strus::CharRegexMatchInstanceInterface* ptinst, const Patte
 	}
 }
 
-static std::vector<strus::stream::PatternMatchToken>
+static std::vector<strus::analyzer::IdToken>
 	match( strus::CharRegexMatchInstanceInterface* ptinst, const std::string& src)
 {
 	std::auto_ptr<strus::CharRegexMatchContextInterface> mt( ptinst->createContext());
-	std::vector<strus::stream::PatternMatchToken> rt = mt->match( src.c_str(), src.size());
+	std::vector<strus::analyzer::IdToken> rt = mt->match( src.c_str(), src.size());
 
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::vector<strus::stream::PatternMatchToken>::const_iterator
+	std::vector<strus::analyzer::IdToken>::const_iterator
 		ri = rt.begin(), re = rt.end();
 	for (; ri != re; ++ri)
 	{
@@ -197,15 +197,15 @@ int main( int argc, const char** argv)
 			std::auto_ptr<strus::CharRegexMatchInstanceInterface> ptinst( pt->createInstance());
 			if (!ptinst.get()) throw std::runtime_error("failed to create regular expression term matcher instance");
 
-			strus::stream::CharRegexMatchOptions opt;
+			strus::analyzer::CharRegexMatchOptions opt;
 			opt("DOTALL");
 			compile( ptinst.get(), g_tests[ti].patterns, g_tests[ti].symbols, opt);
 			if (g_errorBuffer->hasError())
 			{
 				throw std::runtime_error( "error building automaton for test");
 			}
-			std::vector<strus::stream::PatternMatchToken> result = match( ptinst.get(), g_tests[ti].src);
-			std::vector<strus::stream::PatternMatchToken>::const_iterator ri = result.begin(), re = result.end();
+			std::vector<strus::analyzer::IdToken> result = match( ptinst.get(), g_tests[ti].src);
+			std::vector<strus::analyzer::IdToken>::const_iterator ri = result.begin(), re = result.end();
 			std::size_t ridx=0;
 			const ResultDef* expected = g_tests[ti].result;
 			for (; ri != re && expected[ridx].origsize != 0; ++ridx,++ri)

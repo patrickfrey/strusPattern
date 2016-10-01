@@ -17,7 +17,8 @@
 #include "strus/versionAnalyzer.hpp"
 #include "strus/patternMatchProgramInstanceInterface.hpp"
 #include "strus/patternMatchProgramInterface.hpp"
-#include "strus/stream/patternMatchToken.hpp"
+#include "strus/analyzer/idToken.hpp"
+#include "strus/analyzer/documentClass.hpp"
 #include "strus/tokenPatternMatchInstanceInterface.hpp"
 #include "strus/tokenPatternMatchContextInterface.hpp"
 #include "strus/tokenPatternMatchInterface.hpp"
@@ -30,7 +31,6 @@
 #include "strus/segmenterInstanceInterface.hpp"
 #include "strus/segmenterInterface.hpp"
 #include "strus/documentClassDetectorInterface.hpp"
-#include "strus/documentClass.hpp"
 #include "errorUtils.hpp"
 #include "internationalization.hpp"
 #include "utils.hpp"
@@ -284,7 +284,7 @@ public:
 		}
 	}
 
-	strus::SegmenterContextInterface* createSegmenterContext( const std::string& content, strus::SegmenterInstanceInterface*& segmenter, strus::DocumentClass& documentClass) const
+	strus::SegmenterContextInterface* createSegmenterContext( const std::string& content, strus::SegmenterInstanceInterface*& segmenter, strus::analyzer::DocumentClass& documentClass) const
 	{
 		if (m_segmenter)
 		{
@@ -379,7 +379,7 @@ private:
 	std::auto_ptr<strus::TokenMarkupInstanceInterface> m_tokenMarkup;
 	std::map<std::string,int> m_markups;
 	std::string m_resultMarker;
-	strus::DocumentClass m_documentClass;
+	strus::analyzer::DocumentClass m_documentClass;
 	std::vector<std::string> m_errors;
 	std::vector<std::string> m_files;
 	std::vector<std::string>::const_iterator m_fileitr;
@@ -466,7 +466,7 @@ public:
 		std::auto_ptr<strus::TokenPatternMatchContextInterface> mt( m_globalContext->tokenPatternMatchInstance()->createContext());
 		std::auto_ptr<strus::CharRegexMatchContextInterface> crctx( m_globalContext->charRegexMatchInstance()->createContext());
 		strus::SegmenterInstanceInterface* segmenterInstance;
-		strus::DocumentClass documentClass;
+		strus::analyzer::DocumentClass documentClass;
 		std::auto_ptr<strus::SegmenterContextInterface> segmenter( m_globalContext->createSegmenterContext( content, segmenterInstance, documentClass));
 
 		segmenter->putInput( content.c_str(), content.size(), true);
@@ -489,12 +489,12 @@ public:
 #ifdef STRUS_LOWLEVEL_DEBUG
 				std::cerr << "processing segment " << id << " [" << std::string(segment,segmentsize) << "] at " << segmentpos << std::endl;
 #endif
-				std::vector<strus::stream::PatternMatchToken> crmatches = crctx->match( segment, segmentsize);
+				std::vector<strus::analyzer::IdToken> crmatches = crctx->match( segment, segmentsize);
 				if (crmatches.size() == 0 && g_errorBuffer->hasError())
 				{
 					throw std::runtime_error( "failed to scan for tokens with char regex match automaton");
 				}
-				std::vector<strus::stream::PatternMatchToken>::iterator ti = crmatches.begin(), te = crmatches.end();
+				std::vector<strus::analyzer::IdToken>::iterator ti = crmatches.begin(), te = crmatches.end();
 				for (; ti != te; ++ti)
 				{
 					ti->setOrigseg( segmentidx);
@@ -516,7 +516,7 @@ public:
 			throw std::runtime_error("error matching rules");
 		}
 		std::cout << m_globalContext->resultMarker() << filename << ":" << std::endl;
-		std::vector<strus::stream::TokenPatternMatchResult> results = mt->fetchResults();
+		std::vector<strus::analyzer::TokenPatternMatchResult> results = mt->fetchResults();
 		if (m_globalContext->markups().empty())
 		{
 			(*m_output) << "# " << filename << ":" << std::endl;
@@ -528,16 +528,16 @@ public:
 		}
 	}
 
-	void printResults( std::ostream& out, const std::vector<PositionInfo>& segmentposmap, const std::vector<strus::stream::TokenPatternMatchResult>& results, const std::string& src)
+	void printResults( std::ostream& out, const std::vector<PositionInfo>& segmentposmap, const std::vector<strus::analyzer::TokenPatternMatchResult>& results, const std::string& src)
 	{
-		std::vector<strus::stream::TokenPatternMatchResult>::const_iterator
+		std::vector<strus::analyzer::TokenPatternMatchResult>::const_iterator
 			ri = results.begin(), re = results.end();
 		for (; ri != re; ++ri)
 		{
 			std::size_t start_segpos = segmentposmap[ ri->start_origseg()].segpos;
 			std::size_t end_segpos = segmentposmap[ ri->end_origseg()].segpos;
 			out << ri->name() << " [" << ri->ordpos() << ", " << start_segpos << "|" << ri->start_origpos() << " .. " << end_segpos << "|" << ri->end_origpos() << "]:";
-			std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
+			std::vector<strus::analyzer::TokenPatternMatchResultItem>::const_iterator
 				ei = ri->items().begin(), ee = ri->items().end();
 
 			for (; ei != ee; ++ei)
@@ -555,13 +555,13 @@ public:
 	}
 
 	void markupResults( std::ostream& out,
-				const std::vector<strus::stream::TokenPatternMatchResult>& results,
-				const strus::DocumentClass& documentClass, const std::string& src,
+				const std::vector<strus::analyzer::TokenPatternMatchResult>& results,
+				const strus::analyzer::DocumentClass& documentClass, const std::string& src,
 				const strus::SegmenterInstanceInterface* segmenterInstance)
 	{
 		std::auto_ptr<strus::TokenMarkupContextInterface> markupContext( m_globalContext->createTokenMarkupContext());
 
-		std::vector<strus::stream::TokenPatternMatchResult>::const_iterator
+		std::vector<strus::analyzer::TokenPatternMatchResult>::const_iterator
 			ri = results.begin(), re = results.end();
 		for (; ri != re; ++ri)
 		{
@@ -571,9 +571,9 @@ public:
 				markupContext->putMarkup(
 					ri->start_origseg(), ri->start_origpos(),
 					ri->end_origseg(), ri->end_origpos(),
-					strus::TokenMarkup( ri->name()), mi->second);
+					strus::analyzer::TokenMarkup( ri->name()), mi->second);
 			}
-			std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
+			std::vector<strus::analyzer::TokenPatternMatchResultItem>::const_iterator
 				ei = ri->items().begin(), ee = ri->items().end();
 
 			for (; ei != ee; ++ei)
@@ -584,7 +584,7 @@ public:
 					markupContext->putMarkup(
 						ei->start_origseg(), ei->start_origpos(),
 						ei->end_origseg(), ei->end_origpos(),
-						strus::TokenMarkup( ri->name()), mi->second);
+						strus::analyzer::TokenMarkup( ri->name()), mi->second);
 				}
 			}
 		}

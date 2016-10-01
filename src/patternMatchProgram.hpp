@@ -14,8 +14,8 @@
 #include "strus/patternMatchProgramInstanceInterface.hpp"
 #include "strus/tokenPatternMatchInstanceInterface.hpp"
 #include "strus/tokenPatternMatchInterface.hpp"
-#include "strus/stream/charRegexMatchOptions.hpp"
-#include "strus/stream/tokenPatternMatchOptions.hpp"
+#include "strus/analyzer/charRegexMatchOptions.hpp"
+#include "strus/analyzer/tokenPatternMatchOptions.hpp"
 #include "strus/charRegexMatchInstanceInterface.hpp"
 #include "strus/charRegexMatchInterface.hpp"
 #include "symbolTable.hpp"
@@ -73,8 +73,8 @@ private:
 	ErrorBufferInterface* m_errorhnd;
 	std::vector<std::string> m_tokenPatternMatchOptionNames;
 	std::vector<std::string> m_charRegexMatchOptionNames;
-	stream::TokenPatternMatchOptions m_tokenPatternMatchOptions;
-	stream::CharRegexMatchOptions m_charRegexMatchOptions;
+	analyzer::TokenPatternMatchOptions m_tokenPatternMatchOptions;
+	analyzer::CharRegexMatchOptions m_charRegexMatchOptions;
 	Reference<TokenPatternMatchInstanceInterface> m_tokenPatternMatch;
 	Reference<CharRegexMatchInstanceInterface> m_charRegexMatch;
 	SymbolTable m_regexNameSymbolTab;

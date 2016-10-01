@@ -10,8 +10,8 @@
 #ifndef _STRUS_STREAM_TEST_UTILS_HPP_INCLUDED
 #define _STRUS_STREAM_TEST_UTILS_HPP_INCLUDED
 #include "strus/tokenPatternMatchInstanceInterface.hpp"
-#include "strus/stream/tokenPatternMatchResult.hpp"
-#include "strus/stream/tokenPatternMatchStatistics.hpp"
+#include "strus/analyzer/tokenPatternMatchResult.hpp"
+#include "strus/analyzer/tokenPatternMatchStatistics.hpp"
 #include "strus/segmenterContextInterface.hpp"
 #include <vector>
 #include <string>
@@ -63,8 +63,8 @@ typedef strus::TokenPatternMatchInstanceInterface::JoinOperation JoinOperation;
 JoinOperation joinOperation( const char* joinopstr);
 
 unsigned int getUintValue( const char* arg);
-void printResults( std::ostream& out, const std::vector<strus::SegmenterPosition>& segmentposmap, const std::vector<strus::stream::TokenPatternMatchResult>& results, const char* src=0);
-void printStatistics( std::ostream& out, const strus::stream::TokenPatternMatchStatistics& stats);
+void printResults( std::ostream& out, const std::vector<strus::SegmenterPosition>& segmentposmap, const std::vector<strus::analyzer::TokenPatternMatchResult>& results, const char* src=0);
+void printStatistics( std::ostream& out, const strus::analyzer::TokenPatternMatchStatistics& stats);
 
 }} //namespace
 #endif
