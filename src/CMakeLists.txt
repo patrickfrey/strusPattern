@@ -43,6 +43,10 @@ target_link_libraries( local_rulematch strus_base compactnodetrie_static hs ${Bo
 add_library( strus_stream SHARED libstrus_stream.cpp )
 target_link_libraries( strus_stream local_rulematch strus_base  )
 
+add_library( modstrus_analyzer_stream  MODULE  modstrus_analyzer_stream.cpp )
+set_target_properties( modstrus_analyzer_stream PROPERTIES PREFIX "")
+target_link_libraries( modstrus_analyzer_stream strus_module_analyzer strus_stream )
+
 set_target_properties(
     strus_stream
     PROPERTIES
@@ -61,6 +65,10 @@ target_link_libraries( strusPatternMatcher  strus_segmenter_textwolf strus_segme
 # ------------------------------
 install( TARGETS strus_stream
            LIBRARY DESTINATION ${LIB_INSTALL_DIR}/strus )
+
+install( TARGETS modstrus_analyzer_stream
+           LIBRARY DESTINATION ${LIB_INSTALL_DIR}/strus/modules
+	   RUNTIME DESTINATION bin )
 
 install( TARGETS strusPatternMatcher
 	   RUNTIME DESTINATION bin )

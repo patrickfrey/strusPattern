@@ -188,7 +188,7 @@ int main( int argc, const char** argv)
 			std::cerr << "too many arguments" << std::endl;
 			return 1;
 		}
-		std::auto_ptr<strus::PatternLexerInterface> pt( strus::createPatternLexer_standard( g_errorBuffer));
+		std::auto_ptr<strus::PatternLexerInterface> pt( strus::createPatternLexer_stream( g_errorBuffer));
 		if (!pt.get()) throw std::runtime_error("failed to create regular expression term matcher");
 		std::size_t ti = 0;
 		for (; g_tests[ti].src; ++ti)

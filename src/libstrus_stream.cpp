@@ -20,7 +20,7 @@
 using namespace strus;
 static bool g_intl_initialized = false;
 
-DLL_PUBLIC PatternMatcherInterface* strus::createPatternMatcher_standard( ErrorBufferInterface* errorhnd)
+DLL_PUBLIC PatternMatcherInterface* strus::createPatternMatcher_stream( ErrorBufferInterface* errorhnd)
 {
 	try
 	{
@@ -34,7 +34,7 @@ DLL_PUBLIC PatternMatcherInterface* strus::createPatternMatcher_standard( ErrorB
 	CATCH_ERROR_MAP_RETURN( _TXT("error creating token pattern match interface: %s"), *errorhnd, 0);
 }
 
-DLL_PUBLIC PatternLexerInterface* strus::createPatternLexer_standard( ErrorBufferInterface* errorhnd)
+DLL_PUBLIC PatternLexerInterface* strus::createPatternLexer_stream( ErrorBufferInterface* errorhnd)
 {
 	try
 	{
@@ -48,7 +48,7 @@ DLL_PUBLIC PatternLexerInterface* strus::createPatternLexer_standard( ErrorBuffe
 	CATCH_ERROR_MAP_RETURN( _TXT("error creating char regex match interface: %s"), *errorhnd, 0);
 }
 
-DLL_PUBLIC TokenMarkupInstanceInterface* strus::createTokenMarkupInstance_standard( ErrorBufferInterface* errorhnd)
+DLL_PUBLIC TokenMarkupInstanceInterface* strus::createTokenMarkupInstance_stream( ErrorBufferInterface* errorhnd)
 {
 	try
 	{
@@ -63,7 +63,7 @@ DLL_PUBLIC TokenMarkupInstanceInterface* strus::createTokenMarkupInstance_standa
 }
 
 
-DLL_PUBLIC PatternMatcherProgramInterface* strus::createPatternMatcherProgram_standard(
+DLL_PUBLIC PatternMatcherProgramInterface* strus::createPatternMatcherProgram_stream(
 		const PatternMatcherInterface* tpm,
 		const PatternLexerInterface* crm,
 		ErrorBufferInterface* errorhnd)

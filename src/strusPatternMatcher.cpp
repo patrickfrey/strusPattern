@@ -277,7 +277,7 @@ public:
 			if (m_segmenter_cjson.get()) m_segmenter_cjson->defineSelectorExpression( eidx, *ei);
 			if (m_segmenter_textwolf.get()) m_segmenter_textwolf->defineSelectorExpression( eidx, *ei);
 		}
-		m_tokenMarkup.reset( strus::createTokenMarkupInstance_standard( g_errorBuffer));
+		m_tokenMarkup.reset( strus::createTokenMarkupInstance_stream( g_errorBuffer));
 		if (g_errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("global context initialization failed"));
@@ -841,11 +841,11 @@ int main( int argc, const char* argv[])
 		g_errorBuffer = errorBuffer.get();
 
 		// Create objects:
-		std::auto_ptr<strus::PatternMatcherInterface> pti( strus::createPatternMatcher_standard( g_errorBuffer));
+		std::auto_ptr<strus::PatternMatcherInterface> pti( strus::createPatternMatcher_stream( g_errorBuffer));
 		if (!pti.get()) throw std::runtime_error("failed to create pattern matcher");
-		std::auto_ptr<strus::PatternLexerInterface> cri( strus::createPatternLexer_standard( g_errorBuffer));
+		std::auto_ptr<strus::PatternLexerInterface> cri( strus::createPatternLexer_stream( g_errorBuffer));
 		if (!cri.get()) throw std::runtime_error("failed to create char regex matcher");
-		std::auto_ptr<strus::PatternMatcherProgramInterface> ppi( strus::createPatternMatcherProgram_standard( pti.get(), cri.get(), g_errorBuffer));
+		std::auto_ptr<strus::PatternMatcherProgramInterface> ppi( strus::createPatternMatcherProgram_stream( pti.get(), cri.get(), g_errorBuffer));
 		if (!ppi.get()) throw std::runtime_error("failed to create pattern program loader");
 		std::auto_ptr<strus::PatternMatcherProgramInstanceInterface> pii( ppi->createInstance());
 		if (!pii.get()) throw std::runtime_error("failed to create pattern program loader instance");

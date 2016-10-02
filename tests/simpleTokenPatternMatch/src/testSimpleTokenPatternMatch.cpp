@@ -236,7 +236,7 @@ int main( int argc, const char** argv)
 		}
 		unsigned int documentSize = 100;
 
-		std::auto_ptr<strus::PatternMatcherInterface> pt( strus::createPatternMatcher_standard( g_errorBuffer));
+		std::auto_ptr<strus::PatternMatcherInterface> pt( strus::createPatternMatcher_stream( g_errorBuffer));
 		if (!pt.get()) throw std::runtime_error("failed to create pattern matcher");
 		std::auto_ptr<strus::PatternMatcherInstanceInterface> ptinst( pt->createInstance());
 		if (!ptinst.get()) throw std::runtime_error("failed to create pattern matcher instance");
