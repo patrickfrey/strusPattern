@@ -9,10 +9,10 @@
 #include "strus/lib/stream.hpp"
 #include "strus/lib/error.hpp"
 #include "strus/errorBufferInterface.hpp"
-#include "strus/charRegexMatchInterface.hpp"
-#include "strus/charRegexMatchInstanceInterface.hpp"
-#include "strus/charRegexMatchContextInterface.hpp"
-#include "strus/analyzer/idToken.hpp"
+#include "strus/patternLexerInterface.hpp"
+#include "strus/patternLexerInstanceInterface.hpp"
+#include "strus/patternLexerContextInterface.hpp"
+#include "strus/analyzer/patternLexem.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
@@ -64,7 +64,7 @@ struct TestDef
 	ResultDef result[128];
 };
 
-static void compile( strus::CharRegexMatchInstanceInterface* ptinst, const PatternDef* par, const SymbolDef* sar, const strus::analyzer::CharRegexMatchOptions& opt)
+static void compile( strus::PatternLexerInstanceInterface* ptinst, const PatternDef* par, const SymbolDef* sar, const strus::analyzer::PatternLexerOptions& opt)
 {
 	std::size_t pi = 0;
 	for (; par[pi].expression; ++pi)
@@ -84,14 +84,14 @@ static void compile( strus::CharRegexMatchInstanceInterface* ptinst, const Patte
 	}
 }
 
-static std::vector<strus::analyzer::IdToken>
-	match( strus::CharRegexMatchInstanceInterface* ptinst, const std::string& src)
+static std::vector<strus::analyzer::PatternLexem>
+	match( strus::PatternLexerInstanceInterface* ptinst, const std::string& src)
 {
-	std::auto_ptr<strus::CharRegexMatchContextInterface> mt( ptinst->createContext());
-	std::vector<strus::analyzer::IdToken> rt = mt->match( src.c_str(), src.size());
+	std::auto_ptr<strus::PatternLexerContextInterface> mt( ptinst->createContext());
+	std::vector<strus::analyzer::PatternLexem> rt = mt->match( src.c_str(), src.size());
 
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::vector<strus::analyzer::IdToken>::const_iterator
+	std::vector<strus::analyzer::PatternLexem>::const_iterator
 		ri = rt.begin(), re = rt.end();
 	for (; ri != re; ++ri)
 	{
@@ -188,24 +188,24 @@ int main( int argc, const char** argv)
 			std::cerr << "too many arguments" << std::endl;
 			return 1;
 		}
-		std::auto_ptr<strus::CharRegexMatchInterface> pt( strus::createCharRegexMatch_standard( g_errorBuffer));
+		std::auto_ptr<strus::PatternLexerInterface> pt( strus::createPatternLexer_standard( g_errorBuffer));
 		if (!pt.get()) throw std::runtime_error("failed to create regular expression term matcher");
 		std::size_t ti = 0;
 		for (; g_tests[ti].src; ++ti)
 		{
 			std::cerr << "executing test " << (ti+1) << std::endl;
-			std::auto_ptr<strus::CharRegexMatchInstanceInterface> ptinst( pt->createInstance());
+			std::auto_ptr<strus::PatternLexerInstanceInterface> ptinst( pt->createInstance());
 			if (!ptinst.get()) throw std::runtime_error("failed to create regular expression term matcher instance");
 
-			strus::analyzer::CharRegexMatchOptions opt;
+			strus::analyzer::PatternLexerOptions opt;
 			opt("DOTALL");
 			compile( ptinst.get(), g_tests[ti].patterns, g_tests[ti].symbols, opt);
 			if (g_errorBuffer->hasError())
 			{
 				throw std::runtime_error( "error building automaton for test");
 			}
-			std::vector<strus::analyzer::IdToken> result = match( ptinst.get(), g_tests[ti].src);
-			std::vector<strus::analyzer::IdToken>::const_iterator ri = result.begin(), re = result.end();
+			std::vector<strus::analyzer::PatternLexem> result = match( ptinst.get(), g_tests[ti].src);
+			std::vector<strus::analyzer::PatternLexem>::const_iterator ri = result.begin(), re = result.end();
 			std::size_t ridx=0;
 			const ResultDef* expected = g_tests[ti].result;
 			for (; ri != re && expected[ridx].origsize != 0; ++ridx,++ri)

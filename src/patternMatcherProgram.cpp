@@ -6,8 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 /// \brief StrusStream program implementation for loading pattern definitions from source
-/// \file "patternMatchProgram.cpp"
-#include "patternMatchProgram.hpp"
+/// \file "patternMatcherProgram.cpp"
+#include "patternMatcherProgram.hpp"
 #include "lexems.hpp"
 #include "utils.hpp"
 #include "errorUtils.hpp"
@@ -21,14 +21,14 @@ using namespace strus;
 using namespace strus::parser;
 using namespace strus::analyzer;
 
-PatternMatchProgramInstance::PatternMatchProgramInstance( const TokenPatternMatchInterface* tpm, const CharRegexMatchInterface* crm, ErrorBufferInterface* errorhnd_)
+PatternMatcherProgramInstance::PatternMatcherProgramInstance( const PatternMatcherInterface* tpm, const PatternLexerInterface* crm, ErrorBufferInterface* errorhnd_)
 	:m_errorhnd(errorhnd_)
-	,m_tokenPatternMatchOptionNames(tpm->getCompileOptions())
-	,m_charRegexMatchOptionNames(crm->getCompileOptions())
-	,m_tokenPatternMatch(tpm->createInstance())
-	,m_charRegexMatch(crm->createInstance())
+	,m_patternMatcherOptionNames(tpm->getCompileOptions())
+	,m_patternLexerOptionNames(crm->getCompileOptions())
+	,m_patternMatcher(tpm->createInstance())
+	,m_patternLexer(crm->createInstance())
 {
-	if (!m_tokenPatternMatch.get() || !m_charRegexMatch.get()) throw std::bad_alloc();
+	if (!m_patternMatcher.get() || !m_patternLexer.get()) throw std::bad_alloc();
 }
 
 struct SourcePosition
@@ -69,7 +69,7 @@ static SourcePosition getSourcePosition( const std::string& source, const char* 
 	return rt;
 }
 
-typedef strus::TokenPatternMatchInstanceInterface::JoinOperation JoinOperation;
+typedef strus::PatternMatcherInstanceInterface::JoinOperation JoinOperation;
 static JoinOperation joinOperation( const std::string& name)
 {
 	static const char* ar[] = {"sequence","sequence_imm","sequence_struct","within","within_struct","any","and",0};
@@ -84,24 +84,24 @@ static JoinOperation joinOperation( const std::string& name)
 	throw strus::runtime_error( _TXT("unknown join operation: '%s'"), name.c_str());
 }
 
-uint32_t PatternMatchProgramInstance::getOrCreateSymbol( unsigned int regexid, const std::string& name)
+uint32_t PatternMatcherProgramInstance::getOrCreateSymbol( unsigned int regexid, const std::string& name)
 {
-	unsigned int id = m_charRegexMatch->getSymbol( regexid, name);
+	unsigned int id = m_patternLexer->getSymbol( regexid, name);
 	if (!id)
 	{
 		m_symbolRegexIdList.push_back( regexid);
 		id = m_symbolRegexIdList.size() + MaxRegularExpressionNameId;
-		m_charRegexMatch->defineSymbol( id, regexid, name);
+		m_patternLexer->defineSymbol( id, regexid, name);
 	}
 	return id;
 }
 
-const char* PatternMatchProgramInstance::getSymbolRegexId( unsigned int id) const
+const char* PatternMatcherProgramInstance::getSymbolRegexId( unsigned int id) const
 {
 	return m_regexNameSymbolTab.key( m_symbolRegexIdList[ id - MaxRegularExpressionNameId -1]);
 }
 
-void PatternMatchProgramInstance::loadExpressionNode( const std::string& name, char const*& si, SubExpressionInfo& exprinfo)
+void PatternMatcherProgramInstance::loadExpressionNode( const std::string& name, char const*& si, SubExpressionInfo& exprinfo)
 {
 	exprinfo.minrange = 0;
 	if (isOpenOvalBracket( *si))
@@ -125,34 +125,34 @@ void PatternMatchProgramInstance::loadExpressionNode( const std::string& name, c
 			loadExpression( si, argexprinfo);
 			switch (operation)
 			{
-				case TokenPatternMatchInstanceInterface::OpSequence:
+				case PatternMatcherInstanceInterface::OpSequence:
 					exprinfo.minrange += argexprinfo.minrange;
 					break;
-				case TokenPatternMatchInstanceInterface::OpSequenceImm:
+				case PatternMatcherInstanceInterface::OpSequenceImm:
 					exprinfo.minrange += argexprinfo.minrange;
 					break;
-				case TokenPatternMatchInstanceInterface::OpSequenceStruct:
+				case PatternMatcherInstanceInterface::OpSequenceStruct:
 					if (nofArguments)
 					{
 						exprinfo.minrange += argexprinfo.minrange;
 					}
 					break;
-				case TokenPatternMatchInstanceInterface::OpWithin:
+				case PatternMatcherInstanceInterface::OpWithin:
 					exprinfo.minrange += argexprinfo.minrange;
 					break;
-				case TokenPatternMatchInstanceInterface::OpWithinStruct:
+				case PatternMatcherInstanceInterface::OpWithinStruct:
 					if (nofArguments)
 					{
 						exprinfo.minrange += argexprinfo.minrange;
 					}
 					break;
-				case TokenPatternMatchInstanceInterface::OpAny:
+				case PatternMatcherInstanceInterface::OpAny:
 					if (nofArguments == 0 || exprinfo.minrange < argexprinfo.minrange)
 					{
 						exprinfo.minrange = argexprinfo.minrange;
 					}
 					break;
-				case TokenPatternMatchInstanceInterface::OpAnd:
+				case PatternMatcherInstanceInterface::OpAnd:
 					if (exprinfo.minrange > argexprinfo.minrange)
 					{
 						exprinfo.minrange = argexprinfo.minrange;
@@ -200,7 +200,7 @@ void PatternMatchProgramInstance::loadExpressionNode( const std::string& name, c
 		(void)parse_OPERATOR( si);
 		switch (operation)
 		{
-			case TokenPatternMatchInstanceInterface::OpSequenceImm:
+			case PatternMatcherInstanceInterface::OpSequenceImm:
 				if (range == 0)
 				{
 					range = exprinfo.minrange;
@@ -210,12 +210,12 @@ void PatternMatchProgramInstance::loadExpressionNode( const std::string& name, c
 					throw strus::runtime_error(_TXT("rule cannot match in such a within such a small position range span: %u (required %u)"), range, exprinfo.minrange);
 				}
 				break;
-			case TokenPatternMatchInstanceInterface::OpSequence:
-			case TokenPatternMatchInstanceInterface::OpSequenceStruct:
-			case TokenPatternMatchInstanceInterface::OpWithin:
-			case TokenPatternMatchInstanceInterface::OpWithinStruct:
-			case TokenPatternMatchInstanceInterface::OpAny:
-			case TokenPatternMatchInstanceInterface::OpAnd:
+			case PatternMatcherInstanceInterface::OpSequence:
+			case PatternMatcherInstanceInterface::OpSequenceStruct:
+			case PatternMatcherInstanceInterface::OpWithin:
+			case PatternMatcherInstanceInterface::OpWithinStruct:
+			case PatternMatcherInstanceInterface::OpAny:
+			case PatternMatcherInstanceInterface::OpAnd:
 				if (range == 0)
 				{
 					throw strus::runtime_error(_TXT("position range span must be specified for one of the operators %s"), "{'any','and','within','within_struct','sequence','sequence_struct'}");
@@ -226,7 +226,7 @@ void PatternMatchProgramInstance::loadExpressionNode( const std::string& name, c
 				}
 				break;
 		}
-		m_tokenPatternMatch->pushExpression( operation, nofArguments, range, cardinality);
+		m_patternMatcher->pushExpression( operation, nofArguments, range, cardinality);
 	}
 	else if (isAssign(*si))
 	{
@@ -242,7 +242,7 @@ void PatternMatchProgramInstance::loadExpressionNode( const std::string& name, c
 				std::string symbol( parse_STRING( si));
 				id = getOrCreateSymbol( id, symbol);
 			}
-			m_tokenPatternMatch->pushTerm( id);
+			m_patternMatcher->pushTerm( id);
 		}
 		else
 		{
@@ -252,13 +252,13 @@ void PatternMatchProgramInstance::loadExpressionNode( const std::string& name, c
 				id = m_patternNameSymbolTab.getOrCreate( name);
 				m_unresolvedPatternNameSet.insert( id);
 			}
-			m_tokenPatternMatch->pushPattern( name);
+			m_patternMatcher->pushPattern( name);
 		}
 		exprinfo.minrange = 1;
 	}
 }
 
-void PatternMatchProgramInstance::loadExpression( char const*& si, SubExpressionInfo& exprinfo)
+void PatternMatcherProgramInstance::loadExpression( char const*& si, SubExpressionInfo& exprinfo)
 {
 	std::string name = parse_IDENTIFIER( si);
 	if (isAssign(*si))
@@ -281,7 +281,7 @@ void PatternMatchProgramInstance::loadExpression( char const*& si, SubExpression
 		}
 		std::string op = parse_IDENTIFIER( si);
 		loadExpressionNode( op, si, exprinfo);
-		m_tokenPatternMatch->attachVariable( name, weight);
+		m_patternMatcher->attachVariable( name, weight);
 	}
 	else
 	{
@@ -289,14 +289,14 @@ void PatternMatchProgramInstance::loadExpression( char const*& si, SubExpression
 	}
 }
 
-void PatternMatchProgramInstance::loadOption( char const*& si)
+void PatternMatcherProgramInstance::loadOption( char const*& si)
 {
 	if (isAlpha(*si))
 	{
 		std::string name = parse_IDENTIFIER( si);
 		std::vector<std::string>::const_iterator
-			oi = m_tokenPatternMatchOptionNames.begin(),
-			oe = m_tokenPatternMatchOptionNames.end();
+			oi = m_patternMatcherOptionNames.begin(),
+			oe = m_patternMatcherOptionNames.end();
 		for (; oi != oe && !utils::caseInsensitiveEquals( name, *oi); ++oi){}
 
 		if (oi != oe)
@@ -307,7 +307,7 @@ void PatternMatchProgramInstance::loadOption( char const*& si)
 				if (is_FLOAT(si))
 				{
 					double value = parse_FLOAT( si);
-					m_tokenPatternMatchOptions( name, value);
+					m_patternMatcherOptions( name, value);
 				}
 				else
 				{
@@ -320,13 +320,13 @@ void PatternMatchProgramInstance::loadOption( char const*& si)
 			}
 			return;
 		}
-		oi = m_charRegexMatchOptionNames.begin(),
-		oe = m_charRegexMatchOptionNames.end();
+		oi = m_patternLexerOptionNames.begin(),
+		oe = m_patternLexerOptionNames.end();
 		for (; oi != oe && !utils::caseInsensitiveEquals( name, *oi); ++oi){}
 
 		if (oi != oe)
 		{
-			m_charRegexMatchOptions( name);
+			m_patternLexerOptions( name);
 		}
 		else
 		{
@@ -339,7 +339,7 @@ void PatternMatchProgramInstance::loadOption( char const*& si)
 	}
 }
 
-bool PatternMatchProgramInstance::load( const std::string& source)
+bool PatternMatcherProgramInstance::load( const std::string& source)
 {
 	char const* si = source.c_str();
 	try
@@ -421,7 +421,7 @@ bool PatternMatchProgramInstance::load( const std::string& source)
 							(void)parse_OPERATOR(si);
 							posbind = BindSuccessor;
 						}
-						m_charRegexMatch->definePattern(
+						m_patternLexer->definePattern(
 							nameid, regex, resultIndex, level, posbind);
 					}
 					while (isOr(*si));
@@ -445,7 +445,7 @@ bool PatternMatchProgramInstance::load( const std::string& source)
 						{
 							m_unresolvedPatternNameSet.erase( ui);
 						}
-						m_tokenPatternMatch->definePattern( name, visible);
+						m_patternMatcher->definePattern( name, visible);
 					}
 					while (isOr(*si));
 				}
@@ -493,7 +493,7 @@ bool PatternMatchProgramInstance::load( const std::string& source)
 	}
 }
 
-bool PatternMatchProgramInstance::compile()
+bool PatternMatcherProgramInstance::compile()
 {
 	try
 	{
@@ -517,24 +517,24 @@ bool PatternMatchProgramInstance::compile()
 			throw strus::runtime_error(_TXT("unresolved pattern references: %s"), unresolvedstr.c_str());
 		}
 		bool rt = true;
-		rt &= m_tokenPatternMatch->compile( m_tokenPatternMatchOptions);
-		rt &= m_charRegexMatch->compile( m_charRegexMatchOptions);
+		rt &= m_patternMatcher->compile( m_patternMatcherOptions);
+		rt &= m_patternLexer->compile( m_patternLexerOptions);
 		return rt;
 	}
 	CATCH_ERROR_MAP_RETURN( _TXT("failed to compile pattern match program source: %s"), *m_errorhnd, false);
 }
 
-const CharRegexMatchInstanceInterface* PatternMatchProgramInstance::getCharRegexMatchInstance() const
+const PatternLexerInstanceInterface* PatternMatcherProgramInstance::getPatternLexerInstance() const
 {
-	return m_charRegexMatch.get();
+	return m_patternLexer.get();
 }
 
-const TokenPatternMatchInstanceInterface* PatternMatchProgramInstance::getTokenPatternMatchInstance() const
+const PatternMatcherInstanceInterface* PatternMatcherProgramInstance::getPatternMatcherInstance() const
 {
-	return m_tokenPatternMatch.get();
+	return m_patternMatcher.get();
 }
 
-const char* PatternMatchProgramInstance::tokenName( unsigned int id) const
+const char* PatternMatcherProgramInstance::tokenName( unsigned int id) const
 {
 	if (id < MaxRegularExpressionNameId)
 	{
@@ -546,11 +546,11 @@ const char* PatternMatchProgramInstance::tokenName( unsigned int id) const
 	}
 }
 
-PatternMatchProgramInstanceInterface* PatternMatchProgram::createInstance() const
+PatternMatcherProgramInstanceInterface* PatternMatcherProgram::createInstance() const
 {
 	try
 	{
-		return new PatternMatchProgramInstance( m_tpm, m_crm, m_errorhnd);
+		return new PatternMatcherProgramInstance( m_tpm, m_crm, m_errorhnd);
 	}
 	CATCH_ERROR_MAP_RETURN( _TXT("failed to create pattern match program instance: %s"), *m_errorhnd, 0);
 }

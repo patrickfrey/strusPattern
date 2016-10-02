@@ -15,18 +15,18 @@
 #include "strus/base/fileio.hpp"
 #include "strus/versionBase.hpp"
 #include "strus/versionAnalyzer.hpp"
-#include "strus/patternMatchProgramInstanceInterface.hpp"
-#include "strus/patternMatchProgramInterface.hpp"
-#include "strus/analyzer/idToken.hpp"
+#include "strus/patternMatcherProgramInstanceInterface.hpp"
+#include "strus/patternMatcherProgramInterface.hpp"
+#include "strus/analyzer/patternLexem.hpp"
 #include "strus/analyzer/documentClass.hpp"
-#include "strus/tokenPatternMatchInstanceInterface.hpp"
-#include "strus/tokenPatternMatchContextInterface.hpp"
-#include "strus/tokenPatternMatchInterface.hpp"
+#include "strus/patternMatcherInstanceInterface.hpp"
+#include "strus/patternMatcherContextInterface.hpp"
+#include "strus/patternMatcherInterface.hpp"
 #include "strus/tokenMarkupInstanceInterface.hpp"
 #include "strus/tokenMarkupContextInterface.hpp"
-#include "strus/charRegexMatchInstanceInterface.hpp"
-#include "strus/charRegexMatchContextInterface.hpp"
-#include "strus/charRegexMatchInterface.hpp"
+#include "strus/patternLexerInstanceInterface.hpp"
+#include "strus/patternLexerContextInterface.hpp"
+#include "strus/patternLexerInterface.hpp"
 #include "strus/segmenterContextInterface.hpp"
 #include "strus/segmenterInstanceInterface.hpp"
 #include "strus/segmenterInterface.hpp"
@@ -169,9 +169,9 @@ class GlobalContext
 {
 public:
 	explicit GlobalContext(
-			const strus::PatternMatchProgramInstanceInterface* program_,
-			const strus::TokenPatternMatchInstanceInterface* ptinst_,
-			const strus::CharRegexMatchInstanceInterface* crinst_,
+			const strus::PatternMatcherProgramInstanceInterface* program_,
+			const strus::PatternMatcherInstanceInterface* ptinst_,
+			const strus::PatternLexerInstanceInterface* crinst_,
 			const std::vector<std::string>& selectexpr,
 			const std::string& path,
 			const std::string& fileext,
@@ -325,8 +325,8 @@ public:
 		return rt;
 	}
 
-	const strus::TokenPatternMatchInstanceInterface* tokenPatternMatchInstance() const	{return m_ptinst;}
-	const strus::CharRegexMatchInstanceInterface* charRegexMatchInstance() const		{return m_crinst;}
+	const strus::PatternMatcherInstanceInterface* PatternMatcherInstance() const	{return m_ptinst;}
+	const strus::PatternLexerInstanceInterface* PatternLexerInstance() const		{return m_crinst;}
 
 	bool printTokens() const								{return m_printTokens;}
 	const char* tokenName( unsigned int id) const						{return m_program->tokenName( id);}
@@ -369,9 +369,9 @@ public:
 
 private:
 	boost::mutex m_mutex;
-	const strus::PatternMatchProgramInstanceInterface* m_program;
-	const strus::TokenPatternMatchInstanceInterface* m_ptinst;
-	const strus::CharRegexMatchInstanceInterface* m_crinst;
+	const strus::PatternMatcherProgramInstanceInterface* m_program;
+	const strus::PatternMatcherInstanceInterface* m_ptinst;
+	const strus::PatternLexerInstanceInterface* m_crinst;
 	strus::SegmenterInstanceInterface* m_segmenter;
 	std::auto_ptr<strus::SegmenterInstanceInterface> m_segmenter_textwolf;
 	std::auto_ptr<strus::SegmenterInstanceInterface> m_segmenter_cjson;
@@ -463,8 +463,8 @@ public:
 		{
 			throw strus::runtime_error(_TXT("error (%u) reading document %s: %s"), ec, filename.c_str(), ::strerror(ec));
 		}
-		std::auto_ptr<strus::TokenPatternMatchContextInterface> mt( m_globalContext->tokenPatternMatchInstance()->createContext());
-		std::auto_ptr<strus::CharRegexMatchContextInterface> crctx( m_globalContext->charRegexMatchInstance()->createContext());
+		std::auto_ptr<strus::PatternMatcherContextInterface> mt( m_globalContext->PatternMatcherInstance()->createContext());
+		std::auto_ptr<strus::PatternLexerContextInterface> crctx( m_globalContext->PatternLexerInstance()->createContext());
 		strus::SegmenterInstanceInterface* segmenterInstance;
 		strus::analyzer::DocumentClass documentClass;
 		std::auto_ptr<strus::SegmenterContextInterface> segmenter( m_globalContext->createSegmenterContext( content, segmenterInstance, documentClass));
@@ -489,12 +489,12 @@ public:
 #ifdef STRUS_LOWLEVEL_DEBUG
 				std::cerr << "processing segment " << id << " [" << std::string(segment,segmentsize) << "] at " << segmentpos << std::endl;
 #endif
-				std::vector<strus::analyzer::IdToken> crmatches = crctx->match( segment, segmentsize);
+				std::vector<strus::analyzer::PatternLexem> crmatches = crctx->match( segment, segmentsize);
 				if (crmatches.size() == 0 && g_errorBuffer->hasError())
 				{
 					throw std::runtime_error( "failed to scan for tokens with char regex match automaton");
 				}
-				std::vector<strus::analyzer::IdToken>::iterator ti = crmatches.begin(), te = crmatches.end();
+				std::vector<strus::analyzer::PatternLexem>::iterator ti = crmatches.begin(), te = crmatches.end();
 				for (; ti != te; ++ti)
 				{
 					ti->setOrigseg( segmentidx);
@@ -516,7 +516,7 @@ public:
 			throw std::runtime_error("error matching rules");
 		}
 		std::cout << m_globalContext->resultMarker() << filename << ":" << std::endl;
-		std::vector<strus::analyzer::TokenPatternMatchResult> results = mt->fetchResults();
+		std::vector<strus::analyzer::PatternMatcherResult> results = mt->fetchResults();
 		if (m_globalContext->markups().empty())
 		{
 			(*m_output) << "# " << filename << ":" << std::endl;
@@ -528,16 +528,16 @@ public:
 		}
 	}
 
-	void printResults( std::ostream& out, const std::vector<PositionInfo>& segmentposmap, const std::vector<strus::analyzer::TokenPatternMatchResult>& results, const std::string& src)
+	void printResults( std::ostream& out, const std::vector<PositionInfo>& segmentposmap, const std::vector<strus::analyzer::PatternMatcherResult>& results, const std::string& src)
 	{
-		std::vector<strus::analyzer::TokenPatternMatchResult>::const_iterator
+		std::vector<strus::analyzer::PatternMatcherResult>::const_iterator
 			ri = results.begin(), re = results.end();
 		for (; ri != re; ++ri)
 		{
 			std::size_t start_segpos = segmentposmap[ ri->start_origseg()].segpos;
 			std::size_t end_segpos = segmentposmap[ ri->end_origseg()].segpos;
 			out << ri->name() << " [" << ri->ordpos() << ", " << start_segpos << "|" << ri->start_origpos() << " .. " << end_segpos << "|" << ri->end_origpos() << "]:";
-			std::vector<strus::analyzer::TokenPatternMatchResultItem>::const_iterator
+			std::vector<strus::analyzer::PatternMatcherResultItem>::const_iterator
 				ei = ri->items().begin(), ee = ri->items().end();
 
 			for (; ei != ee; ++ei)
@@ -555,13 +555,13 @@ public:
 	}
 
 	void markupResults( std::ostream& out,
-				const std::vector<strus::analyzer::TokenPatternMatchResult>& results,
+				const std::vector<strus::analyzer::PatternMatcherResult>& results,
 				const strus::analyzer::DocumentClass& documentClass, const std::string& src,
 				const strus::SegmenterInstanceInterface* segmenterInstance)
 	{
 		std::auto_ptr<strus::TokenMarkupContextInterface> markupContext( m_globalContext->createTokenMarkupContext());
 
-		std::vector<strus::analyzer::TokenPatternMatchResult>::const_iterator
+		std::vector<strus::analyzer::PatternMatcherResult>::const_iterator
 			ri = results.begin(), re = results.end();
 		for (; ri != re; ++ri)
 		{
@@ -573,7 +573,7 @@ public:
 					ri->end_origseg(), ri->end_origpos(),
 					strus::analyzer::TokenMarkup( ri->name()), mi->second);
 			}
-			std::vector<strus::analyzer::TokenPatternMatchResultItem>::const_iterator
+			std::vector<strus::analyzer::PatternMatcherResultItem>::const_iterator
 				ei = ri->items().begin(), ee = ri->items().end();
 
 			for (; ei != ee; ++ei)
@@ -841,13 +841,13 @@ int main( int argc, const char* argv[])
 		g_errorBuffer = errorBuffer.get();
 
 		// Create objects:
-		std::auto_ptr<strus::TokenPatternMatchInterface> pti( strus::createTokenPatternMatch_standard( g_errorBuffer));
+		std::auto_ptr<strus::PatternMatcherInterface> pti( strus::createPatternMatcher_standard( g_errorBuffer));
 		if (!pti.get()) throw std::runtime_error("failed to create pattern matcher");
-		std::auto_ptr<strus::CharRegexMatchInterface> cri( strus::createCharRegexMatch_standard( g_errorBuffer));
+		std::auto_ptr<strus::PatternLexerInterface> cri( strus::createPatternLexer_standard( g_errorBuffer));
 		if (!cri.get()) throw std::runtime_error("failed to create char regex matcher");
-		std::auto_ptr<strus::PatternMatchProgramInterface> ppi( strus::createPatternMatchProgram_standard( pti.get(), cri.get(), g_errorBuffer));
+		std::auto_ptr<strus::PatternMatcherProgramInterface> ppi( strus::createPatternMatcherProgram_standard( pti.get(), cri.get(), g_errorBuffer));
 		if (!ppi.get()) throw std::runtime_error("failed to create pattern program loader");
-		std::auto_ptr<strus::PatternMatchProgramInstanceInterface> pii( ppi->createInstance());
+		std::auto_ptr<strus::PatternMatcherProgramInstanceInterface> pii( ppi->createInstance());
 		if (!pii.get()) throw std::runtime_error("failed to create pattern program loader instance");
 
 		std::cerr << "loading programs ..." << std::endl;
@@ -881,8 +881,8 @@ int main( int argc, const char* argv[])
 		}
 		GlobalContext globalContext(
 				pii.get(),
-				pii->getTokenPatternMatchInstance(),
-				pii->getCharRegexMatchInstance(),
+				pii->getPatternMatcherInstance(),
+				pii->getPatternLexerInstance(),
 				selectexpr, inputpath, fileext, mimetype, encoding,
 				markups, resultmarker, printTokens);
 

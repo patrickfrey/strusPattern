@@ -6,16 +6,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 /// \brief Implementation of an automaton for detecting patterns of tokens in a document stream
-/// \file "tokenPatternMatch.cpp"
-#include "tokenPatternMatch.hpp"
+/// \file "patternMatcher.cpp"
+#include "patternMatcher.hpp"
 #include "symbolTable.hpp"
 #include "utils.hpp"
 #include "errorUtils.hpp"
 #include "internationalization.hpp"
-#include "strus/analyzer/tokenPatternMatchResultItem.hpp"
-#include "strus/analyzer/tokenPatternMatchResult.hpp"
-#include "strus/tokenPatternMatchInstanceInterface.hpp"
-#include "strus/tokenPatternMatchContextInterface.hpp"
+#include "strus/analyzer/patternMatcherResultItem.hpp"
+#include "strus/analyzer/patternMatcherResult.hpp"
+#include "strus/patternMatcherInstanceInterface.hpp"
+#include "strus/patternMatcherContextInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "ruleMatcherAutomaton.hpp"
 #include <map>
@@ -29,9 +29,9 @@
 using namespace strus;
 using namespace strus::analyzer;
 
-struct TokenPatternMatchData
+struct PatternMatcherData
 {
-	TokenPatternMatchData(){}
+	PatternMatcherData(){}
 
 	SymbolTable variableMap;
 	SymbolTable patternMap;
@@ -45,17 +45,17 @@ static uint32_t eventHandle( PatternEventType type_, uint32_t idx)
 	return idx | ((uint32_t)type_ << 30);
 }
 
-class TokenPatternMatchContext
-	:public TokenPatternMatchContextInterface
+class PatternMatcherContext
+	:public PatternMatcherContextInterface
 {
 public:
-	TokenPatternMatchContext( const TokenPatternMatchData* data_, ErrorBufferInterface* errorhnd_)
+	PatternMatcherContext( const PatternMatcherData* data_, ErrorBufferInterface* errorhnd_)
 		:m_errorhnd(errorhnd_),m_data(data_),m_statemachine(&data_->programTable),m_nofEvents(0),m_curPosition(0){}
 
-	virtual ~TokenPatternMatchContext()
+	virtual ~PatternMatcherContext()
 	{}
 
-	virtual void putInput( const analyzer::IdToken& term)
+	virtual void putInput( const analyzer::PatternLexem& term)
 	{
 		try
 		{
@@ -87,14 +87,14 @@ public:
 		CATCH_ERROR_MAP( _TXT("failed to feed input to pattern matcher: %s"), *m_errorhnd);
 	}
 
-	void gatherResultItems( std::vector<TokenPatternMatchResultItem>& resitemlist, uint32_t dataref) const
+	void gatherResultItems( std::vector<PatternMatcherResultItem>& resitemlist, uint32_t dataref) const
 	{
 		uint32_t itemList = m_statemachine.getEventDataItemListIdx( dataref);
 		const EventItem* item;
 		while (0!=(item=m_statemachine.nextResultItem( itemList)))
 		{
 			const char* itemName = m_data->variableMap.key( item->variable);
-			TokenPatternMatchResultItem rtitem( itemName, item->data.ordpos, item->data.start_origseg, item->data.start_origpos, item->data.end_origseg, item->data.end_origpos, item->weight);
+			PatternMatcherResultItem rtitem( itemName, item->data.ordpos, item->data.start_origseg, item->data.start_origpos, item->data.end_origseg, item->data.end_origpos, item->weight);
 			resitemlist.push_back( rtitem);
 			if (item->data.subdataref)
 			{
@@ -103,11 +103,11 @@ public:
 		}
 	}
 
-	virtual std::vector<analyzer::TokenPatternMatchResult> fetchResults() const
+	virtual std::vector<analyzer::PatternMatcherResult> fetchResults() const
 	{
 		try
 		{
-			std::vector<analyzer::TokenPatternMatchResult> rt;
+			std::vector<analyzer::PatternMatcherResult> rt;
 			const StateMachine::ResultList& results = m_statemachine.results();
 			rt.reserve( results.size());
 			std::size_t ai = 0, ae = results.size();
@@ -115,23 +115,23 @@ public:
 			{
 				const Result& result = results[ ai];
 				const char* resultName = m_data->patternMap.key( result.resultHandle);
-				std::vector<TokenPatternMatchResultItem> rtitemlist;
+				std::vector<PatternMatcherResultItem> rtitemlist;
 				if (result.eventDataReferenceIdx)
 				{
 					gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
 				}
-				rt.push_back( TokenPatternMatchResult( resultName, result.ordpos, result.start_origseg, result.start_origpos, result.end_origseg, result.end_origpos, rtitemlist));
+				rt.push_back( PatternMatcherResult( resultName, result.ordpos, result.start_origseg, result.start_origpos, result.end_origseg, result.end_origpos, rtitemlist));
 			}
 			return rt;
 		}
-		CATCH_ERROR_MAP_RETURN( _TXT("failed to fetch pattern match result: %s"), *m_errorhnd, std::vector<analyzer::TokenPatternMatchResult>());
+		CATCH_ERROR_MAP_RETURN( _TXT("failed to fetch pattern match result: %s"), *m_errorhnd, std::vector<analyzer::PatternMatcherResult>());
 	}
 
-	virtual analyzer::TokenPatternMatchStatistics getStatistics() const
+	virtual analyzer::PatternMatcherStatistics getStatistics() const
 	{
 		try
 		{
-			TokenPatternMatchStatistics stats;
+			PatternMatcherStatistics stats;
 			stats.define( "nofProgramsInstalled", m_statemachine.nofProgramsInstalled());
 			stats.define( "nofAltKeyProgramsInstalled", m_statemachine.nofAltKeyProgramsInstalled());
 			stats.define( "nofSignalsFired", m_statemachine.nofSignalsFired());
@@ -141,26 +141,26 @@ public:
 			}
 			return stats;
 		}
-		CATCH_ERROR_MAP_RETURN( _TXT("failed to get pattern match statistics: %s"), *m_errorhnd, TokenPatternMatchStatistics());
+		CATCH_ERROR_MAP_RETURN( _TXT("failed to get pattern match statistics: %s"), *m_errorhnd, PatternMatcherStatistics());
 	}
 
 private:
 	ErrorBufferInterface* m_errorhnd;
-	const TokenPatternMatchData* m_data;
+	const PatternMatcherData* m_data;
 	StateMachine m_statemachine;
 	unsigned int m_nofEvents;
 	unsigned int m_curPosition;
 };
 
 /// \brief Interface for building the automaton for detecting patterns in a document stream
-class TokenPatternMatchInstance
-	:public TokenPatternMatchInstanceInterface
+class PatternMatcherInstance
+	:public PatternMatcherInstanceInterface
 {
 public:
-	explicit TokenPatternMatchInstance( ErrorBufferInterface* errorhnd_)
+	explicit PatternMatcherInstance( ErrorBufferInterface* errorhnd_)
 		:m_errorhnd(errorhnd_),m_expression_event_cnt(0){}
 
-	virtual ~TokenPatternMatchInstance(){}
+	virtual ~PatternMatcherInstance(){}
 
 	virtual void defineTermFrequency( unsigned int termid, double df)
 	{
@@ -384,11 +384,11 @@ public:
 		CATCH_ERROR_MAP( _TXT("failed to close pattern definition on the pattern match expression stack: %s"), *m_errorhnd);
 	}
 
-	virtual TokenPatternMatchContextInterface* createContext() const
+	virtual PatternMatcherContextInterface* createContext() const
 	{
 		try
 		{
-			return new TokenPatternMatchContext( &m_data, m_errorhnd);
+			return new PatternMatcherContext( &m_data, m_errorhnd);
 		}
 		CATCH_ERROR_MAP_RETURN( _TXT("failed to create pattern match context: %s"), *m_errorhnd, 0);
 	}
@@ -414,7 +414,7 @@ public:
 	}
 #endif
 
-	virtual bool compile( const analyzer::TokenPatternMatchOptions& opt)
+	virtual bool compile( const analyzer::PatternMatcherOptions& opt)
 	{
 		try
 		{
@@ -423,7 +423,7 @@ public:
 			printAutomatonStatistics();
 #endif
 			ProgramTable::OptimizeOptions popt;
-			analyzer::TokenPatternMatchOptions::const_iterator oi = opt.begin(), oe = opt.end();
+			analyzer::PatternMatcherOptions::const_iterator oi = opt.begin(), oe = opt.end();
 			for (; oi != oe; ++oi)
 			{
 				if (utils::caseInsensitiveEquals( oi->first, "stopwordOccurrenceFactor"))
@@ -472,13 +472,13 @@ private:
 
 private:
 	ErrorBufferInterface* m_errorhnd;
-	TokenPatternMatchData m_data;
+	PatternMatcherData m_data;
 	std::vector<StackElement> m_stack;
 	uint32_t m_expression_event_cnt;
 };
 
 
-std::vector<std::string> TokenPatternMatch::getCompileOptions() const
+std::vector<std::string> PatternMatcher::getCompileOptions() const
 {
 	std::vector<std::string> rt;
 	static const char* ar[] = {"stopwordOccurrenceFactor","weightFactor","maxRange",0};
@@ -489,11 +489,11 @@ std::vector<std::string> TokenPatternMatch::getCompileOptions() const
 	return rt;
 }
 
-TokenPatternMatchInstanceInterface* TokenPatternMatch::createInstance() const
+PatternMatcherInstanceInterface* PatternMatcher::createInstance() const
 {
 	try
 	{
-		return new TokenPatternMatchInstance( m_errorhnd);
+		return new PatternMatcherInstance( m_errorhnd);
 	}
 	CATCH_ERROR_MAP_RETURN( _TXT("failed to create pattern match instance: %s"), *m_errorhnd, 0);
 }

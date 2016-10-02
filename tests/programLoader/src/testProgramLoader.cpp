@@ -9,16 +9,16 @@
 #include "strus/lib/stream.hpp"
 #include "strus/lib/error.hpp"
 #include "strus/errorBufferInterface.hpp"
-#include "strus/tokenPatternMatchInterface.hpp"
-#include "strus/tokenPatternMatchInstanceInterface.hpp"
-#include "strus/tokenPatternMatchContextInterface.hpp"
-#include "strus/analyzer/tokenPatternMatchResult.hpp"
-#include "strus/analyzer/tokenPatternMatchStatistics.hpp"
-#include "strus/charRegexMatchInterface.hpp"
-#include "strus/charRegexMatchInstanceInterface.hpp"
-#include "strus/charRegexMatchContextInterface.hpp"
-#include "strus/patternMatchProgramInterface.hpp"
-#include "strus/patternMatchProgramInstanceInterface.hpp"
+#include "strus/patternMatcherInterface.hpp"
+#include "strus/patternMatcherInstanceInterface.hpp"
+#include "strus/patternMatcherContextInterface.hpp"
+#include "strus/analyzer/patternMatcherResult.hpp"
+#include "strus/analyzer/patternMatcherStatistics.hpp"
+#include "strus/patternLexerInterface.hpp"
+#include "strus/patternLexerInstanceInterface.hpp"
+#include "strus/patternLexerContextInterface.hpp"
+#include "strus/patternMatcherProgramInterface.hpp"
+#include "strus/patternMatcherProgramInstanceInterface.hpp"
 #include "strus/base/fileio.hpp"
 #include "testUtils.hpp"
 #include <stdexcept>
@@ -84,13 +84,13 @@ int main( int argc, const char** argv)
 			return 1;
 		}
 		// Create objects:
-		std::auto_ptr<strus::TokenPatternMatchInterface> pti( strus::createTokenPatternMatch_standard( g_errorBuffer));
+		std::auto_ptr<strus::PatternMatcherInterface> pti( strus::createPatternMatcher_standard( g_errorBuffer));
 		if (!pti.get()) throw std::runtime_error("failed to create pattern matcher");
-		std::auto_ptr<strus::CharRegexMatchInterface> cri( strus::createCharRegexMatch_standard( g_errorBuffer));
+		std::auto_ptr<strus::PatternLexerInterface> cri( strus::createPatternLexer_standard( g_errorBuffer));
 		if (!cri.get()) throw std::runtime_error("failed to create char regex matcher");
-		std::auto_ptr<strus::PatternMatchProgramInterface> ppi( strus::createPatternMatchProgram_standard( pti.get(), cri.get(), g_errorBuffer));
+		std::auto_ptr<strus::PatternMatcherProgramInterface> ppi( strus::createPatternMatcherProgram_standard( pti.get(), cri.get(), g_errorBuffer));
 		if (!ppi.get()) throw std::runtime_error("failed to create pattern program loader");
-		std::auto_ptr<strus::PatternMatchProgramInstanceInterface> pii( ppi->createInstance());
+		std::auto_ptr<strus::PatternMatcherProgramInstanceInterface> pii( ppi->createInstance());
 		if (!pii.get()) throw std::runtime_error("failed to create pattern program loader instance");
 
 		// Load program:
@@ -151,10 +151,10 @@ int main( int argc, const char** argv)
 		}
 
 		// Scan source with char regex automaton for tokens:
-		const strus::CharRegexMatchInstanceInterface* crinst = pii->getCharRegexMatchInstance();
-		std::auto_ptr<strus::CharRegexMatchContextInterface> crctx( crinst->createContext());
+		const strus::PatternLexerInstanceInterface* crinst = pii->getPatternLexerInstance();
+		std::auto_ptr<strus::PatternLexerContextInterface> crctx( crinst->createContext());
 
-		std::vector<strus::analyzer::IdToken> crmatches = crctx->match( inputsrc.c_str(), inputsrc.size());
+		std::vector<strus::analyzer::PatternLexem> crmatches = crctx->match( inputsrc.c_str(), inputsrc.size());
 		if (crmatches.size() == 0 && g_errorBuffer->hasError())
 		{
 			throw std::runtime_error( "failed to scan for tokens with char regex match automaton");
@@ -162,9 +162,9 @@ int main( int argc, const char** argv)
 		std::ostringstream resultstrbuf;
 
 		// Scan tokens with token pattern match automaton and print results:
-		const strus::TokenPatternMatchInstanceInterface* ptinst = pii->getTokenPatternMatchInstance();
-		std::auto_ptr<strus::TokenPatternMatchContextInterface> ptctx( ptinst->createContext());
-		std::vector<strus::analyzer::IdToken>::const_iterator
+		const strus::PatternMatcherInstanceInterface* ptinst = pii->getPatternMatcherInstance();
+		std::auto_ptr<strus::PatternMatcherContextInterface> ptctx( ptinst->createContext());
+		std::vector<strus::analyzer::PatternLexem>::const_iterator
 			ci = crmatches.begin(), ce = crmatches.end();
 		for (; ci != ce; ++ci)
 		{
@@ -174,7 +174,7 @@ int main( int argc, const char** argv)
 					<< tokstr << "'" << std::endl;
 			ptctx->putInput( *ci);
 		}
-		std::vector<strus::analyzer::TokenPatternMatchResult> results = ptctx->fetchResults();
+		std::vector<strus::analyzer::PatternMatcherResult> results = ptctx->fetchResults();
 		if (results.size() == 0 && g_errorBuffer->hasError())
 		{
 			throw std::runtime_error( "failed to scan for patterns with token pattern match automaton");
@@ -182,7 +182,7 @@ int main( int argc, const char** argv)
 
 		// Print results to buffer:
 		strus::utils::printResults( resultstrbuf, std::vector<strus::SegmenterPosition>(), results, inputsrc.c_str());
-		strus::analyzer::TokenPatternMatchStatistics stats = ptctx->getStatistics();
+		strus::analyzer::PatternMatcherStatistics stats = ptctx->getStatistics();
 		strus::utils::printStatistics( resultstrbuf, stats);
 
 		// Print result to stdout and verify result by comparing it with the expected output:

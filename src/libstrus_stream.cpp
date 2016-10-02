@@ -9,10 +9,10 @@
 /// \file libstrus_stream.cpp
 #include "strus/lib/stream.hpp"
 #include "strus/errorBufferInterface.hpp"
-#include "tokenPatternMatch.hpp"
 #include "tokenMarkup.hpp"
-#include "charRegexMatch.hpp"
-#include "patternMatchProgram.hpp"
+#include "patternMatcher.hpp"
+#include "patternLexer.hpp"
+#include "patternMatcherProgram.hpp"
 #include "strus/base/dll_tags.hpp"
 #include "internationalization.hpp"
 #include "errorUtils.hpp"
@@ -20,7 +20,7 @@
 using namespace strus;
 static bool g_intl_initialized = false;
 
-DLL_PUBLIC TokenPatternMatchInterface* strus::createTokenPatternMatch_standard( ErrorBufferInterface* errorhnd)
+DLL_PUBLIC PatternMatcherInterface* strus::createPatternMatcher_standard( ErrorBufferInterface* errorhnd)
 {
 	try
 	{
@@ -29,12 +29,12 @@ DLL_PUBLIC TokenPatternMatchInterface* strus::createTokenPatternMatch_standard( 
 			strus::initMessageTextDomain();
 			g_intl_initialized = true;
 		}
-		return new TokenPatternMatch( errorhnd);
+		return new PatternMatcher( errorhnd);
 	}
 	CATCH_ERROR_MAP_RETURN( _TXT("error creating token pattern match interface: %s"), *errorhnd, 0);
 }
 
-DLL_PUBLIC CharRegexMatchInterface* strus::createCharRegexMatch_standard( ErrorBufferInterface* errorhnd)
+DLL_PUBLIC PatternLexerInterface* strus::createPatternLexer_standard( ErrorBufferInterface* errorhnd)
 {
 	try
 	{
@@ -43,7 +43,7 @@ DLL_PUBLIC CharRegexMatchInterface* strus::createCharRegexMatch_standard( ErrorB
 			strus::initMessageTextDomain();
 			g_intl_initialized = true;
 		}
-		return new CharRegexMatch( errorhnd);
+		return new PatternLexer( errorhnd);
 	}
 	CATCH_ERROR_MAP_RETURN( _TXT("error creating char regex match interface: %s"), *errorhnd, 0);
 }
@@ -63,9 +63,9 @@ DLL_PUBLIC TokenMarkupInstanceInterface* strus::createTokenMarkupInstance_standa
 }
 
 
-DLL_PUBLIC PatternMatchProgramInterface* strus::createPatternMatchProgram_standard(
-		const TokenPatternMatchInterface* tpm,
-		const CharRegexMatchInterface* crm,
+DLL_PUBLIC PatternMatcherProgramInterface* strus::createPatternMatcherProgram_standard(
+		const PatternMatcherInterface* tpm,
+		const PatternLexerInterface* crm,
 		ErrorBufferInterface* errorhnd)
 {
 	try
@@ -75,7 +75,7 @@ DLL_PUBLIC PatternMatchProgramInterface* strus::createPatternMatchProgram_standa
 			strus::initMessageTextDomain();
 			g_intl_initialized = true;
 		}
-		return new PatternMatchProgram( tpm, crm, errorhnd);
+		return new PatternMatcherProgram( tpm, crm, errorhnd);
 	}
 	CATCH_ERROR_MAP_RETURN( _TXT("error creating the standard pattern match program interface: %s"), *errorhnd, 0);
 }
