@@ -29,7 +29,7 @@
 #include <iostream>
 #include <boost/regex.hpp>
 
-#undef STRUS_LOWLEVEL_DEBUG
+#define STRUS_LOWLEVEL_DEBUG
 
 using namespace strus;
 using namespace strus::analyzer;

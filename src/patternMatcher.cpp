@@ -24,7 +24,7 @@
 #include <cstring>
 #include <iostream>
 
-#undef STRUS_LOWLEVEL_DEBUG
+#define STRUS_LOWLEVEL_DEBUG
 
 using namespace strus;
 using namespace strus::analyzer;
