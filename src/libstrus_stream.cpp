@@ -9,7 +9,6 @@
 /// \file libstrus_stream.cpp
 #include "strus/lib/stream.hpp"
 #include "strus/errorBufferInterface.hpp"
-#include "tokenMarkup.hpp"
 #include "patternMatcher.hpp"
 #include "patternLexer.hpp"
 #include "patternMatcherProgram.hpp"
@@ -47,21 +46,6 @@ DLL_PUBLIC PatternLexerInterface* strus::createPatternLexer_stream( ErrorBufferI
 	}
 	CATCH_ERROR_MAP_RETURN( _TXT("error creating char regex match interface: %s"), *errorhnd, 0);
 }
-
-DLL_PUBLIC TokenMarkupInstanceInterface* strus::createTokenMarkupInstance_stream( ErrorBufferInterface* errorhnd)
-{
-	try
-	{
-		if (!g_intl_initialized)
-		{
-			strus::initMessageTextDomain();
-			g_intl_initialized = true;
-		}
-		return new TokenMarkupInstance( errorhnd);
-	}
-	CATCH_ERROR_MAP_RETURN( _TXT("error creating char regex match interface: %s"), *errorhnd, 0);
-}
-
 
 DLL_PUBLIC PatternMatcherProgramInterface* strus::createPatternMatcherProgram_stream(
 		const PatternMatcherInterface* tpm,

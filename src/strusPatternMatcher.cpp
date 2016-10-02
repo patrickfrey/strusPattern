@@ -11,6 +11,7 @@
 #include "strus/lib/segmenter_cjson.hpp"
 #include "strus/lib/segmenter_textwolf.hpp"
 #include "strus/lib/detector_std.hpp"
+#include "strus/lib/markup_std.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/versionBase.hpp"
@@ -277,7 +278,7 @@ public:
 			if (m_segmenter_cjson.get()) m_segmenter_cjson->defineSelectorExpression( eidx, *ei);
 			if (m_segmenter_textwolf.get()) m_segmenter_textwolf->defineSelectorExpression( eidx, *ei);
 		}
-		m_tokenMarkup.reset( strus::createTokenMarkupInstance_stream( g_errorBuffer));
+		m_tokenMarkup.reset( strus::createTokenMarkupInstance_standard( g_errorBuffer));
 		if (g_errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("global context initialization failed"));

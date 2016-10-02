@@ -33,10 +33,6 @@ PatternLexerInterface* createPatternLexer_stream(
 PatternMatcherInterface* createPatternMatcher_stream(
 		ErrorBufferInterface* errorhnd);
 
-/// \brief Create the interface for markup of tokens in a document text
-TokenMarkupInstanceInterface* createTokenMarkupInstance_stream(
-		ErrorBufferInterface* errorhnd);
-
 /// \brief Create the interface for loading programs from source that define patterns to match
 PatternMatcherProgramInterface* createPatternMatcherProgram_stream(
 		const PatternMatcherInterface* tpm,

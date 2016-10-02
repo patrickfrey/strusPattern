@@ -11,7 +11,6 @@ set( source_files
 	patternLexer.cpp
 	patternMatcher.cpp
 	patternMatcherProgram.cpp
-	tokenMarkup.cpp
 	lexems.cpp
 )
 
@@ -58,7 +57,7 @@ set_target_properties(
 # STRUS TRACE PROGRAMS
 # -------------------------------------------
 add_executable( strusPatternMatcher  strusPatternMatcher.cpp )
-target_link_libraries( strusPatternMatcher  strus_segmenter_textwolf strus_segmenter_cjson strus_detector_std local_rulematch strus_stream strus_base strus_error ${Boost_LIBRARIES} ${Intl_LIBRARIES})
+target_link_libraries( strusPatternMatcher  strus_markup_std strus_segmenter_textwolf strus_segmenter_cjson strus_detector_std local_rulematch strus_stream strus_base strus_error ${Boost_LIBRARIES} ${Intl_LIBRARIES})
 
 # ------------------------------
 # INSTALLATION
