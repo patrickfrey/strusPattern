@@ -347,12 +347,12 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
 endif()
 endif()
 
-add_subdirectory(util)
-add_subdirectory(unit)
-add_subdirectory(doc/dev-reference)
-if (EXISTS ${CMAKE_SOURCE_DIR}/tools/CMakeLists.txt)
-    add_subdirectory(tools)
-endif()
+# EXCLUDED add_subdirectory(util)
+# EXCLUDED add_subdirectory(unit)
+# EXCLUDED add_subdirectory(doc/dev-reference)
+# EXCLUDED if (EXISTS ${CMAKE_SOURCE_DIR}/tools/CMakeLists.txt)
+# EXCLUDED    add_subdirectory(tools)
+# EXCLUDED endif()
 
 # do substitutions
 configure_file(${CMAKE_MODULE_PATH}/config.h.in ${PROJECT_SOURCE_DIR}/config.h)
@@ -1012,6 +1012,6 @@ install(TARGETS hs_shared
     LIBRARY DESTINATION lib)
 endif()
 
-if(NOT WIN32)
-    add_subdirectory(examples)
-endif()
+#EXCLUDED if(NOT WIN32)
+#EXCLUDED     add_subdirectory(examples)
+#EXCLUDED endif()
