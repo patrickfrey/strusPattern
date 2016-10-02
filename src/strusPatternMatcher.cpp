@@ -51,7 +51,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 
-#define STRUS_LOWLEVEL_DEBUG
+#undef STRUS_LOWLEVEL_DEBUG
 
 static void printIntelBsdLicense()
 {

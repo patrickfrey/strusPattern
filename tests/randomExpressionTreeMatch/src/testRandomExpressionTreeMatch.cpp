@@ -35,7 +35,7 @@
 #include <boost/date_time.hpp>
 #include "boost/date_time/posix_time/posix_time.hpp"
 
-#define STRUS_LOWLEVEL_DEBUG
+#undef STRUS_LOWLEVEL_DEBUG
 
 static void initRand()
 {
