@@ -775,5 +775,9 @@ PatternLexerInstanceInterface* PatternLexer::createInstance() const
 	CATCH_ERROR_MAP_RETURN( _TXT("failed to create term match instance: %s"), *m_errorhnd, 0);
 }
 
+const char* PatternLexer::getDescription() const
+{
+	return _TXT( "pattern lexer based the Intel hyperscan library");
+}
 
 

@@ -32,7 +32,6 @@ testRandomTokenPatternMatch
 testRandomExpressionTreeMatch
 testProgramLoader
 testSimpleTokenPatternMatch
-strusPatternMatcher
 
 # CMake generated files
 CMakeCache.txt

@@ -498,3 +498,9 @@ PatternMatcherInstanceInterface* PatternMatcher::createInstance() const
 	CATCH_ERROR_MAP_RETURN( _TXT("failed to create pattern match instance: %s"), *m_errorhnd, 0);
 }
 
+const char* PatternMatcher::getDescription() const
+{
+	return _TXT( "pattern matcher based on an event driven automaton");
+}
+
+

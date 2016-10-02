@@ -30,6 +30,8 @@ public:
 	virtual std::vector<std::string> getCompileOptions() const;
 	virtual PatternMatcherInstanceInterface* createInstance() const;
 
+	virtual const char* getDescription() const;
+
 private:
 	ErrorBufferInterface* m_errorhnd;
 };
