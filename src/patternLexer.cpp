@@ -6,12 +6,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 /// \brief Implementation of detecting tokens defined as regular expressions on text
-/// \file "charRegexMatch.hpp"
-#include "charRegexMatch.hpp"
-#include "strus/analyzer/idToken.hpp"
+/// \file "patternLexer.hpp"
+#include "patternLexer.hpp"
+#include "strus/analyzer/patternLexem.hpp"
 #include "strus/analyzer/positionBind.hpp"
-#include "strus/charRegexMatchInstanceInterface.hpp"
-#include "strus/charRegexMatchContextInterface.hpp"
+#include "strus/patternLexerInstanceInterface.hpp"
+#include "strus/patternLexerContextInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/reference.hpp"
 #include "strus/base/stdint.h"
@@ -358,11 +358,11 @@ struct MatchEvent
 		:id(o.id),level(o.level),posbind(o.posbind),origsize(o.origsize),origpos(o.origpos){}
 };
 
-class CharRegexMatchContext
-	:public CharRegexMatchContextInterface
+class PatternLexerContext
+	:public PatternLexerContextInterface
 {
 public:
-	CharRegexMatchContext( const TermMatchData* data_, ErrorBufferInterface* errorhnd_)
+	PatternLexerContext( const TermMatchData* data_, ErrorBufferInterface* errorhnd_)
 		:m_errorhnd(errorhnd_),m_data(data_),m_hs_scratch(0),m_src(0)
 	{
 		hs_error_t err = hs_alloc_scratch( m_data->patterndb, &m_hs_scratch);
@@ -372,14 +372,14 @@ public:
 		}
 	}
 
-	virtual ~CharRegexMatchContext()
+	virtual ~PatternLexerContext()
 	{
 		hs_free_scratch( m_hs_scratch);
 	}
 
 	static int match_event_handler( unsigned int patternIdx, unsigned_long_long from, unsigned_long_long to, unsigned int, void *context)
 	{
-		CharRegexMatchContext* THIS = (CharRegexMatchContext*)context;
+		PatternLexerContext* THIS = (PatternLexerContext*)context;
 		try
 		{
 			if (to - from >= std::numeric_limits<uint16_t>::max())
@@ -513,11 +513,11 @@ public:
 		}
 	}
 
-	virtual std::vector<analyzer::IdToken> match( const char* src, std::size_t srclen)
+	virtual std::vector<analyzer::PatternLexem> match( const char* src, std::size_t srclen)
 	{
 		try
 		{
-			std::vector<analyzer::IdToken> rt;
+			std::vector<analyzer::PatternLexem> rt;
 			unsigned int nofExpectedTokens = srclen / 4 + 10;
 			m_matchEventAr.reserve( nofExpectedTokens);
 			m_src = src;
@@ -551,11 +551,11 @@ public:
 					case analyzer::BindContent:
 						ordpos = 1;
 						origpos = mi->origpos;
-						rt.push_back( analyzer::IdToken( mi->id, 1, 0/*origseg*/, mi->origpos, mi->origsize));
+						rt.push_back( analyzer::PatternLexem( mi->id, 1, 0/*origseg*/, mi->origpos, mi->origsize));
 						++mi;
 						goto EXITLOOP;
 					case analyzer::BindSuccessor:
-						rt.push_back( analyzer::IdToken( mi->id, 1, 0/*origseg*/, mi->origpos, mi->origsize));
+						rt.push_back( analyzer::PatternLexem( mi->id, 1, 0/*origseg*/, mi->origpos, mi->origsize));
 						break;
 					case analyzer::BindPredecessor:
 						break;
@@ -576,20 +576,20 @@ public:
 							origpos = mi->origpos;
 							++ordpos;
 						}
-						rt.push_back( analyzer::IdToken( mi->id, ordpos, 0/*origseg*/, mi->origpos, mi->origsize));
+						rt.push_back( analyzer::PatternLexem( mi->id, ordpos, 0/*origseg*/, mi->origpos, mi->origsize));
 						break;
 					case analyzer::BindSuccessor:
-						rt.push_back( analyzer::IdToken( mi->id, ordpos+1, 0/*origseg*/, mi->origpos, mi->origsize));
+						rt.push_back( analyzer::PatternLexem( mi->id, ordpos+1, 0/*origseg*/, mi->origpos, mi->origsize));
 						break;
 					case analyzer::BindPredecessor:
-						rt.push_back( analyzer::IdToken( mi->id, ordpos, 0/*origseg*/, mi->origpos, mi->origsize));
+						rt.push_back( analyzer::PatternLexem( mi->id, ordpos, 0/*origseg*/, mi->origpos, mi->origsize));
 						break;
 				}
 			}
 			m_matchEventAr.clear();
 			return rt;
 		}
-		CATCH_ERROR_MAP_RETURN( _TXT("failed to run pattern matching terms with regular expressions: %s"), *m_errorhnd, std::vector<analyzer::IdToken>());
+		CATCH_ERROR_MAP_RETURN( _TXT("failed to run pattern matching terms with regular expressions: %s"), *m_errorhnd, std::vector<analyzer::PatternLexem>());
 	}
 
 private:
@@ -600,15 +600,15 @@ private:
 	std::vector<MatchEvent> m_matchEventAr;
 };
 
-class CharRegexMatchInstance
-	:public CharRegexMatchInstanceInterface
+class PatternLexerInstance
+	:public PatternLexerInstanceInterface
 {
 public:
-	explicit CharRegexMatchInstance( ErrorBufferInterface* errorhnd_)
+	explicit PatternLexerInstance( ErrorBufferInterface* errorhnd_)
 		:m_errorhnd(errorhnd_),m_data(),m_state(DefinitionPhase)
 	{}
 
-	virtual ~CharRegexMatchInstance(){}
+	virtual ~PatternLexerInstance(){}
 
 	virtual void definePattern(
 			unsigned int id,
@@ -651,7 +651,7 @@ public:
 		CATCH_ERROR_MAP_RETURN( _TXT("failed to retrieve regular expression pattern symbol: %s"), *m_errorhnd, 0);
 	}
 
-	virtual bool compile( const CharRegexMatchOptions& opts)
+	virtual bool compile( const PatternLexerOptions& opts)
 	{
 		try
 		{
@@ -699,7 +699,7 @@ public:
 		CATCH_ERROR_MAP_RETURN( _TXT("failed to compile regular expression patterns: %s"), *m_errorhnd, false);
 	}
 
-	virtual CharRegexMatchContextInterface* createContext() const
+	virtual PatternLexerContextInterface* createContext() const
 	{
 		try
 		{
@@ -707,16 +707,16 @@ public:
 			{
 				throw strus::runtime_error(_TXT("called create context without calling 'compile'"));
 			}
-			return new CharRegexMatchContext( &m_data, m_errorhnd);
+			return new PatternLexerContext( &m_data, m_errorhnd);
 		}
 		CATCH_ERROR_MAP_RETURN( _TXT("failed to create term match context: %s"), *m_errorhnd, 0);
 	}
 
 private:
-	static unsigned int getFlags( const CharRegexMatchOptions& opts)
+	static unsigned int getFlags( const PatternLexerOptions& opts)
 	{
 		unsigned int rt = 0;
-		CharRegexMatchOptions::const_iterator ai = opts.begin(), ae = opts.end();
+		PatternLexerOptions::const_iterator ai = opts.begin(), ae = opts.end();
 		for (; ai != ae; ++ai)
 		{
 			if (utils::caseInsensitiveEquals( *ai, "CASELESS"))
@@ -755,7 +755,7 @@ private:
 };
 
 
-std::vector<std::string> CharRegexMatch::getCompileOptions() const
+std::vector<std::string> PatternLexer::getCompileOptions() const
 {
 	std::vector<std::string> rt;
 	static const char* ar[] = {"CASELESS", "DOTALL", "MULTILINE", "ALLOWEMPTY", "UCP", 0};
@@ -766,11 +766,11 @@ std::vector<std::string> CharRegexMatch::getCompileOptions() const
 	return rt;
 }
 
-CharRegexMatchInstanceInterface* CharRegexMatch::createInstance() const
+PatternLexerInstanceInterface* PatternLexer::createInstance() const
 {
 	try
 	{
-		return new CharRegexMatchInstance( m_errorhnd);
+		return new PatternLexerInstance( m_errorhnd);
 	}
 	CATCH_ERROR_MAP_RETURN( _TXT("failed to create term match instance: %s"), *m_errorhnd, 0);
 }

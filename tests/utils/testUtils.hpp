@@ -9,9 +9,9 @@
 /// \file "testUtils.hpp"
 #ifndef _STRUS_STREAM_TEST_UTILS_HPP_INCLUDED
 #define _STRUS_STREAM_TEST_UTILS_HPP_INCLUDED
-#include "strus/tokenPatternMatchInstanceInterface.hpp"
-#include "strus/analyzer/tokenPatternMatchResult.hpp"
-#include "strus/analyzer/tokenPatternMatchStatistics.hpp"
+#include "strus/patternMatcherInstanceInterface.hpp"
+#include "strus/analyzer/patternMatcherResult.hpp"
+#include "strus/analyzer/patternMatcherStatistics.hpp"
 #include "strus/segmenterContextInterface.hpp"
 #include <vector>
 #include <string>
@@ -59,12 +59,12 @@ unsigned int termId( TermType tp, unsigned int no);
 
 Document createRandomDocument( unsigned int no, unsigned int size, unsigned int mod);
 
-typedef strus::TokenPatternMatchInstanceInterface::JoinOperation JoinOperation;
+typedef strus::PatternMatcherInstanceInterface::JoinOperation JoinOperation;
 JoinOperation joinOperation( const char* joinopstr);
 
 unsigned int getUintValue( const char* arg);
-void printResults( std::ostream& out, const std::vector<strus::SegmenterPosition>& segmentposmap, const std::vector<strus::analyzer::TokenPatternMatchResult>& results, const char* src=0);
-void printStatistics( std::ostream& out, const strus::analyzer::TokenPatternMatchStatistics& stats);
+void printResults( std::ostream& out, const std::vector<strus::SegmenterPosition>& segmentposmap, const std::vector<strus::analyzer::PatternMatcherResult>& results, const char* src=0);
+void printStatistics( std::ostream& out, const strus::analyzer::PatternMatcherStatistics& stats);
 
 }} //namespace
 #endif

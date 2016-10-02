@@ -6,18 +6,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 /// \brief StrusStream program implementation for loading pattern definitions from source
-/// \file "patternMatchProgram.hpp"
-#ifndef _STRUS_STREAM_PATTERN_MATCH_PROGRAM_IMPLEMENTATION_HPP_INCLUDED
-#define _STRUS_STREAM_PATTERN_MATCH_PROGRAM_IMPLEMENTATION_HPP_INCLUDED
+/// \file "patternMatcherProgram.hpp"
+#ifndef _STRUS_STREAM_PATTERN_MATCHER_PROGRAM_IMPLEMENTATION_HPP_INCLUDED
+#define _STRUS_STREAM_PATTERN_MATCHER_PROGRAM_IMPLEMENTATION_HPP_INCLUDED
 #include "strus/reference.hpp"
-#include "strus/patternMatchProgramInterface.hpp"
-#include "strus/patternMatchProgramInstanceInterface.hpp"
-#include "strus/tokenPatternMatchInstanceInterface.hpp"
-#include "strus/tokenPatternMatchInterface.hpp"
-#include "strus/analyzer/charRegexMatchOptions.hpp"
-#include "strus/analyzer/tokenPatternMatchOptions.hpp"
-#include "strus/charRegexMatchInstanceInterface.hpp"
-#include "strus/charRegexMatchInterface.hpp"
+#include "strus/patternMatcherProgramInterface.hpp"
+#include "strus/patternMatcherProgramInstanceInterface.hpp"
+#include "strus/patternMatcherInstanceInterface.hpp"
+#include "strus/patternMatcherInterface.hpp"
+#include "strus/analyzer/patternMatcherOptions.hpp"
+#include "strus/analyzer/patternLexerOptions.hpp"
+#include "strus/patternLexerInstanceInterface.hpp"
+#include "strus/patternLexerInterface.hpp"
 #include "symbolTable.hpp"
 #include <string>
 #include <vector>
@@ -30,24 +30,24 @@ namespace strus {
 class ErrorBufferInterface;
 
 /// \brief StrusStream program loader for loading pattern definitions from source
-class PatternMatchProgramInstance
-	:public PatternMatchProgramInstanceInterface
+class PatternMatcherProgramInstance
+	:public PatternMatcherProgramInstanceInterface
 {
 public:
 	/// \brief Constructor
-	PatternMatchProgramInstance(
-			const TokenPatternMatchInterface* tpm,
-			const CharRegexMatchInterface* crm,
+	PatternMatcherProgramInstance(
+			const PatternMatcherInterface* tpm,
+			const PatternLexerInterface* crm,
 			ErrorBufferInterface* errorhnd_);
 
 	/// \brief Destructor
-	virtual ~PatternMatchProgramInstance(){}
+	virtual ~PatternMatcherProgramInstance(){}
 
 	virtual bool load( const std::string& source);
 	virtual bool compile();
 
-	virtual const CharRegexMatchInstanceInterface* getCharRegexMatchInstance() const;
-	virtual const TokenPatternMatchInstanceInterface* getTokenPatternMatchInstance() const;
+	virtual const PatternLexerInstanceInterface* getPatternLexerInstance() const;
+	virtual const PatternMatcherInstanceInterface* getPatternMatcherInstance() const;
 
 	virtual const char* tokenName( unsigned int id) const;
 
@@ -71,12 +71,12 @@ private:
 private:
 	enum {MaxRegularExpressionNameId=(1<<24)};
 	ErrorBufferInterface* m_errorhnd;
-	std::vector<std::string> m_tokenPatternMatchOptionNames;
-	std::vector<std::string> m_charRegexMatchOptionNames;
-	analyzer::TokenPatternMatchOptions m_tokenPatternMatchOptions;
-	analyzer::CharRegexMatchOptions m_charRegexMatchOptions;
-	Reference<TokenPatternMatchInstanceInterface> m_tokenPatternMatch;
-	Reference<CharRegexMatchInstanceInterface> m_charRegexMatch;
+	std::vector<std::string> m_patternMatcherOptionNames;
+	std::vector<std::string> m_patternLexerOptionNames;
+	analyzer::PatternMatcherOptions m_patternMatcherOptions;
+	analyzer::PatternLexerOptions m_patternLexerOptions;
+	Reference<PatternMatcherInstanceInterface> m_patternMatcher;
+	Reference<PatternLexerInstanceInterface> m_patternLexer;
 	SymbolTable m_regexNameSymbolTab;
 	SymbolTable m_patternNameSymbolTab;
 	std::vector<uint32_t> m_symbolRegexIdList;
@@ -85,21 +85,21 @@ private:
 
 
 /// \brief StrusStream interface to load pattern definitions from source
-class PatternMatchProgram
-	:public PatternMatchProgramInterface
+class PatternMatcherProgram
+	:public PatternMatcherProgramInterface
 {
 public:
-	PatternMatchProgram( const TokenPatternMatchInterface* tpm_, const CharRegexMatchInterface* crm_, ErrorBufferInterface* errorhnd_)
+	PatternMatcherProgram( const PatternMatcherInterface* tpm_, const PatternLexerInterface* crm_, ErrorBufferInterface* errorhnd_)
 		:m_errorhnd(errorhnd_),m_tpm(tpm_),m_crm(crm_){}
 
-	virtual ~PatternMatchProgram(){}
+	virtual ~PatternMatcherProgram(){}
 
-	virtual PatternMatchProgramInstanceInterface* createInstance() const;
+	virtual PatternMatcherProgramInstanceInterface* createInstance() const;
 
 private:
 	ErrorBufferInterface* m_errorhnd;
-	const TokenPatternMatchInterface* m_tpm;
-	const CharRegexMatchInterface* m_crm;
+	const PatternMatcherInterface* m_tpm;
+	const PatternLexerInterface* m_crm;
 };
 
 

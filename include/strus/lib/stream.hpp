@@ -15,22 +15,22 @@
 namespace strus {
 
 /// \brief Forward declaration
-class CharRegexMatchInterface;
+class PatternLexerInterface;
 /// \brief Forward declaration
-class TokenPatternMatchInterface;
+class PatternMatcherInterface;
+/// \brief Forward declaration
+class PatternMatcherProgramInterface;
 /// \brief Forward declaration
 class TokenMarkupInstanceInterface;
-/// \brief Forward declaration
-class PatternMatchProgramInterface;
 /// \brief Forward declaration
 class ErrorBufferInterface;
 
 /// \brief Create the interface for regular expression matching on text
-CharRegexMatchInterface* createCharRegexMatch_standard(
+PatternLexerInterface* createPatternLexer_standard(
 		ErrorBufferInterface* errorhnd);
 
 /// \brief Create the interface for pattern matching on a stream of tokens
-TokenPatternMatchInterface* createTokenPatternMatch_standard(
+PatternMatcherInterface* createPatternMatcher_standard(
 		ErrorBufferInterface* errorhnd);
 
 /// \brief Create the interface for markup of tokens in a document text
@@ -38,9 +38,9 @@ TokenMarkupInstanceInterface* createTokenMarkupInstance_standard(
 		ErrorBufferInterface* errorhnd);
 
 /// \brief Create the interface for loading programs from source that define patterns to match
-PatternMatchProgramInterface* createPatternMatchProgram_standard(
-		const TokenPatternMatchInterface* tpm,
-		const CharRegexMatchInterface* crm,
+PatternMatcherProgramInterface* createPatternMatcherProgram_standard(
+		const PatternMatcherInterface* tpm,
+		const PatternLexerInterface* crm,
 		ErrorBufferInterface* errorhnd);
 
 }//namespace

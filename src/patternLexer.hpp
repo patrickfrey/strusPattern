@@ -6,10 +6,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 /// \brief Implementation of detecting tokens defined as regular expressions on text
-/// \file "charRegexMatch.hpp"
-#ifndef _STRUS_STREAM_CHAR_REGEX_MATCH_IMPLEMENTATION_HPP_INCLUDED
-#define _STRUS_STREAM_CHAR_REGEX_MATCH_IMPLEMENTATION_HPP_INCLUDED
-#include "strus/charRegexMatchInterface.hpp"
+/// \file "patternLexer.hpp"
+#ifndef _STRUS_STREAM_PATTERN_LEXER_IMPLEMENTATION_HPP_INCLUDED
+#define _STRUS_STREAM_PATTERN_LEXER_IMPLEMENTATION_HPP_INCLUDED
+#include "strus/patternLexerInterface.hpp"
 
 namespace strus {
 
@@ -18,17 +18,17 @@ class ErrorBufferInterface;
 
 /// \brief Object for creating an automaton for detecting tokens defined as regular expressions in text
 /// \note Based on the Intel hyperscan library as backend.
-class CharRegexMatch
-	:public CharRegexMatchInterface
+class PatternLexer
+	:public PatternLexerInterface
 {
 public:
-	explicit CharRegexMatch( ErrorBufferInterface* errorhnd_)
+	explicit PatternLexer( ErrorBufferInterface* errorhnd_)
 		:m_errorhnd(errorhnd_){}
 
-	virtual ~CharRegexMatch(){}
+	virtual ~PatternLexer(){}
 
 	virtual std::vector<std::string> getCompileOptions() const;
-	virtual CharRegexMatchInstanceInterface* createInstance() const;
+	virtual PatternLexerInstanceInterface* createInstance() const;
 
 private:
 	ErrorBufferInterface* m_errorhnd;
