@@ -24,7 +24,7 @@
 #include <cstring>
 #include <iostream>
 
-#define STRUS_LOWLEVEL_DEBUG
+#undef STRUS_LOWLEVEL_DEBUG
 
 using namespace strus;
 using namespace strus::analyzer;
@@ -497,4 +497,10 @@ PatternMatcherInstanceInterface* PatternMatcher::createInstance() const
 	}
 	CATCH_ERROR_MAP_RETURN( _TXT("failed to create pattern match instance: %s"), *m_errorhnd, 0);
 }
+
+const char* PatternMatcher::getDescription() const
+{
+	return _TXT( "pattern matcher based on an event driven automaton");
+}
+
 

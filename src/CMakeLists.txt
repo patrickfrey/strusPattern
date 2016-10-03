@@ -11,7 +11,6 @@ set( source_files
 	patternLexer.cpp
 	patternMatcher.cpp
 	patternMatcherProgram.cpp
-	tokenMarkup.cpp
 	lexems.cpp
 )
 
@@ -43,6 +42,10 @@ target_link_libraries( local_rulematch strus_base compactnodetrie_static hs ${Bo
 add_library( strus_stream SHARED libstrus_stream.cpp )
 target_link_libraries( strus_stream local_rulematch strus_base  )
 
+add_library( modstrus_analyzer_stream  MODULE  modstrus_analyzer_stream.cpp )
+set_target_properties( modstrus_analyzer_stream PROPERTIES PREFIX "")
+target_link_libraries( modstrus_analyzer_stream strus_module_analyzer strus_stream )
+
 set_target_properties(
     strus_stream
     PROPERTIES
@@ -54,13 +57,17 @@ set_target_properties(
 # STRUS TRACE PROGRAMS
 # -------------------------------------------
 add_executable( strusPatternMatcher  strusPatternMatcher.cpp )
-target_link_libraries( strusPatternMatcher  strus_segmenter_textwolf strus_segmenter_cjson strus_detector_std local_rulematch strus_stream strus_base strus_error ${Boost_LIBRARIES} ${Intl_LIBRARIES})
+target_link_libraries( strusPatternMatcher  strus_markup_std strus_segmenter_textwolf strus_segmenter_cjson strus_detector_std local_rulematch strus_stream strus_base strus_error ${Boost_LIBRARIES} ${Intl_LIBRARIES})
 
 # ------------------------------
 # INSTALLATION
 # ------------------------------
 install( TARGETS strus_stream
            LIBRARY DESTINATION ${LIB_INSTALL_DIR}/strus )
+
+install( TARGETS modstrus_analyzer_stream
+           LIBRARY DESTINATION ${LIB_INSTALL_DIR}/strus/modules
+	   RUNTIME DESTINATION bin )
 
 install( TARGETS strusPatternMatcher
 	   RUNTIME DESTINATION bin )

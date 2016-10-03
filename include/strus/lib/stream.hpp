@@ -26,19 +26,15 @@ class TokenMarkupInstanceInterface;
 class ErrorBufferInterface;
 
 /// \brief Create the interface for regular expression matching on text
-PatternLexerInterface* createPatternLexer_standard(
+PatternLexerInterface* createPatternLexer_stream(
 		ErrorBufferInterface* errorhnd);
 
 /// \brief Create the interface for pattern matching on a stream of tokens
-PatternMatcherInterface* createPatternMatcher_standard(
-		ErrorBufferInterface* errorhnd);
-
-/// \brief Create the interface for markup of tokens in a document text
-TokenMarkupInstanceInterface* createTokenMarkupInstance_standard(
+PatternMatcherInterface* createPatternMatcher_stream(
 		ErrorBufferInterface* errorhnd);
 
 /// \brief Create the interface for loading programs from source that define patterns to match
-PatternMatcherProgramInterface* createPatternMatcherProgram_standard(
+PatternMatcherProgramInterface* createPatternMatcherProgram_stream(
 		const PatternMatcherInterface* tpm,
 		const PatternLexerInterface* crm,
 		ErrorBufferInterface* errorhnd);

@@ -11,6 +11,7 @@
 #include "strus/lib/segmenter_cjson.hpp"
 #include "strus/lib/segmenter_textwolf.hpp"
 #include "strus/lib/detector_std.hpp"
+#include "strus/lib/markup_std.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/versionBase.hpp"
@@ -50,7 +51,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 
-#define STRUS_LOWLEVEL_DEBUG
+#undef STRUS_LOWLEVEL_DEBUG
 
 static void printIntelBsdLicense()
 {
@@ -841,11 +842,11 @@ int main( int argc, const char* argv[])
 		g_errorBuffer = errorBuffer.get();
 
 		// Create objects:
-		std::auto_ptr<strus::PatternMatcherInterface> pti( strus::createPatternMatcher_standard( g_errorBuffer));
+		std::auto_ptr<strus::PatternMatcherInterface> pti( strus::createPatternMatcher_stream( g_errorBuffer));
 		if (!pti.get()) throw std::runtime_error("failed to create pattern matcher");
-		std::auto_ptr<strus::PatternLexerInterface> cri( strus::createPatternLexer_standard( g_errorBuffer));
+		std::auto_ptr<strus::PatternLexerInterface> cri( strus::createPatternLexer_stream( g_errorBuffer));
 		if (!cri.get()) throw std::runtime_error("failed to create char regex matcher");
-		std::auto_ptr<strus::PatternMatcherProgramInterface> ppi( strus::createPatternMatcherProgram_standard( pti.get(), cri.get(), g_errorBuffer));
+		std::auto_ptr<strus::PatternMatcherProgramInterface> ppi( strus::createPatternMatcherProgram_stream( pti.get(), cri.get(), g_errorBuffer));
 		if (!ppi.get()) throw std::runtime_error("failed to create pattern program loader");
 		std::auto_ptr<strus::PatternMatcherProgramInstanceInterface> pii( ppi->createInstance());
 		if (!pii.get()) throw std::runtime_error("failed to create pattern program loader instance");
