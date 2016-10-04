@@ -10,7 +10,6 @@ set( source_files
 	symbolTable.cpp
 	patternLexer.cpp
 	patternMatcher.cpp
-	patternMatcherProgram.cpp
 	lexems.cpp
 )
 
@@ -53,12 +52,6 @@ set_target_properties(
     SOVERSION "${STRUS_MAJOR_VERSION}.${STRUS_MINOR_VERSION}"
     VERSION ${STRUS_VERSION} )
 
-# -------------------------------------------
-# STRUS TRACE PROGRAMS
-# -------------------------------------------
-add_executable( strusPatternMatcher  strusPatternMatcher.cpp )
-target_link_libraries( strusPatternMatcher  strus_markup_std strus_segmenter_textwolf strus_segmenter_cjson strus_detector_std local_rulematch strus_stream strus_base strus_error ${Boost_LIBRARIES} ${Intl_LIBRARIES})
-
 # ------------------------------
 # INSTALLATION
 # ------------------------------
@@ -69,6 +62,4 @@ install( TARGETS modstrus_analyzer_stream
            LIBRARY DESTINATION ${LIB_INSTALL_DIR}/strus/modules
 	   RUNTIME DESTINATION bin )
 
-install( TARGETS strusPatternMatcher
-	   RUNTIME DESTINATION bin )
 

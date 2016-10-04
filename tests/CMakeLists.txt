@@ -5,7 +5,6 @@ add_subdirectory( utils )
 add_subdirectory( simpleTokenPatternMatch )
 add_subdirectory( randomTokenPatternMatch )
 add_subdirectory( charRegexMatch )
-add_subdirectory( programLoader )
 add_subdirectory( randomExpressionTreeMatch )
 
 

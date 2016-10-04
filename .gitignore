@@ -30,7 +30,6 @@
 testCharRegexMatch
 testRandomTokenPatternMatch
 testRandomExpressionTreeMatch
-testProgramLoader
 testSimpleTokenPatternMatch
 
 # CMake generated files
