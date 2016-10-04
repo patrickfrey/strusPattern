@@ -1,4 +1,4 @@
-Source: strusstream
+Source: struspattern
 Section: libs
 Priority: optional
 Maintainer: Patrick Frey <patrickpfrey@yahoo.com>
@@ -9,14 +9,14 @@ Build-Depends: debhelper (>= 4.1.16), cmake,
 Standards-Version: 3.8.3
 Homepage: http://project-strus.net
 
-Package: strusstream
+Package: struspattern
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: Library offering stream processing of documents
- Library implementing pattern matching in documents processed in a stream.
+Description: Library offering pattern matching on text
+ Library implementing pattern matching on text for document and query analysis.
 
-Package: strusstream-dev
+Package: struspattern-dev
 Architecture: any
-Depends: strusstream, ${shlibs:Depends}, ${misc:Depends}
-Description: strusstream development files
- Strusstream development files.
+Depends: struspattern, ${shlibs:Depends}, ${misc:Depends}
+Description: strus pattern development files
+ Strus pattern development files.

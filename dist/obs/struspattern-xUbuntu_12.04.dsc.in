@@ -1,7 +1,7 @@
 Format: 3.0 (quilt)
-Source: strusstream
+Source: struspattern
 Version: @STRUS_VERSION@-xUbuntu12.04
-Binary: strusstream
+Binary: struspattern
 Maintainer: Patrick Frey <patrickpfrey@yahoo.com>
 Architecture: any
 Build-Depends: debhelper (>= 4.1.16), cmake,
