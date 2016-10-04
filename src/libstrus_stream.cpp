@@ -11,7 +11,6 @@
 #include "strus/errorBufferInterface.hpp"
 #include "patternMatcher.hpp"
 #include "patternLexer.hpp"
-#include "patternMatcherProgram.hpp"
 #include "strus/base/dll_tags.hpp"
 #include "internationalization.hpp"
 #include "errorUtils.hpp"
@@ -46,22 +45,4 @@ DLL_PUBLIC PatternLexerInterface* strus::createPatternLexer_stream( ErrorBufferI
 	}
 	CATCH_ERROR_MAP_RETURN( _TXT("error creating char regex match interface: %s"), *errorhnd, 0);
 }
-
-DLL_PUBLIC PatternMatcherProgramInterface* strus::createPatternMatcherProgram_stream(
-		const PatternMatcherInterface* tpm,
-		const PatternLexerInterface* crm,
-		ErrorBufferInterface* errorhnd)
-{
-	try
-	{
-		if (!g_intl_initialized)
-		{
-			strus::initMessageTextDomain();
-			g_intl_initialized = true;
-		}
-		return new PatternMatcherProgram( tpm, crm, errorhnd);
-	}
-	CATCH_ERROR_MAP_RETURN( _TXT("error creating the standard pattern match program interface: %s"), *errorhnd, 0);
-}
-
 

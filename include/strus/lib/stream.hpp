@@ -19,8 +19,6 @@ class PatternLexerInterface;
 /// \brief Forward declaration
 class PatternMatcherInterface;
 /// \brief Forward declaration
-class PatternMatcherProgramInterface;
-/// \brief Forward declaration
 class TokenMarkupInstanceInterface;
 /// \brief Forward declaration
 class ErrorBufferInterface;
@@ -31,12 +29,6 @@ PatternLexerInterface* createPatternLexer_stream(
 
 /// \brief Create the interface for pattern matching on a stream of tokens
 PatternMatcherInterface* createPatternMatcher_stream(
-		ErrorBufferInterface* errorhnd);
-
-/// \brief Create the interface for loading programs from source that define patterns to match
-PatternMatcherProgramInterface* createPatternMatcherProgram_stream(
-		const PatternMatcherInterface* tpm,
-		const PatternLexerInterface* crm,
 		ErrorBufferInterface* errorhnd);
 
 }//namespace
