@@ -5,10 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// \brief Some utility classes and funtions for the StrusStream tests
+/// \brief Some utility classes and funtions for the strus pattern tests
 /// \file "testUtils.hpp"
-#ifndef _STRUS_STREAM_TEST_UTILS_HPP_INCLUDED
-#define _STRUS_STREAM_TEST_UTILS_HPP_INCLUDED
+#ifndef _STRUS_PATTERN_TEST_UTILS_HPP_INCLUDED
+#define _STRUS_PATTERN_TEST_UTILS_HPP_INCLUDED
 #include "strus/patternMatcherInstanceInterface.hpp"
 #include "strus/analyzer/patternMatcherResult.hpp"
 #include "strus/analyzer/patternMatcherStatistics.hpp"

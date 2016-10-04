@@ -6,8 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 ///\brief Definition of a pool of basic POD stack structures for the rule matcher automaton
-#ifndef _STRUS_STREAM_POD_STACK_POOL_BASE_HPP_INCLUDED
-#define _STRUS_STREAM_POD_STACK_POOL_BASE_HPP_INCLUDED
+#ifndef _STRUS_PATTERN_POD_STACK_POOL_BASE_HPP_INCLUDED
+#define _STRUS_PATTERN_POD_STACK_POOL_BASE_HPP_INCLUDED
 #include "strus/base/stdint.h"
 #include "podStructArrayBase.hpp"
 #include "podStructTableBase.hpp"
