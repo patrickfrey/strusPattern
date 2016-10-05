@@ -15,15 +15,17 @@
 
 static const strus::PatternLexerConstructor lexer =
 {
-	"stream", strus::createPatternLexer_stream
+	"pattern_std", strus::createPatternLexer_stream
 };
 
 static const strus::PatternMatcherConstructor matcher =
 {
-	"stream", strus::createPatternMatcher_stream
+	"pattern_std", strus::createPatternMatcher_stream
 };
 
 static const char* intel_hyperscan_license =
+	" Intel hyperscan library:\n"
+	" ------------------------\n"
 	" Copyright (c) 2015, Intel Corporation\n\n"
 	" Redistribution and use in source and binary forms, with or without\n"
 	" modification, are permitted provided that the following conditions are met:\n"
