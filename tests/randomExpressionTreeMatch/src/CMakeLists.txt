@@ -15,5 +15,5 @@ link_directories(
 )
 
 add_executable( testRandomExpressionTreeMatch testRandomExpressionTreeMatch.cpp )
-target_link_libraries( testRandomExpressionTreeMatch strus_error strus_base strus_stream local_test_utils ${Boost_LIBRARIES} "${Intl_LIBRARIES}"  )
+target_link_libraries( testRandomExpressionTreeMatch strus_error strus_base strus_pattern local_test_utils ${Boost_LIBRARIES} "${Intl_LIBRARIES}"  )
 

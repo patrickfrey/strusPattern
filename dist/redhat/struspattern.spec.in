@@ -1,4 +1,4 @@
-# Strusstream spec file
+# struspattern spec file
 
 # Set distribution based on some OpenSuse and distribution macros
 # this is only relevant when building on https://build.opensuse.org
@@ -113,7 +113,7 @@
 %endif
 
 Summary: Library implementing the storage of a text search engine
-Name: strusstream
+Name: struspattern
 %define main_version @STRUS_VERSION@
 %define dep_version @STRUS_MAJOR_VERSION@.@STRUS_MINOR_VERSION@
 Version: %{main_version}
@@ -225,11 +225,11 @@ Packager: Patrick Frey <patrickpfrey@yahoo.com>
 Library implementing the storage of a text search engine.
 
 %package devel
-Summary: strusstream development files
+Summary: struspattern development files
 Group: Development/Libraries/C++
 
 %description devel
-The libraries and header files used for development with strusstream.
+The libraries and header files used for development with struspattern.
 
 Requires: %{name} >= %{main_version}-%{release}
 
@@ -267,12 +267,13 @@ make test
 %files
 %defattr( -, root, root )
 %dir %{_libdir}/strus
-%{_libdir}/strus/libstrus_stream.so.@STRUS_MAJOR_VERSION@.@STRUS_MINOR_VERSION@
-%{_libdir}/strus/libstrus_stream.so.@STRUS_MAJOR_VERSION@.@STRUS_MINOR_VERSION@.@STRUS_PATCH_VERSION@
+%{_libdir}/strus/libstrus_pattern.so.@STRUS_MAJOR_VERSION@.@STRUS_MINOR_VERSION@
+%{_libdir}/strus/libstrus_pattern.so.@STRUS_MAJOR_VERSION@.@STRUS_MINOR_VERSION@.@STRUS_PATCH_VERSION@
 
 %files devel
 %defattr( -, root, root )
-%{_libdir}/strus/libstrus_stream.so
+%{_libdir}/strus/libstrus_pattern.so
+%{_libdir}/strus/modstrus_analyzer_pattern.so
 %dir %{_includedir}/strus
 %{_includedir}/strus/*.hpp
 %dir %{_includedir}/strus/lib

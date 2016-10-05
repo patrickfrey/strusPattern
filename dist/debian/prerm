@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Debian prerm script for strusstream
+# Debian prerm script for struspattern
 
 # summary of how this script can be called:
 #        * <prerm> `remove'

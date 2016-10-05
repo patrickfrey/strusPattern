@@ -38,15 +38,15 @@ link_directories(
 add_library( local_rulematch STATIC ${source_files} )
 target_link_libraries( local_rulematch strus_base compactnodetrie_static hs ${Boost_LIBRARIES} ${Intl_LIBRARIES} )
 
-add_library( strus_stream SHARED libstrus_stream.cpp )
-target_link_libraries( strus_stream local_rulematch strus_base  )
+add_library( strus_pattern SHARED libstrus_pattern.cpp )
+target_link_libraries( strus_pattern local_rulematch strus_base  )
 
-add_library( modstrus_analyzer_stream  MODULE  modstrus_analyzer_stream.cpp )
-set_target_properties( modstrus_analyzer_stream PROPERTIES PREFIX "")
-target_link_libraries( modstrus_analyzer_stream strus_module_analyzer strus_stream )
+add_library( modstrus_analyzer_pattern  MODULE  modstrus_analyzer_pattern.cpp )
+set_target_properties( modstrus_analyzer_pattern PROPERTIES PREFIX "")
+target_link_libraries( modstrus_analyzer_pattern strus_module_analyzer strus_pattern )
 
 set_target_properties(
-    strus_stream
+    strus_pattern
     PROPERTIES
     DEBUG_POSTFIX "_d"
     SOVERSION "${STRUS_MAJOR_VERSION}.${STRUS_MINOR_VERSION}"
@@ -55,10 +55,10 @@ set_target_properties(
 # ------------------------------
 # INSTALLATION
 # ------------------------------
-install( TARGETS strus_stream
+install( TARGETS strus_pattern
            LIBRARY DESTINATION ${LIB_INSTALL_DIR}/strus )
 
-install( TARGETS modstrus_analyzer_stream
+install( TARGETS modstrus_analyzer_pattern
            LIBRARY DESTINATION ${LIB_INSTALL_DIR}/strus/modules
 	   RUNTIME DESTINATION bin )
 

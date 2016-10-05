@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 #include "strus/base/stdint.h"
-#include "strus/lib/stream.hpp"
+#include "strus/lib/pattern.hpp"
 #include "strus/lib/error.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/reference.hpp"
@@ -847,7 +847,7 @@ static std::vector<strus::analyzer::PatternMatcherResult>
 
 //
 // We have comparison differences mainly due to non determinism of random generated rules and the fact
-// that StrusStream stops with the first match (non generating all possible solutions).
+// that strus pattern stops with the first match (non generating all possible solutions).
 //
 #ifdef STRUS_TEST_RANDOM_EXPRESSION_TREE_COMPARE_RES_EXACT
 static bool compareResults( const std::vector<strus::analyzer::PatternMatcherResult>& results, const std::vector<strus::analyzer::PatternMatcherResult>& expectedResults)

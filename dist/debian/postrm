@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Debian postrm script for strusstream
+# Debian postrm script for struspattern
 
 # summary of how this script can be called:
 #        * <postrm> `remove'

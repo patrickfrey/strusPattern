@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PACKAGE_NAME=strusstream
+PACKAGE_NAME=struspattern
 PACKAGE_VERSION=@STRUS_VERSION@
 OSC_HOME=$HOME/home:PatrickFrey/$PACKAGE_NAME
 

@@ -7,8 +7,8 @@
  */
 /// \brief Implementation of detecting tokens defined as regular expressions on text
 /// \file "patternLexer.hpp"
-#ifndef _STRUS_STREAM_PATTERN_LEXER_IMPLEMENTATION_HPP_INCLUDED
-#define _STRUS_STREAM_PATTERN_LEXER_IMPLEMENTATION_HPP_INCLUDED
+#ifndef _STRUS_PATTERN_PATTERN_LEXER_IMPLEMENTATION_HPP_INCLUDED
+#define _STRUS_PATTERN_PATTERN_LEXER_IMPLEMENTATION_HPP_INCLUDED
 #include "strus/patternLexerInterface.hpp"
 
 namespace strus {

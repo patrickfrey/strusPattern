@@ -7,8 +7,8 @@
  */
 /// \brief Implementation of a pattern matcher detecting patterns of tokens in a document stream
 /// \file "patternMatcher.hpp"
-#ifndef _STRUS_STREAM_PATTERN_MATCHER_IMPLEMENTATION_HPP_INCLUDED
-#define _STRUS_STREAM_PATTERN_MATCHER_IMPLEMENTATION_HPP_INCLUDED
+#ifndef _STRUS_PATTERN_MATCHER_IMPLEMENTATION_HPP_INCLUDED
+#define _STRUS_PATTERN_MATCHER_IMPLEMENTATION_HPP_INCLUDED
 #include "strus/patternMatcherInterface.hpp"
 
 namespace strus

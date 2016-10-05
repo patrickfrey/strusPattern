@@ -7,8 +7,8 @@
  */
 /// \brief Exported functions of the strus stream library implementing pattern matching of rules built from document terms
 /// \file error.hpp
-#ifndef _STRUS_STREAM_LIB_HPP_INCLUDED
-#define _STRUS_STREAM_LIB_HPP_INCLUDED
+#ifndef _STRUS_PATTERN_LIB_HPP_INCLUDED
+#define _STRUS_PATTERN_LIB_HPP_INCLUDED
 #include <cstdio>
 
 /// \brief strus toplevel namespace

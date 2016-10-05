@@ -7,7 +7,7 @@
  */
 /// \brief Exported functions of the strus stream library
 /// \file libstrus_stream.cpp
-#include "strus/lib/stream.hpp"
+#include "strus/lib/pattern.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "patternMatcher.hpp"
 #include "patternLexer.hpp"

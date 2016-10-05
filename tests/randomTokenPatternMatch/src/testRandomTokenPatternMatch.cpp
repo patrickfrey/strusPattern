@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 #include "strus/base/stdint.h"
-#include "strus/lib/stream.hpp"
+#include "strus/lib/pattern.hpp"
 #include "strus/lib/error.hpp"
 #include "strus/reference.hpp"
 #include "strus/errorBufferInterface.hpp"
