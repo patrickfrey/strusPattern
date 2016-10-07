@@ -269,11 +269,11 @@ make test
 %dir %{_libdir}/strus
 %{_libdir}/strus/libstrus_pattern.so.@STRUS_MAJOR_VERSION@.@STRUS_MINOR_VERSION@
 %{_libdir}/strus/libstrus_pattern.so.@STRUS_MAJOR_VERSION@.@STRUS_MINOR_VERSION@.@STRUS_PATCH_VERSION@
+%{_libdir}/strus/modules/modstrus_analyzer_pattern.so
 
 %files devel
 %defattr( -, root, root )
 %{_libdir}/strus/libstrus_pattern.so
-%{_libdir}/strus/modstrus_analyzer_pattern.so
 %dir %{_includedir}/strus
 %{_includedir}/strus/*.hpp
 %dir %{_includedir}/strus/lib
