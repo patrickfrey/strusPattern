@@ -9,7 +9,7 @@ pkgdesc='Library implementing pattern matching on text for document and query an
 license=('MPL2')
 arch=('i686' 'x86_64')
 url="http://project-strus.net"
-depends=('boost>=1.53' 'boost-libs>=1.53' "strusbase>=${_deppkgver}" "strusanalyzer>=${_deppkgver}")
+depends=('boost>=1.53' 'boost-libs>=1.53' "strusbase>=${_deppkgver}" "strus=${_deppkgver}" "strusanalyzer>=${_deppkgver}")
 makedepends=('cmake')
 source=("${pkgname}-${_mainpkgver}.tar.gz")
 
