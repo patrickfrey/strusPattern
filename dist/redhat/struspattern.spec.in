@@ -209,10 +209,19 @@ BuildRequires: boost-devel
 
 BuildRequires: strusbase-devel >= %{dep_version}
 BuildRequires: strusbase >= %{dep_version}
+BuildRequires: strus-devel >= %{dep_version}
+BuildRequires: strus >= %{dep_version}
 BuildRequires: strusanalyzer-devel >= %{dep_version}
 BuildRequires: strusanalyzer >= %{dep_version}
+BuildRequires: strustrace-devel >= %{dep_version}
+BuildRequires: strustrace >= %{dep_version}
+BuildRequires: strusmodule-devel >= %{dep_version}
+BuildRequires: strusmodule >= %{dep_version}
 Requires: strusbase >= %{dep_version}
+Requires: strus >= %{dep_version}
 Requires: strusanalyzer >= %{dep_version}
+Requires: strustrace >= %{dep_version}
+Requires: strusmodule >= %{dep_version}
 
 # Check if 'Distribution' is really set by OBS (as mentioned in bacula)
 %if ! 0%{?opensuse_bs}

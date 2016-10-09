@@ -4,7 +4,7 @@ set -e
 
 OS=$(uname -s)
 
-PROJECT=strusStream
+PROJECT=strusPattern
 
 # set up environment
 case $OS in
@@ -29,7 +29,7 @@ case $OS in
 esac
 
 # build pre-requisites
-DEPS="strusBase"
+DEPS="strusBase strus strusAnalyzer strusTrace strusModule"
 
 GITURL=`git config remote.origin.url`
 cd ..
