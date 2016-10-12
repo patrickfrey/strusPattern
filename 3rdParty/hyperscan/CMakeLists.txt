@@ -396,7 +396,7 @@ SET(hs_HEADERS
     src/hs_compile.h
     src/hs_runtime.h
 )
-install(FILES ${hs_HEADERS} DESTINATION include/hs)
+#install(FILES ${hs_HEADERS} DESTINATION include/hs)
 
 set (hs_exec_SRCS
     ${hs_HEADERS}
@@ -968,7 +968,7 @@ add_library(hs_runtime STATIC src/hs_version.c $<TARGET_OBJECTS:hs_exec>)
 set_target_properties(hs_runtime PROPERTIES
     LINKER_LANGUAGE C)
 if (NOT BUILD_SHARED_LIBS)
-    install(TARGETS hs_runtime DESTINATION lib)
+#    install(TARGETS hs_runtime DESTINATION lib)
 endif()
 
 if (BUILD_STATIC_AND_SHARED OR BUILD_SHARED_LIBS)
@@ -979,10 +979,10 @@ if (BUILD_STATIC_AND_SHARED OR BUILD_SHARED_LIBS)
         OUTPUT_NAME hs_runtime
         MACOSX_RPATH ON
         LINKER_LANGUAGE C)
-    install(TARGETS hs_runtime_shared
-        RUNTIME DESTINATION bin
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib)
+#    install(TARGETS hs_runtime_shared
+#        RUNTIME DESTINATION bin
+#        ARCHIVE DESTINATION lib
+#        LIBRARY DESTINATION lib)
 endif()
 
 # we want the static lib for testing
@@ -993,7 +993,7 @@ add_dependencies(hs ragel_Parser)
 ENDIF (WITH_RAGEL STREQUAL "YES")
 
 if (NOT BUILD_SHARED_LIBS)
-install(TARGETS hs DESTINATION lib)
+#install(TARGETS hs DESTINATION lib)
 endif()
 
 if (BUILD_STATIC_AND_SHARED OR BUILD_SHARED_LIBS)
@@ -1006,10 +1006,10 @@ if (BUILD_STATIC_AND_SHARED OR BUILD_SHARED_LIBS)
         VERSION ${LIB_VERSION}
         SOVERSION ${LIB_SOVERSION}
         MACOSX_RPATH ON)
-install(TARGETS hs_shared
-    RUNTIME DESTINATION bin
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib)
+#install(TARGETS hs_shared
+#    RUNTIME DESTINATION bin
+#    ARCHIVE DESTINATION lib
+#    LIBRARY DESTINATION lib)
 endif()
 
 #EXCLUDED if(NOT WIN32)
