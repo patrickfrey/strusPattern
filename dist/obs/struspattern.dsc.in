@@ -6,6 +6,6 @@ Maintainer: Patrick Frey <patrickpfrey@yahoo.com>
 Architecture: any
 Build-Depends: debhelper (>= 4.1.16), cmake,
  libboost-dev, libboost-thread-dev, libboost-system-dev,
- libboost-date-time-dev, strusbase-dev, strus-dev,
- strusanalyzer-dev, strustrace-dev, strusmodule-dev
+ libboost-date-time-dev, libboost-regex-dev, strusbase-dev,
+ strus-dev, strusanalyzer-dev, strustrace-dev, strusmodule-dev
 Files:

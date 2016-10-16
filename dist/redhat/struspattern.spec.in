@@ -187,6 +187,7 @@ Requires: libboost_thread1_53_0 >= 1.53.0
 Requires: libboost_atomic1_53_0 >= 1.53.0
 Requires: libboost_system1_53_0 >= 1.53.0
 Requires: libboost_date_time1_53_0 >= 1.53.0
+Requires: libboost_regex1_53_0 >= 1.53.0
 BuildRequires: boost-devel
 # for some reason OBS doesn't pull in libboost_atomic1_53_0 automatically!?
 BuildRequires: libboost_atomic1_53_0 >= 1.53.0
@@ -196,6 +197,7 @@ Requires: libboost_thread1_54_0 >= 1.54.0
 Requires: libboost_atomic1_54_0 >= 1.54.0
 Requires: libboost_system1_54_0 >= 1.54.0
 Requires: libboost_date_time1_54_0 >= 1.54.0
+Requires: libboost_regex1_54_0 >= 1.54.0
 BuildRequires: boost-devel
 %endif
 %if %{osufactory}
@@ -203,6 +205,7 @@ Requires: libboost_thread1_61_0 >= 1.61.0
 Requires: libboost_atomic1_61_0 >= 1.61.0
 Requires: libboost_system1_61_0 >= 1.61.0
 Requires: libboost_date_time1_61_0 >= 1.61.0
+Requires: libboost_regex1_61_0 >= 1.61.0
 BuildRequires: boost-devel
 %endif
 %endif
