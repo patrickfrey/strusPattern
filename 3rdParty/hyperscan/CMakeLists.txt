@@ -374,8 +374,8 @@ endif()
 
 # reset compiler flags set by super-CMakeList.txt (strusPattern)
 # and setting some more for newer gcc's
-set(HYPERSCAN_CMAKE_C_FLAGS "")
-set(HYPERSCAN_CMAKE_CXX_FLAGS "-Wno-ignored-attributes")
+set(HYPERSCAN_CMAKE_C_FLAGS "-fPIC")
+set(HYPERSCAN_CMAKE_CXX_FLAGS "-Wno-ignored-attributes -fPIC")
 
 # only set these after all tests are done
 set(CMAKE_C_FLAGS "${HYPERSCAN_CMAKE_C_FLAGS} ${EXTRA_C_FLAGS}")
