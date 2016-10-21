@@ -372,9 +372,17 @@ if (NOT WIN32)
 #            DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")
 endif()
 
+# reset compiler flags set by super-CMakeList.txt (strusPattern)
+set(HYPERSCAN_CMAKE_C_FLAGS "")
+set(HYPERSCAN_CMAKE_CXX_FLAGS "")
+
 # only set these after all tests are done
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_C_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CXX_FLAGS}")
+set(CMAKE_C_FLAGS "${HYPERSCAN_CMAKE_C_FLAGS} ${EXTRA_C_FLAGS}")
+set(CMAKE_CXX_FLAGS "${HYPERSCAN_CMAKE_CXX_FLAGS} ${EXTRA_CXX_FLAGS}")
+
+MESSAGE("Compiler used for Hyperscan:")
+MESSAGE("  C++ compilation flags: ${CMAKE_CXX_FLAGS}")
+MESSAGE("  C compilation flags: ${CMAKE_C_FLAGS}")
 
 
 if(NOT WIN32)
