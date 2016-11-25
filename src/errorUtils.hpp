@@ -7,8 +7,8 @@
  */
 /// \brief Macros, classes and functions supporting error handling
 /// \file errorUtils.hpp
-#ifndef _STRUS_TRACE_ERROR_UTILITIES_HPP_INCLUDED
-#define _STRUS_TRACE_ERROR_UTILITIES_HPP_INCLUDED
+#ifndef _STRUS_PATTERN_ERROR_UTILITIES_HPP_INCLUDED
+#define _STRUS_PATTERN_ERROR_UTILITIES_HPP_INCLUDED
 #include <stdexcept>
 #include "internationalization.hpp"
 
@@ -25,6 +25,10 @@ namespace strus
 	{\
 		(errorBuffer).report( contextExplainText, err.what());\
 	}\
+	catch (const std::logic_error& err)\
+	{\
+		(errorBuffer).report( _TXT("logic error in strus pattern: %s"), err.what());\
+	}\
 	catch (const std::exception& err)\
 	{\
 		(errorBuffer).report( _TXT("uncaught exception: %s"), err.what());\
@@ -38,6 +42,10 @@ namespace strus
 	catch (const std::runtime_error& err)\
 	{\
 		(errorBuffer).report( contextExplainText, ARG, err.what());\
+	}\
+	catch (const std::logic_error& err)\
+	{\
+		(errorBuffer).report( _TXT("logic error in strus pattern: %s"), err.what());\
 	}\
 	catch (const std::exception& err)\
 	{\
@@ -55,6 +63,11 @@ namespace strus
 		(errorBuffer).report( contextExplainText, err.what());\
 		return errorReturnValue;\
 	}\
+	catch (const std::logic_error& err)\
+	{\
+		(errorBuffer).report( _TXT("logic error in strus pattern: %s"), err.what());\
+		return errorReturnValue;\
+	}\
 	catch (const std::exception& err)\
 	{\
 		(errorBuffer).report( _TXT("uncaught exception: %s"), err.what());\
@@ -70,6 +83,11 @@ namespace strus
 	catch (const std::runtime_error& err)\
 	{\
 		(errorBuffer).report( contextExplainText, ARG, err.what());\
+		return errorReturnValue;\
+	}\
+	catch (const std::logic_error& err)\
+	{\
+		(errorBuffer).report( _TXT("logic error in strus pattern: %s"), err.what());\
 		return errorReturnValue;\
 	}\
 	catch (const std::exception& err)\
