@@ -610,7 +610,7 @@ public:
 
 	virtual ~PatternLexerInstance(){}
 
-	virtual void definePattern(
+	virtual void defineLexem(
 			unsigned int id,
 			const std::string& expression,
 			unsigned int resultIndex,

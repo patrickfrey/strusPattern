@@ -72,7 +72,7 @@ static void compile( strus::PatternLexerInstanceInterface* ptinst, const Pattern
 		strus::analyzer::PositionBind posbind = par[pi].haspos
 			? strus::analyzer::BindContent
 			: strus::analyzer::BindPredecessor;
-		ptinst->definePattern( par[pi].id, par[pi].expression, par[pi].resultIndex, par[pi].level, posbind);
+		ptinst->defineLexem( par[pi].id, par[pi].expression, par[pi].resultIndex, par[pi].level, posbind);
 	}
 	for (pi=0; sar[pi].name; ++pi)
 	{
