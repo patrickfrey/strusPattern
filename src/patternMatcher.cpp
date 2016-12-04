@@ -8,7 +8,6 @@
 /// \brief Implementation of an automaton for detecting patterns of tokens in a document stream
 /// \file "patternMatcher.cpp"
 #include "patternMatcher.hpp"
-#include "symbolTable.hpp"
 #include "utils.hpp"
 #include "errorUtils.hpp"
 #include "internationalization.hpp"
@@ -17,6 +16,7 @@
 #include "strus/patternMatcherInstanceInterface.hpp"
 #include "strus/patternMatcherContextInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
+#include "strus/base/symbolTable.hpp"
 #include "ruleMatcherAutomaton.hpp"
 #include <map>
 #include <limits>

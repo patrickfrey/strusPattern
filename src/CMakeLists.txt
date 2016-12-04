@@ -7,7 +7,6 @@ set( source_files
 	utils.cpp
 	internationalization.cpp
 	ruleMatcherAutomaton.cpp
-	symbolTable.cpp
 	patternLexer.cpp
 	patternMatcher.cpp
 	lexems.cpp
