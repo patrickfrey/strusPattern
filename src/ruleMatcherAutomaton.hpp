@@ -93,7 +93,7 @@ struct ActionSlot
 	uint32_t start_ordpos;
 	uint32_t end_ordpos;
 	uint32_t start_origseg;
-	uint16_t start_origpos;
+	uint32_t start_origpos;
 	uint16_t count;
 
 	ActionSlot( uint32_t value_, uint16_t count_, uint32_t event_, uint32_t rule_, uint32_t resultHandle_)
@@ -198,14 +198,14 @@ struct EventData
 {
 	uint32_t start_origseg;
 	uint32_t end_origseg;
-	uint16_t start_origpos;
-	uint16_t end_origpos;
+	uint32_t start_origpos;
+	uint32_t end_origpos;
 	uint32_t ordpos;
 	uint32_t subdataref;
 
 	EventData()
 		:start_origseg(0),end_origseg(0),start_origpos(0),end_origpos(0),ordpos(0),subdataref(0){}
-	EventData( uint32_t start_origseg_, uint16_t start_origpos_, uint32_t end_origseg_, uint16_t end_origpos_, uint32_t ordpos_, uint32_t subdataref_)
+	EventData( uint32_t start_origseg_, uint32_t start_origpos_, uint32_t end_origseg_, uint32_t end_origpos_, uint32_t ordpos_, uint32_t subdataref_)
 		:start_origseg(start_origseg_),end_origseg(end_origseg_),start_origpos(start_origpos_),end_origpos(end_origpos_),ordpos(ordpos_),subdataref(subdataref_){}
 	EventData( const EventData& o)
 		:start_origseg(o.start_origseg),end_origseg(o.end_origseg),start_origpos(o.start_origpos),end_origpos(o.end_origpos),ordpos(o.ordpos),subdataref(o.subdataref){}
@@ -272,10 +272,10 @@ struct Result
 	uint32_t ordpos;
 	uint32_t start_origseg;
 	uint32_t end_origseg;
-	uint16_t start_origpos;
-	uint16_t end_origpos;
+	uint32_t start_origpos;
+	uint32_t end_origpos;
 
-	Result( uint32_t resultHandle_, uint32_t eventDataReferenceIdx_, uint32_t ordpos_, uint32_t start_origseg_, uint16_t start_origpos_, uint32_t end_origseg_, uint16_t end_origpos_)
+	Result( uint32_t resultHandle_, uint32_t eventDataReferenceIdx_, uint32_t ordpos_, uint32_t start_origseg_, uint32_t start_origpos_, uint32_t end_origseg_, uint32_t end_origpos_)
 		:resultHandle(resultHandle_),eventDataReferenceIdx(eventDataReferenceIdx_),ordpos(ordpos_),start_origseg(start_origseg_),end_origseg(end_origseg_),start_origpos(start_origpos_),end_origpos(end_origpos_){}
 	Result( const Result& o)
 		:resultHandle(o.resultHandle),eventDataReferenceIdx(o.eventDataReferenceIdx),ordpos(o.ordpos),start_origseg(o.start_origseg),end_origseg(o.end_origseg),start_origpos(o.start_origpos),end_origpos(o.end_origpos){}

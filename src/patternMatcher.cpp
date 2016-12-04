@@ -67,7 +67,7 @@ public:
 			{
 				m_statemachine.setCurrentPos( m_curPosition = term.ordpos());
 			}
-			else if (term.origsize() >= (std::size_t)std::numeric_limits<uint16_t>::max())
+			else if (term.origsize() >= (std::size_t)std::numeric_limits<uint32_t>::max())
 			{
 				throw strus::runtime_error(_TXT("term event orig size out of range"));
 			}
@@ -75,7 +75,7 @@ public:
 			{
 				throw strus::runtime_error(_TXT("term event orig segment number out of range"));
 			}
-			else if (term.origpos() >= (std::size_t)std::numeric_limits<uint16_t>::max())
+			else if (term.origpos() >= (std::size_t)std::numeric_limits<uint32_t>::max())
 			{
 				throw strus::runtime_error(_TXT("term event orig segment byte position out of range"));
 			}
