@@ -172,7 +172,8 @@ public:
 class PatternTable
 {
 public:
-	PatternTable(){}
+	explicit PatternTable( ErrorBufferInterface* errorhnd_)
+		:m_errorhnd(errorhnd_){}
 
 	void definePattern(
 			unsigned int id,
@@ -225,6 +226,7 @@ public:
 		uint32_t symidx = m_symtabmap[ symtabref-1]->getOrCreate( name);
 		if (symidx != m_symidmap.size()+1)
 		{
+			if (symidx == 0) throw strus::runtime_error( m_errorhnd->fetchError());
 			throw strus::runtime_error(_TXT("symbol defined twice: '%s'"), name.c_str());
 		}
 #ifdef STRUS_LOWLEVEL_DEBUG
@@ -320,6 +322,7 @@ private:
 	};
 
 private:
+	ErrorBufferInterface* m_errorhnd;
 	std::vector<PatternDef> m_defar;			///< list of expressions and their attributes defined for the automaton to recognize
 	std::vector<Reference<SymbolTable> > m_symtabmap;	///< map PatternDef::symtabref -> symbol table
 	std::vector<uint32_t> m_symidmap;			///< map symbol table id -> symbol identifier id given by defineSymbol
@@ -334,8 +337,8 @@ struct TermMatchData
 	PatternTable patternTable;
 	hs_database_t* patterndb;
 
-	TermMatchData()
-		:patternTable(),patterndb(0){}
+	explicit TermMatchData( ErrorBufferInterface* errorhnd_)
+		:patternTable( errorhnd_),patterndb(0){}
 	~TermMatchData()
 	{
 		if (patterndb) hs_free_database(patterndb);
@@ -605,7 +608,7 @@ class PatternLexerInstance
 {
 public:
 	explicit PatternLexerInstance( ErrorBufferInterface* errorhnd_)
-		:m_errorhnd(errorhnd_),m_data(),m_state(DefinitionPhase)
+		:m_errorhnd(errorhnd_),m_data(errorhnd_),m_state(DefinitionPhase)
 	{}
 
 	virtual ~PatternLexerInstance(){}

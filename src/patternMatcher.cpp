@@ -31,7 +31,8 @@ using namespace strus::analyzer;
 
 struct PatternMatcherData
 {
-	PatternMatcherData(){}
+	explicit PatternMatcherData( ErrorBufferInterface* errorhnd)
+		:variableMap(),patternMap(),programTable(){}
 
 	SymbolTable variableMap;
 	SymbolTable patternMap;
@@ -158,7 +159,7 @@ class PatternMatcherInstance
 {
 public:
 	explicit PatternMatcherInstance( ErrorBufferInterface* errorhnd_)
-		:m_errorhnd(errorhnd_),m_expression_event_cnt(0){}
+		:m_errorhnd(errorhnd_),m_data(errorhnd_),m_stack(),m_expression_event_cnt(0){}
 
 	virtual ~PatternMatcherInstance(){}
 
@@ -324,6 +325,7 @@ public:
 			std::cout << "ATM push pattern '" << name << "'" << std::endl;
 #endif
 			uint32_t eventid = eventHandle( ReferenceEvent, m_data.patternMap.getOrCreate( name));
+			if (eventid == 0) throw strus::runtime_error(_TXT("failed to define pattern symbol"));
 			m_stack.push_back( StackElement( eventid));
 		}
 		CATCH_ERROR_MAP( _TXT("failed to push pattern reference on the pattern match expression stack: %s"), *m_errorhnd);
@@ -346,6 +348,10 @@ public:
 				throw strus::runtime_error(_TXT( "more than one variable assignment to a node"));
 			}
 			elem.variable = m_data.variableMap.getOrCreate( name);
+			if (elem.variable == 0)
+			{
+				throw strus::runtime_error(_TXT("failed to define variable symbol"));
+			}
 			elem.weight = weight;
 		}
 		CATCH_ERROR_MAP( _TXT("failed to attach variable to top element of the pattern match expression stack: %s"), *m_errorhnd);
@@ -361,6 +367,10 @@ public:
 			}
 			StackElement& elem = m_stack.back();
 			uint32_t resultHandle = m_data.patternMap.getOrCreate( name);
+			if (resultHandle == 0)
+			{
+				throw strus::runtime_error(_TXT("failed to define result symbol"));
+			}
 			uint32_t resultEvent = eventHandle( ReferenceEvent, resultHandle);
 			uint32_t program = elem.program;
 			if (!program)
