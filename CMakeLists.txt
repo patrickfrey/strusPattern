@@ -26,8 +26,6 @@ configure_file( "${PROJECT_SOURCE_DIR}/include/strus/versionPattern.hpp.in"  "${
 configure_file( "${PROJECT_SOURCE_DIR}/dist/obs/deploy_to_obs.sh.in"  "${PROJECT_SOURCE_DIR}/dist/obs/deploy_to_obs.sh"  @ONLY )
 configure_file( "${PROJECT_SOURCE_DIR}/dist/archlinux/PKGBUILD.in"  "${PROJECT_SOURCE_DIR}/dist/archlinux/PKGBUILD"  @ONLY )
 configure_file( "${PROJECT_SOURCE_DIR}/dist/obs/struspattern.dsc.in"  "${PROJECT_SOURCE_DIR}/dist/obs/struspattern.dsc"  @ONLY )
-configure_file( "${PROJECT_SOURCE_DIR}/dist/obs/struspattern-Debian_7.0.dsc.in"  "${PROJECT_SOURCE_DIR}/dist/obs/struspattern-Debian_7.0.dsc"  @ONLY )
-configure_file( "${PROJECT_SOURCE_DIR}/dist/obs/struspattern-xUbuntu_12.04.dsc.in"  "${PROJECT_SOURCE_DIR}/dist/obs/struspattern-xUbuntu_12.04.dsc"  @ONLY )
 configure_file( "${PROJECT_SOURCE_DIR}/dist/redhat/struspattern.spec.in"  "${PROJECT_SOURCE_DIR}/dist/redhat/struspattern.spec"  @ONLY )
 
 set( STRUS_GETTEXT_PACKAGE "struspattern-dom" )	#... 1st parameter of bindtextdomain(...)
