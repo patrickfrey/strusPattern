@@ -145,6 +145,17 @@ public:
 		CATCH_ERROR_MAP_RETURN( _TXT("failed to get pattern match statistics: %s"), *m_errorhnd, PatternMatcherStatistics());
 	}
 
+	virtual void reset()
+	{
+		try
+		{
+			m_statemachine.clear();
+			m_nofEvents = 0;
+			m_curPosition = 0;
+		}
+		CATCH_ERROR_MAP( _TXT("failed to get reset pattern matcher context: %s"), *m_errorhnd);
+	}
+
 private:
 	ErrorBufferInterface* m_errorhnd;
 	const PatternMatcherData* m_data;
