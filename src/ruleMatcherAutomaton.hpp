@@ -143,6 +143,7 @@ public:
 	typedef PodStructArrayBase<Trigger const*,std::size_t,0> TriggerRefList;
 	void getTriggers( TriggerRefList& triggers, uint32_t event) const;
 	uint32_t nofTriggers() const			{return m_nofTriggers;}
+	void clear();
 
 public:
 	enum {BlockSize=1024,EventHashTabSize=16,EventHashTabIdxShift=28,EventHashTabIdxMask=15};
@@ -159,6 +160,7 @@ private:
 		TriggerInd() :m_eventAr(0),m_ar(0),m_allocsize(0),m_size(0){}
 		~TriggerInd();
 		void expand( uint32_t newallocsize);
+		void clear();
 	};
 	TriggerInd m_triggerIndAr[ EventHashTabSize];
 	LinkedTriggerTable m_triggerTab;
@@ -443,6 +445,7 @@ public:
 	{
 		return m_eventItemList.nextptr( list);
 	}
+	void clear();
 
 public://getStatistics
 	unsigned int nofProgramsInstalled() const	{return m_nofProgramsInstalled;}

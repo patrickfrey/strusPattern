@@ -94,6 +94,11 @@ public:
 	{
 		(*this)[ idx-1];
 	}
+
+	void clear()
+	{
+		Parent::clear();
+	}
 };
 
 }//namespace

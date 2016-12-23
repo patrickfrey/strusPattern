@@ -116,7 +116,7 @@ public:
 		return 0;
 #endif
 	}
-	void reset()
+	void clear()
 	{
 		m_size = 0;
 	}

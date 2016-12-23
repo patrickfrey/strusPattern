@@ -141,8 +141,19 @@ public:
 #endif
 		}
 	}
-private:
-	void reset(){}		//< forbid usage of inherited method
+
+	void clear()
+	{
+		Parent::clear();
+#ifdef STRUS_CHECK_FREE_ITEMS
+		m_free_elemtab.clear();
+#else
+		m_freelistidx = 0;
+#endif
+#ifdef STRUS_CHECK_USED_ITEMS
+		m_used_size = 0;
+#endif
+	}
 
 private:
 #ifdef STRUS_CHECK_FREE_ITEMS

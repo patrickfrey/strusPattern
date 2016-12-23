@@ -380,6 +380,23 @@ public:
 		hs_free_scratch( m_hs_scratch);
 	}
 
+	virtual void reset()
+	{
+		try
+		{
+			hs_scratch_t* new_scratch = 0;
+			hs_error_t err = hs_alloc_scratch( m_data->patterndb, &m_hs_scratch);
+			if (err != HS_SUCCESS)
+			{
+				throw std::bad_alloc();
+			}
+			hs_free_scratch( m_hs_scratch);
+			m_hs_scratch = new_scratch;
+			m_src = 0;
+		}
+		CATCH_ERROR_MAP( _TXT("error calling hyperscan lexer reset: %s"), *m_errorhnd);
+	}
+	
 	static int match_event_handler( unsigned int patternIdx, unsigned_long_long from, unsigned_long_long to, unsigned int, void *context)
 	{
 		PatternLexerContext* THIS = (PatternLexerContext*)context;

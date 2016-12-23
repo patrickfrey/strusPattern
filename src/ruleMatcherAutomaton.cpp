@@ -66,6 +66,13 @@ EventTriggerTable::TriggerInd::~TriggerInd()
 	}
 }
 
+void EventTriggerTable::TriggerInd::clear()
+{
+	if (m_eventAr) std::free( m_eventAr);
+	if (m_ar) std::free( m_ar);
+	std::memset( this, 0, sizeof(*this));
+}
+
 enum {EventArrayMemoryAlignment=64};
 void EventTriggerTable::TriggerInd::expand( uint32_t newallocsize)
 {
@@ -82,6 +89,14 @@ void EventTriggerTable::TriggerInd::expand( uint32_t newallocsize)
 	if (!far) throw std::bad_alloc();
 	m_ar = far;
 	m_allocsize = newallocsize;
+}
+
+void EventTriggerTable::clear()
+{
+	std::size_t hi = 0, he = EventHashTabSize;
+	for (;  hi != he; ++hi) m_triggerIndAr[hi].clear();
+	m_triggerTab.clear();
+	m_nofTriggers = 0;
 }
 
 static inline uint32_t linkid( uint32_t htidx, uint32_t elidx)
@@ -581,6 +596,28 @@ StateMachine::StateMachine( const StateMachine& o)
 	,m_timestmp(o.m_timestmp)
 {
 	std::memcpy( m_disposeWindow, o.m_disposeWindow, sizeof(m_disposeWindow));
+}
+
+void StateMachine::clear()
+{
+	m_eventTriggerTable.clear();
+	m_actionSlotTable.clear();
+	m_eventTriggerList.clear();
+	m_eventItemList.clear();
+	m_eventDataReferenceTable.clear();
+	m_ruleTable.clear();
+	m_results.clear();
+	m_curpos = 0;
+	std::memset( m_disposeWindow, 0, sizeof(*m_disposeWindow));
+	m_disposeRuleList.clear();
+	m_ruleDisposeQueue.clear();
+	std::make_heap( m_ruleDisposeQueue.begin(), m_ruleDisposeQueue.end());
+	m_stopWordsEventLogMap.clear();
+	m_nofProgramsInstalled = 0;
+	m_nofAltKeyProgramsInstalled = 0;
+	m_nofSignalsFired = 0;
+	m_nofOpenPatterns = 0;
+	m_timestmp = 0;
 }
 
 uint32_t StateMachine::createRule( uint32_t expiryOrdpos)
