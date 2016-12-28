@@ -188,6 +188,9 @@ public:
 #endif
 			uint32_t eventid = eventHandle( TermEvent, termid);
 			m_stack.push_back( StackElement( eventid));
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cout << "ATM stack size " << m_stack.size() << std::endl;
+#endif
 		}
 		CATCH_ERROR_MAP( _TXT("failed to push term on the pattern match expression stack: %s"), *m_errorhnd);
 	}
@@ -324,6 +327,9 @@ public:
 			m_data.programTable.doneProgram( program);
 			m_stack.resize( m_stack.size() - argc);
 			m_stack.push_back( StackElement( slot_event, program));
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cout << "ATM stack size " << m_stack.size() << std::endl;
+#endif
 		}
 		CATCH_ERROR_MAP( _TXT("failed to push expression on the pattern match expression stack: %s"), *m_errorhnd);
 	}
@@ -338,6 +344,9 @@ public:
 			uint32_t eventid = eventHandle( ReferenceEvent, m_data.patternMap.getOrCreate( name));
 			if (eventid == 0) throw strus::runtime_error(_TXT("failed to define pattern symbol"));
 			m_stack.push_back( StackElement( eventid));
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cout << "ATM stack size " << m_stack.size() << std::endl;
+#endif
 		}
 		CATCH_ERROR_MAP( _TXT("failed to push pattern reference on the pattern match expression stack: %s"), *m_errorhnd);
 	}
@@ -400,6 +409,7 @@ public:
 			m_data.programTable.defineProgramResult( program, resultEvent, visible?resultHandle:0);
 #ifdef STRUS_LOWLEVEL_DEBUG
 			std::cout << "ATM define token pattern '" << name << "'" << (visible?" (visible)":"") << " as program " << program << std::endl;
+			std::cout << "ATM stack size " << m_stack.size() << std::endl;
 #endif
 		}
 		CATCH_ERROR_MAP( _TXT("failed to close pattern definition on the pattern match expression stack: %s"), *m_errorhnd);
