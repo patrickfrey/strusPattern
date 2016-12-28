@@ -121,15 +121,15 @@ public:
 					// ... ingnore results covered by bigger pattern
 					const Result& next_result = results[ ai+1];
 
-					if (next_result.end_origseg() >= result.end_origseg()
-					&&  next_result.end_origpos() >= result.end_origpos()
-					&&  next_result.start_origseg() <= result.start_origseg()
-					&&  next_result.start_origpos() <= result.start_origpos())
+					if (next_result.end_origseg >= result.end_origseg
+					&&  next_result.end_origpos >= result.end_origpos
+					&&  next_result.start_origseg <= result.start_origseg
+					&&  next_result.start_origpos <= result.start_origpos)
 					{
-						if (next_result.end_origseg() != result.end_origseg()
-						||  next_result.end_origpos() != result.end_origpos()
-						||  next_result.start_origseg() != result.start_origseg()
-						||  next_result.start_origpos() != result.start_origpos())
+						if (next_result.end_origseg != result.end_origseg
+						||  next_result.end_origpos != result.end_origpos
+						||  next_result.start_origseg != result.start_origseg
+						||  next_result.start_origpos != result.start_origpos)
 						{
 							continue;
 						}
