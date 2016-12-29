@@ -32,11 +32,12 @@ using namespace strus::analyzer;
 struct PatternMatcherData
 {
 	explicit PatternMatcherData( ErrorBufferInterface* errorhnd)
-		:variableMap(),patternMap(),programTable(){}
+		:variableMap(),patternMap(),programTable(),exclusive(false){}
 
 	SymbolTable variableMap;
 	SymbolTable patternMap;
 	ProgramTable programTable;
+	bool exclusive;
 };
 
 enum PatternEventType {TermEvent=0, ExpressionEvent=1, ReferenceEvent=2};
@@ -115,6 +116,25 @@ public:
 			for (; ai != ae; ++ai)
 			{
 				const Result& result = results[ ai];
+				if (m_data->exclusive && ai+1 < ae)
+				{
+					// ... ingnore results covered by bigger pattern
+					const Result& next_result = results[ ai+1];
+
+					if (next_result.end_origseg >= result.end_origseg
+					&&  next_result.end_origpos >= result.end_origpos
+					&&  next_result.start_origseg <= result.start_origseg
+					&&  next_result.start_origpos <= result.start_origpos)
+					{
+						if (next_result.end_origseg != result.end_origseg
+						||  next_result.end_origpos != result.end_origpos
+						||  next_result.start_origseg != result.start_origseg
+						||  next_result.start_origpos != result.start_origpos)
+						{
+							continue;
+						}
+					}
+				}
 				const char* resultName = m_data->patternMap.key( result.resultHandle);
 				std::vector<PatternMatcherResultItem> rtitemlist;
 				if (result.eventDataReferenceIdx)
@@ -469,6 +489,10 @@ public:
 				{
 					popt.maxRange = (unsigned int)(oi->second + std::numeric_limits<double>::epsilon());
 				}
+				else if (utils::caseInsensitiveEquals( oi->first, "exclusive"))
+				{
+					m_data.exclusive = true;
+				}
 				else
 				{
 					throw strus::runtime_error(_TXT("unknown token pattern match option: '%s'"), oi->first.c_str());
@@ -512,7 +536,7 @@ private:
 std::vector<std::string> PatternMatcher::getCompileOptions() const
 {
 	std::vector<std::string> rt;
-	static const char* ar[] = {"stopwordOccurrenceFactor","weightFactor","maxRange",0};
+	static const char* ar[] = {"stopwordOccurrenceFactor","weightFactor","maxRange","exclusive",0};
 	for (std::size_t ai=0; ar[ai]; ++ai)
 	{
 		rt.push_back( ar[ ai]);
