@@ -141,6 +141,10 @@ public:
 								break;
 							}
 						}
+						else if (next_result.resultHandle == result.resultHandle)
+						{
+							break;
+						}
 					}
 					if (an != ae)
 					{
