@@ -118,21 +118,38 @@ public:
 				const Result& result = results[ ai];
 				if (m_data->exclusive && ai+1 < ae)
 				{
-					// ... ingnore results covered by bigger pattern
-					const Result& next_result = results[ ai+1];
-
-					if (next_result.end_origseg >= result.end_origseg
-					&&  next_result.end_origpos >= result.end_origpos
-					&&  next_result.start_origseg <= result.start_origseg
-					&&  next_result.start_origpos <= result.start_origpos)
+					// Try to find succeeding result covering current result:
+					std::size_t an = ai+1;
+					for (; an < ae; ++an)
 					{
-						if (next_result.end_origseg != result.end_origseg
-						||  next_result.end_origpos != result.end_origpos
-						||  next_result.start_origseg != result.start_origseg
-						||  next_result.start_origpos != result.start_origpos)
+						const Result& next_result = results[ an];
+
+						if (next_result.start_origseg > result.start_origseg
+						||  next_result.start_origpos > result.start_origpos)
 						{
-							continue;
+							an = ae;
+							break;
 						}
+						if (next_result.end_origseg >= result.end_origseg
+						&&  next_result.end_origpos >= result.end_origpos)
+						{
+							if (next_result.end_origseg != result.end_origseg
+							||  next_result.end_origpos != result.end_origpos
+							||  next_result.start_origseg != result.start_origseg
+							||  next_result.start_origpos != result.start_origpos)
+							{
+								break;
+							}
+						}
+						else if (next_result.resultHandle == result.resultHandle)
+						{
+							break;
+						}
+					}
+					if (an != ae)
+					{
+						// ... ingnore results covered by bigger pattern
+						continue;
 					}
 				}
 				const char* resultName = m_data->patternMap.key( result.resultHandle);
