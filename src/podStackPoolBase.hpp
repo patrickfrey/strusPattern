@@ -95,6 +95,12 @@ public:
 		(*this)[ idx-1];
 	}
 
+	void checkTable()
+	{
+		Parent::checkTable();
+		
+	}
+
 	void clear()
 	{
 		Parent::clear();
