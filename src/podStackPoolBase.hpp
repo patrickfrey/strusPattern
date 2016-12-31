@@ -115,7 +115,7 @@ public:
 	{
 		std::size_t ii = 0, ie = Parent::size();
 		SIZETYPE si = idx;
-		for (; ii!=ie; ++ie)
+		for (; ii!=ie && si; ++ie)
 		{
 			si = (*this)[ si-1].next;
 			if (si == idx || si == 0) break;
