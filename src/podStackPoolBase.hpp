@@ -118,9 +118,9 @@ public:
 		for (; ii!=ie; ++ie)
 		{
 			si = (*this)[ si-1].next;
-			if (si == idx) break;
+			if (si == idx || si == 0) break;
 		}
-		if (ii != ie)
+		if (ii != ie && si != 0)
 		{
 			throw strus::runtime_error(_TXT( "internal: circular list"));
 		}
