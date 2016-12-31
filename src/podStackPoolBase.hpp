@@ -20,6 +20,8 @@
 namespace strus
 {
 
+#define STRUS_LOWLEVEL_DEBUG
+
 template <typename ELEMTYPE, typename SIZETYPE>
 struct PodStackElement
 {
@@ -46,10 +48,16 @@ public:
 	{
 		PodStackElement<ELEMTYPE,SIZETYPE> listelem( elem, stk);
 		stk = Parent::add( listelem)+1;
+#ifdef STRUS_LOWLEVEL_DEBUG
+		checkCircular( stk);
+#endif
 	}
 
 	void remove( SIZETYPE stk)
 	{
+#ifdef STRUS_LOWLEVEL_DEBUG
+		checkCircular( stk);
+#endif
 		if (stk == 0) return;
 		SIZETYPE idx = stk;
 		while (idx)
@@ -67,10 +75,13 @@ public:
 		SIZETYPE nextidx = (*this)[ stk-1].next;
 		Parent::remove( stk-1);
 		stk = nextidx;
+#ifdef STRUS_LOWLEVEL_DEBUG
+		checkCircular( stk);
+#endif
 		return true;
 	}
 
-	void set( SIZETYPE stk, const ELEMTYPE& elem) const
+	void set( SIZETYPE stk, const ELEMTYPE& elem)
 	{
 		if (stk == 0 || stk > Parent::size()) throw strus::runtime_error(_TXT( "illegal list access (set)"));
 		(*this)[ stk-1].value = elem;
@@ -98,7 +109,21 @@ public:
 	void checkTable()
 	{
 		Parent::checkTable();
-		
+	}
+
+	void checkCircular( SIZETYPE idx) const
+	{
+		std::size_t ii = 0, ie = Parent::size();
+		SIZETYPE si = idx;
+		for (; ii!=ie; ++ie)
+		{
+			si = (*this)[ si-1].next;
+			if (si == idx) break;
+		}
+		if (ii != ie)
+		{
+			throw strus::runtime_error(_TXT( "internal: circular list"));
+		}
 	}
 
 	void clear()
