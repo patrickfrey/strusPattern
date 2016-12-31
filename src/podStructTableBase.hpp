@@ -128,6 +128,7 @@ public:
 #endif
 	void checkTable() const
 	{
+#ifndef STRUS_CHECK_FREE_ITEMS
 		// Check freelist:
 		SIZETYPE fi = m_freelistidx;
 		while (fi)
@@ -140,6 +141,7 @@ public:
 			}
 #endif
 		}
+#endif
 	}
 
 	void clear()
