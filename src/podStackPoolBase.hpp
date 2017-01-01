@@ -158,7 +158,7 @@ private:
 		for (; ii!=ie && si; ++ii)
 		{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		if (!Parent::exists( si))
+		if (!Parent::exists( si-1))
 		{
 			throw strus::runtime_error(_TXT( "illegal list access (checkCircular)"));
 		}
