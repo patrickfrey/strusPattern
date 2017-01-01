@@ -608,7 +608,7 @@ void StateMachine::clear()
 	m_ruleTable.clear();
 	m_results.clear();
 	m_curpos = 0;
-	std::memset( m_disposeWindow, 0, sizeof(*m_disposeWindow));
+	std::memset( m_disposeWindow, 0, sizeof(m_disposeWindow));
 	m_disposeRuleList.clear();
 	m_ruleDisposeQueue.clear();
 	std::make_heap( m_ruleDisposeQueue.begin(), m_ruleDisposeQueue.end());

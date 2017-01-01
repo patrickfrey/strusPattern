@@ -61,6 +61,9 @@ public:
 	{
 		try
 		{
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cerr << "put input " << term.id() << " at " << term.ordpos() << std::endl;
+#endif
 			if (m_curPosition > term.ordpos())
 			{
 				throw strus::runtime_error(_TXT("term events not fed in ascending order (%u > %u)"), m_curPosition, term.ordpos());
@@ -158,6 +161,9 @@ public:
 				{
 					gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
 				}
+#ifdef STRUS_LOWLEVEL_DEBUG
+				std::cerr << "result " << resultName << " at " << result.ordpos << std::endl;
+#endif
 				rt.push_back( PatternMatcherResult( resultName, result.ordpos, result.start_origseg, result.start_origpos, result.end_origseg, result.end_origpos, rtitemlist));
 			}
 			return rt;
