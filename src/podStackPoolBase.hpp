@@ -21,6 +21,7 @@ namespace strus
 {
 
 #undef STRUS_LOWLEVEL_DEBUG
+#undef STRUS_LOWLEVEL_DEBUG_CHECK_CIRCULAR
 
 template <typename ELEMTYPE, typename SIZETYPE>
 struct PodStackElement
@@ -55,7 +56,7 @@ public:
 		PodStackElement<ELEMTYPE,SIZETYPE> listelem( elem, stk);
 		SIZETYPE new_idx = Parent::add( listelem);
 		stk = new_idx+1;
-#ifdef STRUS_LOWLEVEL_DEBUG
+#ifdef STRUS_LOWLEVEL_DEBUG_CHECK_CIRCULAR
 		checkCircular( stk);
 #endif
 	}
@@ -68,7 +69,9 @@ public:
 		{
 			throw strus::runtime_error(_TXT( "illegal list access (remove)"));
 		}
+#ifdef STRUS_LOWLEVEL_DEBUG_CHECK_CIRCULAR
 		checkCircular( stk);
+#endif
 #endif
 		SIZETYPE idx = stk;
 		while (idx)
@@ -92,7 +95,7 @@ public:
 		SIZETYPE nextidx = (*this)[ stk-1].next;
 		Parent::remove( stk-1);
 		stk = nextidx;
-#ifdef STRUS_LOWLEVEL_DEBUG
+#ifdef STRUS_LOWLEVEL_DEBUG_CHECK_CIRCULAR
 		checkCircular( stk);
 #endif
 		return true;
