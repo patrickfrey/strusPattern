@@ -127,13 +127,15 @@ public:
 					{
 						const Result& next_result = results[ an];
 
-						if (next_result.start_origseg > result.start_origseg
-						||  next_result.start_origpos > result.start_origpos)
+						if (next_result.start_origseg > result.end_origseg
+						||  next_result.start_origpos > result.end_origpos)
 						{
 							an = ae;
 							break;
 						}
-						if (next_result.end_origseg >= result.end_origseg
+						if (next_result.start_origseg <= result.start_origseg
+						&&  next_result.start_origpos <= result.start_origpos
+						&&  next_result.end_origseg >= result.end_origseg
 						&&  next_result.end_origpos >= result.end_origpos)
 						{
 							if (next_result.end_origseg != result.end_origseg
