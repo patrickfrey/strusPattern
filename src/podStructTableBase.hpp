@@ -157,6 +157,18 @@ public:
 #endif
 	}
 
+	bool exists( SIZETYPE idx) const
+	{
+#ifdef STRUS_USE_BASEADDR
+		idx -= BASEADDR;
+#endif
+#ifdef STRUS_CHECK_FREE_ITEMS
+		return (idx < Parent::size() && m_free_elemtab.find( idx) == m_free_elemtab.end());
+#else
+		return (idx < Parent::size());
+#endif
+	}
+
 private:
 #ifdef STRUS_CHECK_FREE_ITEMS
 	std::set<SIZETYPE> m_free_elemtab;
