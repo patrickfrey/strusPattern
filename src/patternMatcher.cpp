@@ -17,6 +17,7 @@
 #include "strus/patternMatcherContextInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/base/symbolTable.hpp"
+#include "strus/reference.hpp"
 #include "ruleMatcherAutomaton.hpp"
 #include <map>
 #include <limits>
@@ -52,7 +53,7 @@ class PatternMatcherContext
 {
 public:
 	PatternMatcherContext( const PatternMatcherData* data_, ErrorBufferInterface* errorhnd_)
-		:m_errorhnd(errorhnd_),m_data(data_),m_statemachine(&data_->programTable),m_nofEvents(0),m_curPosition(0){}
+		:m_errorhnd(errorhnd_),m_data(data_),m_statemachine(new StateMachine(&data_->programTable)),m_nofEvents(0),m_curPosition(0){}
 
 	virtual ~PatternMatcherContext()
 	{}
@@ -70,7 +71,7 @@ public:
 			}
 			else if (m_curPosition < term.ordpos())
 			{
-				m_statemachine.setCurrentPos( m_curPosition = term.ordpos());
+				m_statemachine->setCurrentPos( m_curPosition = term.ordpos());
 			}
 			else if (term.origsize() >= (std::size_t)std::numeric_limits<uint32_t>::max())
 			{
@@ -86,7 +87,7 @@ public:
 			}
 			uint32_t eventid = eventHandle( TermEvent, term.id());
 			EventData data( term.origseg(), term.origpos(), term.origseg(), term.origpos() + term.origsize(), term.ordpos(), 0/*subdataref*/);
-			m_statemachine.doTransition( eventid, data);
+			m_statemachine->doTransition( eventid, data);
 			++m_nofEvents;
 		}
 		CATCH_ERROR_MAP( _TXT("failed to feed input to pattern matcher: %s"), *m_errorhnd);
@@ -94,9 +95,9 @@ public:
 
 	void gatherResultItems( std::vector<PatternMatcherResultItem>& resitemlist, uint32_t dataref) const
 	{
-		uint32_t itemList = m_statemachine.getEventDataItemListIdx( dataref);
+		uint32_t itemList = m_statemachine->getEventDataItemListIdx( dataref);
 		const EventItem* item;
-		while (0!=(item=m_statemachine.nextResultItem( itemList)))
+		while (0!=(item=m_statemachine->nextResultItem( itemList)))
 		{
 			const char* itemName = m_data->variableMap.key( item->variable);
 			PatternMatcherResultItem rtitem( itemName, item->data.ordpos, item->data.start_origseg, item->data.start_origpos, item->data.end_origseg, item->data.end_origpos, item->weight);
@@ -113,7 +114,7 @@ public:
 		try
 		{
 			std::vector<analyzer::PatternMatcherResult> rt;
-			const StateMachine::ResultList& results = m_statemachine.results();
+			const StateMachine::ResultList& results = m_statemachine->results();
 			rt.reserve( results.size());
 			std::size_t ai = 0, ae = results.size();
 			for (; ai != ae; ++ai)
@@ -194,12 +195,12 @@ public:
 		try
 		{
 			PatternMatcherStatistics stats;
-			stats.define( "nofProgramsInstalled", m_statemachine.nofProgramsInstalled());
-			stats.define( "nofAltKeyProgramsInstalled", m_statemachine.nofAltKeyProgramsInstalled());
-			stats.define( "nofSignalsFired", m_statemachine.nofSignalsFired());
+			stats.define( "nofProgramsInstalled", m_statemachine->nofProgramsInstalled());
+			stats.define( "nofAltKeyProgramsInstalled", m_statemachine->nofAltKeyProgramsInstalled());
+			stats.define( "nofSignalsFired", m_statemachine->nofSignalsFired());
 			if (m_nofEvents)
 			{
-				stats.define( "nofTriggersAvgActive", m_statemachine.nofOpenPatterns() / m_nofEvents);
+				stats.define( "nofTriggersAvgActive", m_statemachine->nofOpenPatterns() / m_nofEvents);
 			}
 			return stats;
 		}
@@ -210,7 +211,8 @@ public:
 	{
 		try
 		{
-			m_statemachine.clear();
+			m_statemachine.reset( new StateMachine( &m_data->programTable));
+			if (!m_statemachine.get()) throw std::bad_alloc();
 			m_nofEvents = 0;
 			m_curPosition = 0;
 		}
@@ -220,7 +222,7 @@ public:
 private:
 	ErrorBufferInterface* m_errorhnd;
 	const PatternMatcherData* m_data;
-	StateMachine m_statemachine;
+	Reference<StateMachine> m_statemachine;
 	unsigned int m_nofEvents;
 	unsigned int m_curPosition;
 };
