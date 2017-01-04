@@ -364,7 +364,7 @@ uint32_t ProgramTable::getAltEventId( uint32_t eventid, uint32_t triggerListIdx)
 				return 0;
 			case Trigger::SigAnd:
 			{
-				if (sigtype == trigger->sigtype)
+				if (sigtype == (Trigger::SigType)trigger->sigtype)
 				{
 					if (trigger->event != eventid)
 					{
@@ -386,7 +386,7 @@ uint32_t ProgramTable::getAltEventId( uint32_t eventid, uint32_t triggerListIdx)
 			case Trigger::SigSequenceImm:
 			case Trigger::SigWithin:
 			{
-				if (sigtype == trigger->sigtype)
+				if (sigtype == (Trigger::SigType)trigger->sigtype)
 				{
 					if (sigval_selected < trigger->sigval && trigger->event != eventid)
 					{
@@ -401,13 +401,23 @@ uint32_t ProgramTable::getAltEventId( uint32_t eventid, uint32_t triggerListIdx)
 					sigval_selected = trigger->sigval;
 					sigtype = (Trigger::SigType)trigger->sigtype;
 				}
+				else if (sigtype == Trigger::SigSequenceImm && trigger->sigtype == Trigger::SigSequence)
+				{
+					if (sigval_selected < trigger->sigval && trigger->event != eventid)
+					{
+						eventid_selected = trigger->event;
+						sigval_selected = trigger->sigval;
+						sigtype = (Trigger::SigType)trigger->sigtype;
+					}
+				}
 				else
 				{
 					return 0;
 				}
+				break;
 			}
 			case Trigger::SigDel:
-				continue;
+				break;
 		}
 	}
 	return eventid_selected;
