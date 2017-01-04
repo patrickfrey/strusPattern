@@ -535,18 +535,25 @@ void ProgramTable::optimize( OptimizeOptions& opt)
 		while (0!=(programTrigger=m_programTriggerList.nextptr( prglist)))
 		{
 			Program& program = m_programMap[ programTrigger->programidx-1];
-			uint32_t alt_eventid;
-			if (!programTrigger->past_eventid
-			&&  opt.maxRange >= program.positionRange
-			&&  0!=(alt_eventid = getAltEventId( eventid, program.triggerListIdx))
-			&&  weight > (calcEventWeight( alt_eventid) * opt.weightFactor))
+			uint32_t alt_eventid = getAltEventId( eventid, program.triggerListIdx);
+			if (!alt_eventid)
 			{
-				defineEventProgramAlt( alt_eventid, programTrigger->programidx, eventid);
-				getDelimTokenStopWordSet( program.triggerListIdx);
+				m_programTriggerList.push( new_prglist, *programTrigger);
 			}
 			else
 			{
-				m_programTriggerList.push( new_prglist, *programTrigger);
+				double alt_weight = calcEventWeight( alt_eventid) * opt.weightFactor;
+				if (!programTrigger->past_eventid
+				&&  opt.maxRange >= program.positionRange
+				&&  weight > alt_weight)
+				{
+					defineEventProgramAlt( alt_eventid, programTrigger->programidx, eventid);
+					getDelimTokenStopWordSet( program.triggerListIdx);
+				}
+				else
+				{
+					m_programTriggerList.push( new_prglist, *programTrigger);
+				}
 			}
 		}
 		// Set new program list
