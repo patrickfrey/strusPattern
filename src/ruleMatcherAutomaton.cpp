@@ -364,7 +364,7 @@ uint32_t ProgramTable::getAltEventId( uint32_t eventid, uint32_t triggerListIdx)
 				return 0;
 			case Trigger::SigAnd:
 			{
-				if (sigtype == trigger->sigtype)
+				if (sigtype == (Trigger::SigType)trigger->sigtype)
 				{
 					if (trigger->event != eventid)
 					{
@@ -386,7 +386,7 @@ uint32_t ProgramTable::getAltEventId( uint32_t eventid, uint32_t triggerListIdx)
 			case Trigger::SigSequenceImm:
 			case Trigger::SigWithin:
 			{
-				if (sigtype == trigger->sigtype)
+				if (sigtype == (Trigger::SigType)trigger->sigtype)
 				{
 					if (sigval_selected < trigger->sigval && trigger->event != eventid)
 					{
@@ -401,13 +401,23 @@ uint32_t ProgramTable::getAltEventId( uint32_t eventid, uint32_t triggerListIdx)
 					sigval_selected = trigger->sigval;
 					sigtype = (Trigger::SigType)trigger->sigtype;
 				}
+				else if (sigtype == Trigger::SigSequenceImm && trigger->sigtype == Trigger::SigSequence)
+				{
+					if (sigval_selected < trigger->sigval && trigger->event != eventid)
+					{
+						eventid_selected = trigger->event;
+						sigval_selected = trigger->sigval;
+						sigtype = (Trigger::SigType)trigger->sigtype;
+					}
+				}
 				else
 				{
 					return 0;
 				}
+				break;
 			}
 			case Trigger::SigDel:
-				continue;
+				break;
 		}
 	}
 	return eventid_selected;
@@ -535,18 +545,25 @@ void ProgramTable::optimize( OptimizeOptions& opt)
 		while (0!=(programTrigger=m_programTriggerList.nextptr( prglist)))
 		{
 			Program& program = m_programMap[ programTrigger->programidx-1];
-			uint32_t alt_eventid;
-			if (!programTrigger->past_eventid
-			&&  opt.maxRange >= program.positionRange
-			&&  0!=(alt_eventid = getAltEventId( eventid, program.triggerListIdx))
-			&&  weight > (calcEventWeight( alt_eventid) * opt.weightFactor))
+			uint32_t alt_eventid = getAltEventId( eventid, program.triggerListIdx);
+			if (!alt_eventid)
 			{
-				defineEventProgramAlt( alt_eventid, programTrigger->programidx, eventid);
-				getDelimTokenStopWordSet( program.triggerListIdx);
+				m_programTriggerList.push( new_prglist, *programTrigger);
 			}
 			else
 			{
-				m_programTriggerList.push( new_prglist, *programTrigger);
+				double alt_weight = calcEventWeight( alt_eventid) * opt.weightFactor;
+				if (!programTrigger->past_eventid
+				&&  opt.maxRange >= program.positionRange
+				&&  weight > alt_weight)
+				{
+					defineEventProgramAlt( alt_eventid, programTrigger->programidx, eventid);
+					getDelimTokenStopWordSet( program.triggerListIdx);
+				}
+				else
+				{
+					m_programTriggerList.push( new_prglist, *programTrigger);
+				}
 			}
 		}
 		// Set new program list
