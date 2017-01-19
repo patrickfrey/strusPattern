@@ -319,7 +319,7 @@ int main( int argc, const char** argv)
 		createRules( ptinst.get(), joinop, nofFeatures, nofPatterns);
 		if (doOpimize)
 		{
-			ptinst->compile( strus::analyzer::PatternMatcherOptions());
+			ptinst->compile();
 		}
 		if (g_errorBuffer->hasError())
 		{

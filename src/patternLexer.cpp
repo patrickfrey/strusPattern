@@ -625,7 +625,7 @@ class PatternLexerInstance
 {
 public:
 	explicit PatternLexerInstance( ErrorBufferInterface* errorhnd_)
-		:m_errorhnd(errorhnd_),m_data(errorhnd_),m_state(DefinitionPhase)
+		:m_errorhnd(errorhnd_),m_data(errorhnd_),m_state(DefinitionPhase),m_flags(0)
 	{}
 
 	virtual ~PatternLexerInstance(){}
@@ -671,7 +671,40 @@ public:
 		CATCH_ERROR_MAP_RETURN( _TXT("failed to retrieve regular expression pattern symbol: %s"), *m_errorhnd, 0);
 	}
 
-	virtual bool compile( const PatternLexerOptions& opts)
+	virtual void defineOption( const std::string& name, double)
+	{
+		try
+		{
+			if (utils::caseInsensitiveEquals( name, "CASELESS"))
+			{
+				m_flags |= HS_FLAG_CASELESS;
+			}
+			else if (utils::caseInsensitiveEquals( name, "DOTALL"))
+			{
+				m_flags |= HS_FLAG_DOTALL;
+			}
+			else if (utils::caseInsensitiveEquals( name, "MULTILINE"))
+			{
+				m_flags |= HS_FLAG_MULTILINE;
+			}
+			else if (utils::caseInsensitiveEquals( name, "ALLOWEMPTY"))
+			{
+				m_flags |= HS_FLAG_ALLOWEMPTY;
+			}
+			else if (utils::caseInsensitiveEquals( name, "UCP"))
+			{
+				m_flags |= HS_FLAG_UCP;
+			}
+			else
+			{
+				throw strus::runtime_error(_TXT("unknown option '%s'"), name.c_str());
+			}
+			
+		}
+		CATCH_ERROR_MAP( _TXT("define option failed for hyperscan pattern lexer: %s"), *m_errorhnd);
+	}
+
+	virtual bool compile()
 	{
 		try
 		{
@@ -679,7 +712,7 @@ public:
 			m_data.patterndb = 0;
 
 			HsPatternTable hspt;
-			m_data.patternTable.complete( hspt, getFlags( opts));
+			m_data.patternTable.complete( hspt, m_flags);
 
 			hs_platform_info_t platform;
 			std::memset( &platform, 0, sizeof(platform));
@@ -733,49 +766,15 @@ public:
 	}
 
 private:
-	static unsigned int getFlags( const PatternLexerOptions& opts)
-	{
-		unsigned int rt = 0;
-		PatternLexerOptions::const_iterator ai = opts.begin(), ae = opts.end();
-		for (; ai != ae; ++ai)
-		{
-			if (utils::caseInsensitiveEquals( *ai, "CASELESS"))
-			{
-				rt |= HS_FLAG_CASELESS;
-			}
-			else if (utils::caseInsensitiveEquals( *ai, "DOTALL"))
-			{
-				rt |= HS_FLAG_DOTALL;
-			}
-			else if (utils::caseInsensitiveEquals( *ai, "MULTILINE"))
-			{
-				rt |= HS_FLAG_MULTILINE;
-			}
-			else if (utils::caseInsensitiveEquals( *ai, "ALLOWEMPTY"))
-			{
-				rt |= HS_FLAG_ALLOWEMPTY;
-			}
-			else if (utils::caseInsensitiveEquals( *ai, "UCP"))
-			{
-				rt |= HS_FLAG_UCP;
-			}
-			else
-			{
-				throw strus::runtime_error(_TXT("unknown option '%s'"), ai->c_str());
-			}
-		}
-		return rt;
-	}
-
-private:
 	ErrorBufferInterface* m_errorhnd;
 	TermMatchData m_data;
 	enum State {DefinitionPhase,MatchPhase};
 	State m_state;
+	unsigned int m_flags;
 };
 
 
-std::vector<std::string> PatternLexer::getCompileOptions() const
+std::vector<std::string> PatternLexer::getCompileOptionNames() const
 {
 	std::vector<std::string> rt;
 	static const char* ar[] = {"CASELESS", "DOTALL", "MULTILINE", "ALLOWEMPTY", "UCP", 0};

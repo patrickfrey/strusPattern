@@ -64,7 +64,7 @@ struct TestDef
 	ResultDef result[128];
 };
 
-static void compile( strus::PatternLexerInstanceInterface* ptinst, const PatternDef* par, const SymbolDef* sar, const strus::analyzer::PatternLexerOptions& opt)
+static void compile( strus::PatternLexerInstanceInterface* ptinst, const PatternDef* par, const SymbolDef* sar)
 {
 	std::size_t pi = 0;
 	for (; par[pi].expression; ++pi)
@@ -78,7 +78,7 @@ static void compile( strus::PatternLexerInstanceInterface* ptinst, const Pattern
 	{
 		ptinst->defineSymbol( sar[pi].id, sar[pi].patternid, sar[pi].name);
 	}
-	if (!ptinst->compile( opt))
+	if (!ptinst->compile())
 	{
 		throw std::runtime_error("error building term match automaton");
 	}
@@ -197,9 +197,8 @@ int main( int argc, const char** argv)
 			std::auto_ptr<strus::PatternLexerInstanceInterface> ptinst( pt->createInstance());
 			if (!ptinst.get()) throw std::runtime_error("failed to create regular expression term matcher instance");
 
-			strus::analyzer::PatternLexerOptions opt;
-			opt("DOTALL");
-			compile( ptinst.get(), g_tests[ti].patterns, g_tests[ti].symbols, opt);
+			ptinst->defineOption( "DOTALL", 0);
+			compile( ptinst.get(), g_tests[ti].patterns, g_tests[ti].symbols);
 			if (g_errorBuffer->hasError())
 			{
 				throw std::runtime_error( "error building automaton for test");

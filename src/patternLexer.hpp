@@ -27,7 +27,7 @@ public:
 
 	virtual ~PatternLexer(){}
 
-	virtual std::vector<std::string> getCompileOptions() const;
+	virtual std::vector<std::string> getCompileOptionNames() const;
 	virtual PatternLexerInstanceInterface* createInstance() const;
 
 	virtual const char* getDescription() const;

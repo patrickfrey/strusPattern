@@ -233,7 +233,7 @@ class PatternMatcherInstance
 {
 public:
 	explicit PatternMatcherInstance( ErrorBufferInterface* errorhnd_)
-		:m_errorhnd(errorhnd_),m_data(errorhnd_),m_stack(),m_expression_event_cnt(0){}
+		:m_errorhnd(errorhnd_),m_data(errorhnd_),m_stack(),m_expression_event_cnt(0),m_popt(){}
 
 	virtual ~PatternMatcherInstance(){}
 
@@ -508,7 +508,35 @@ public:
 	}
 #endif
 
-	virtual bool compile( const analyzer::PatternMatcherOptions& opt)
+	virtual void defineOption( const std::string& name, double value)
+	{
+		try
+		{
+			if (utils::caseInsensitiveEquals( name, "stopwordOccurrenceFactor"))
+			{
+				m_popt.stopwordOccurrenceFactor = value;
+			}
+			else if (utils::caseInsensitiveEquals( name, "weightFactor"))
+			{
+				m_popt.weightFactor = value;
+			}
+			else if (utils::caseInsensitiveEquals( name, "maxRange"))
+			{
+				m_popt.maxRange = (unsigned int)(value + std::numeric_limits<double>::epsilon());
+			}
+			else if (utils::caseInsensitiveEquals( name, "exclusive"))
+			{
+				m_data.exclusive = true;
+			}
+			else
+			{
+				throw strus::runtime_error(_TXT("unknown token pattern match option: '%s'"), name.c_str());
+			}
+		}
+		CATCH_ERROR_MAP( _TXT("failed to define pattern matching automaton option: %s"), *m_errorhnd);
+	}
+
+	virtual bool compile()
 	{
 		try
 		{
@@ -516,32 +544,7 @@ public:
 			std::cout << "automaton statistics before otimization:" << std::endl;
 			printAutomatonStatistics();
 #endif
-			ProgramTable::OptimizeOptions popt;
-			analyzer::PatternMatcherOptions::const_iterator oi = opt.begin(), oe = opt.end();
-			for (; oi != oe; ++oi)
-			{
-				if (utils::caseInsensitiveEquals( oi->first, "stopwordOccurrenceFactor"))
-				{
-					popt.stopwordOccurrenceFactor = oi->second;
-				}
-				else if (utils::caseInsensitiveEquals( oi->first, "weightFactor"))
-				{
-					popt.weightFactor = oi->second;
-				}
-				else if (utils::caseInsensitiveEquals( oi->first, "maxRange"))
-				{
-					popt.maxRange = (unsigned int)(oi->second + std::numeric_limits<double>::epsilon());
-				}
-				else if (utils::caseInsensitiveEquals( oi->first, "exclusive"))
-				{
-					m_data.exclusive = true;
-				}
-				else
-				{
-					throw strus::runtime_error(_TXT("unknown token pattern match option: '%s'"), oi->first.c_str());
-				}
-			}
-			m_data.programTable.optimize( popt);
+			m_data.programTable.optimize( m_popt);
 
 #ifdef STRUS_LOWLEVEL_DEBUG
 			std::cout << "automaton statistics after otimization:" << std::endl;
@@ -573,10 +576,11 @@ private:
 	PatternMatcherData m_data;
 	std::vector<StackElement> m_stack;
 	uint32_t m_expression_event_cnt;
+	ProgramTable::OptimizeOptions m_popt;
 };
 
 
-std::vector<std::string> PatternMatcher::getCompileOptions() const
+std::vector<std::string> PatternMatcher::getCompileOptionNames() const
 {
 	std::vector<std::string> rt;
 	static const char* ar[] = {"stopwordOccurrenceFactor","weightFactor","maxRange","exclusive",0};

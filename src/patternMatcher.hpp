@@ -27,7 +27,7 @@ public:
 		:m_errorhnd(errorhnd_){}
 	virtual ~PatternMatcher(){}
 
-	virtual std::vector<std::string> getCompileOptions() const;
+	virtual std::vector<std::string> getCompileOptionNames() const;
 	virtual PatternMatcherInstanceInterface* createInstance() const;
 
 	virtual const char* getDescription() const;

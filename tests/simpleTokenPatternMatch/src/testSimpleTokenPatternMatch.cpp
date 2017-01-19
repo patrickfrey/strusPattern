@@ -241,7 +241,7 @@ int main( int argc, const char** argv)
 		std::auto_ptr<strus::PatternMatcherInstanceInterface> ptinst( pt->createInstance());
 		if (!ptinst.get()) throw std::runtime_error("failed to create pattern matcher instance");
 		createPatterns( ptinst.get(), testPatterns);
-		ptinst->compile( strus::analyzer::PatternMatcherOptions());
+		ptinst->compile();
 
 		if (g_errorBuffer->hasError())
 		{

@@ -1010,7 +1010,7 @@ int main( int argc, const char** argv)
 		createRules( ptinst.get(), &ctx, treear);
 		if (doOptimize)
 		{
-			ptinst->compile( strus::analyzer::PatternMatcherOptions());
+			ptinst->compile();
 		}
 		if (g_errorBuffer->hasError())
 		{
