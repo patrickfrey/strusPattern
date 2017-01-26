@@ -62,6 +62,7 @@ public:
 	{
 		try
 		{
+			/*[-]*/std::cerr << "put input " << term.id() << " at " << term.ordpos() << std::endl;
 #ifdef STRUS_LOWLEVEL_DEBUG
 			std::cerr << "put input " << term.id() << " at " << term.ordpos() << std::endl;
 #endif
@@ -180,6 +181,7 @@ public:
 				{
 					gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
 				}
+				/*[-]*/std::cerr << "result " << resultName << " at " << result.ordpos << std::endl;
 #ifdef STRUS_LOWLEVEL_DEBUG
 				std::cerr << "result " << resultName << " at " << result.ordpos << std::endl;
 #endif

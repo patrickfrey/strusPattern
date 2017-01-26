@@ -429,6 +429,9 @@ public:
 	explicit StateMachine( const ProgramTable* programTable_);
 	StateMachine( const StateMachine& o);
 
+	void addObserveEvent( uint32_t event);
+	bool isObservedEvent( uint32_t event) const;
+
 	void doTransition( uint32_t event, const EventData& data);
 	void setCurrentPos( uint32_t pos);
 
@@ -491,6 +494,8 @@ private:
 	unsigned int m_nofSignalsFired;
 	double m_nofOpenPatterns;
 	unsigned int m_timestmp;
+	enum {MaxNofObserveEvents=8};
+	uint32_t m_observeEvents[ MaxNofObserveEvents];
 };
 
 } //namespace

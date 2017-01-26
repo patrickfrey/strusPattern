@@ -591,6 +591,7 @@ StateMachine::StateMachine( const ProgramTable* programTable_)
 {
 	std::memset( m_disposeWindow, 0, sizeof(m_disposeWindow));
 	std::make_heap( m_ruleDisposeQueue.begin(), m_ruleDisposeQueue.end());
+	std::memset( m_observeEvents, 0, sizeof(m_observeEvents));
 }
 
 StateMachine::StateMachine( const StateMachine& o)
@@ -613,6 +614,33 @@ StateMachine::StateMachine( const StateMachine& o)
 	,m_timestmp(o.m_timestmp)
 {
 	std::memcpy( m_disposeWindow, o.m_disposeWindow, sizeof(m_disposeWindow));
+	std::make_heap( m_ruleDisposeQueue.begin(), m_ruleDisposeQueue.end());
+	std::memcpy( m_observeEvents, o.m_observeEvents, sizeof(m_observeEvents));
+}
+
+void StateMachine::addObserveEvent( uint32_t event)
+{
+	std::size_t ei = 0, ee = MaxNofObserveEvents;
+	for (; ei < ee && m_observeEvents[ei] != 0; ++ei){}
+	if (ei == ee) throw strus::runtime_error( _TXT("too many observe events defined"));
+#ifndef STRUS_LOWLEVEL_DEBUG
+	throw strus::runtime_error( _TXT("observe events only eanabled in LOWLEVEL debug mode (compile switch)"));
+#endif
+}
+
+bool StateMachine::isObservedEvent( uint32_t event) const
+{
+	uint32_t const* ev = m_observeEvents;
+	if (*ev)
+	{
+		for (; *ev && *ev != event; ++ev){}
+		if (*ev) return true;
+	}
+	else
+	{
+		return true;
+	}
+	return false;
 }
 
 void StateMachine::clear()
@@ -748,7 +776,11 @@ void StateMachine::fireSignal(
 	++m_nofSignalsFired;
 
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::cout << "rule " << slot.rule << " fire sig " << Trigger::sigTypeName( trigger.sigtype()) << "(" << std::hex << trigger.sigval() << ") at " << slot.value << "#" << std::dec << slot.count;
+	bool observed = isObservedEvent( slot.event);
+	if (observed)
+	{
+		std::cout << "rule " << slot.rule << " fire sig " << Trigger::sigTypeName( trigger.sigtype()) << "(" << std::hex << trigger.sigval() << ") at " << slot.value << "#" << std::dec << slot.count;
+	}
 #endif
 	switch (trigger.sigtype())
 	{
@@ -840,15 +872,21 @@ void StateMachine::fireSignal(
 			slot.value = 0;
 			disposeRuleList.add( slot.rule);
 #ifdef STRUS_LOWLEVEL_DEBUG
-			std::cout << std::endl;
+			if (observed)
+			{
+				std::cout << std::endl;
+			}
 #endif
 			return;
 		}
 	}
 #ifdef STRUS_LOWLEVEL_DEBUG
-	if (match) std::cout << ", matches";
-	if (finished) std::cout << ", finishes";
-	if (takeEventData) std::cout << ", takes data";
+	if (observed)
+	{
+		if (match) std::cout << ", matches";
+		if (finished) std::cout << ", finishes";
+		if (takeEventData) std::cout << ", takes data";
+	}
 #endif
 	if (takeEventData)
 	{
@@ -900,12 +938,18 @@ void StateMachine::fireSignal(
 					referenceEventData( rule.eventDataReferenceIdx);
 				}
 #ifdef STRUS_LOWLEVEL_DEBUG
-				std::cout << ", produces result";
+				if (observed)
+				{
+					std::cout << ", produces result";
+				}
 #endif
 			}
 			rule.done = true;
 #ifdef STRUS_LOWLEVEL_DEBUG
-			std::cout << ", done";
+			if (observed)
+			{
+				std::cout << ", done";
+			}
 #endif
 		}
 		if (finished)
@@ -914,14 +958,21 @@ void StateMachine::fireSignal(
 		}
 	}
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::cout << std::endl;
+	if (observed)
+	{
+		std::cout << std::endl;
+	}
 #endif
 }
 
 void StateMachine::doTransition( uint32_t event, const EventData& data)
 {
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::cout << "call doTransition( event=" << event << ", ordpos=" << data.ordpos << ")" << std::endl;
+	bool observed = isObservedEvent( event);
+	if (observed)
+	{
+		std::cout << "call doTransition( event=" << event << ", ordpos=" << data.ordpos << ")" << std::endl;
+	}
 #endif
 	// Some logging:
 	m_nofOpenPatterns += m_eventTriggerTable.nofTriggers();
@@ -981,7 +1032,10 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 		}
 	}
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::cout << "current state after transition [" << followList.size() << "]: nof rules used " << m_ruleTable.used_size() << ", nof active triggers " << m_eventTriggerTable.nofTriggers() << std::endl;
+	if (observed)
+	{
+		std::cout << "current state after transition [" << followList.size() << "]: nof rules used " << m_ruleTable.used_size() << ", nof active triggers " << m_eventTriggerTable.nofTriggers() << std::endl;
+	}
 #endif
 }
 
@@ -1074,7 +1128,10 @@ void StateMachine::installEventPrograms( uint32_t event, const EventData& data, 
 #endif
 	}
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::cout << "programs installed " << icnt << ", nof rules used " << m_ruleTable.used_size() << ", triggers active " << m_eventTriggerTable.nofTriggers() << std::endl;
+	if (isObservedEvent( event))
+	{
+		std::cout << "programs installed " << icnt << ", nof rules used " << m_ruleTable.used_size() << ", triggers active " << m_eventTriggerTable.nofTriggers() << std::endl;
+	}
 #endif
 }
 
@@ -1093,14 +1150,20 @@ void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& prog
 	if (data.ordpos + program.positionRange < m_curpos)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cout << "failed to install program of rule that rule cannot match anymore because of expired maximum position " << (data.ordpos + program.positionRange) << std::endl;
+		if (isObservedEvent( keyevent))
+		{
+			std::cout << "failed to install program of rule that rule cannot match anymore because of expired maximum position " << (data.ordpos + program.positionRange) << std::endl;
+		}
 #endif
 		return; /*rule cannot match anymore because of expired maximum position*/
 	}
 	uint32_t ruleidx = createRule( data.ordpos + program.positionRange);
 	Rule& rule = m_ruleTable[ ruleidx];
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::cout << "key event " << keyevent << " install program " << programTrigger.programidx << " as rule " << ruleidx << " at " << data.ordpos << std::endl;
+	if (isObservedEvent( keyevent))
+	{
+		std::cout << "key event " << keyevent << " install program " << programTrigger.programidx << " as rule " << ruleidx << " at " << data.ordpos << std::endl;
+	}
 #endif
 	rule.actionSlotIdx =
 		1+m_actionSlotTable.add(
