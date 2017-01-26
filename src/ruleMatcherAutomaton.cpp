@@ -1182,6 +1182,14 @@ void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& prog
 		bool doInstall = false;
 		if (keyevent == triggerDef->event)
 		{
+			if (nofKeyTriggerDef < MaxNofKeyTriggerDefs)
+			{
+				keyTriggerDef[ nofKeyTriggerDef++] = triggerDef;
+			}
+			else
+			{
+				throw strus::runtime_error(_TXT("pattern with too many (%u) identical key events defined"), (unsigned int)nofKeyTriggerDef);
+			}
 			if (triggerDef->isKeyEvent && !hasKeyEvent)
 			{
 				hasKeyEvent = true;
@@ -1189,28 +1197,12 @@ void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& prog
 				{
 					doInstall = true;
 				}
-				if (nofKeyTriggerDef < MaxNofKeyTriggerDefs)
-				{
-					keyTriggerDef[ nofKeyTriggerDef++] = triggerDef;
-				}
-				else
-				{
-					throw strus::runtime_error(_TXT("pattern with too many (%u) identical key events defined"), (unsigned int)nofKeyTriggerDef);
-				}
 			}
 			else if ((Trigger::SigType)triggerDef->sigtype == Trigger::SigDel)
 			{
 				if (triggerDefNeedsInstall( *triggerDef, slot))
 				{
 					doInstall = true;
-				}
-				if (nofKeyTriggerDef < MaxNofKeyTriggerDefs)
-				{
-					keyTriggerDef[ nofKeyTriggerDef++] = triggerDef;
-				}
-				else
-				{
-					throw strus::runtime_error(_TXT("pattern with too many (%u) identical key events defined"), (unsigned int)nofKeyTriggerDef);
 				}
 			}
 			else

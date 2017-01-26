@@ -46,7 +46,7 @@ public:
 	enum SigType {SigAny=0x0,SigSequence=0x1,SigSequenceImm=0x2,SigWithin=0x3,SigDel=0x4,SigAnd=0x5};
 	static const char* sigTypeName( SigType i)
 	{
-		static const char* ar[] = {"Any","Sequence","SequenceImm","Within","Del"};
+		static const char* ar[] = {"Any","Sequence","SequenceImm","Within","Del","And"};
 		return ar[i];
 	}
 
