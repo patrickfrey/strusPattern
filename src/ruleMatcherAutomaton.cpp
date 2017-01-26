@@ -798,11 +798,10 @@ void StateMachine::fireSignal(
 			{
 				if (!slot.value)
 				{
-					slot.value = data.ordpos;
+					slot.end_ordpos = slot.value = data.ordpos;
 				}
 				if (slot.value == data.ordpos)
 				{
-					slot.end_ordpos = m_curpos;
 					match = true;
 					--slot.count;
 					finished = (slot.count == 0);
@@ -813,7 +812,7 @@ void StateMachine::fireSignal(
 		case Trigger::SigSequence:
 			if (trigger.sigval() == slot.value && slot.end_ordpos < data.ordpos)
 			{
-				slot.end_ordpos = m_curpos;
+				slot.end_ordpos = data.ordpos;
 				slot.value = trigger.sigval()-1;
 				if (slot.count > 0)
 				{
@@ -831,7 +830,7 @@ void StateMachine::fireSignal(
 		case Trigger::SigSequenceImm:
 			if (trigger.sigval() == slot.value && slot.end_ordpos+1 == data.ordpos)
 			{
-				slot.end_ordpos = m_curpos;
+				slot.end_ordpos = data.ordpos;
 				slot.value = trigger.sigval()-1;
 				if (slot.count > 0)
 				{
@@ -850,7 +849,7 @@ void StateMachine::fireSignal(
 		{
 			if ((trigger.sigval() & slot.value) != 0 && slot.end_ordpos < data.ordpos)
 			{
-				slot.end_ordpos = m_curpos;
+				slot.end_ordpos = data.ordpos;
 				slot.value &= ~trigger.sigval();
 				if (slot.count > 0)
 				{
