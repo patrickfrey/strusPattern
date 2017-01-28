@@ -262,7 +262,12 @@ int main( int argc, const char** argv)
 		std::set<Match> matches;
 		for (;ri != re; ++ri)
 		{
-			matches.insert( Match( ri->name(), ri->ordpos()));
+			matches.insert( Match( ri->name(), ri->start_ordpos()));
+		}
+		std::set<Match>::const_iterator li = matches.begin(), le = matches.end();
+		for (; li != le; ++li)
+		{
+			std::cout << "MATCH " << li->first << " -> " << li->second << std::endl;
 		}
 		unsigned int ti=0;
 		for (; testPatterns[ti].name; ++ti)
@@ -270,6 +275,7 @@ int main( int argc, const char** argv)
 			unsigned int ei=0;
 			for (; testPatterns[ti].results[ei]; ++ei)
 			{
+				std::cout << "CHECK " << ti << ": " << testPatterns[ti].name << " -> " << testPatterns[ti].results[ei] << std::endl;
 				std::set<Match>::iterator
 					mi = matches.find( Match( testPatterns[ti].name, testPatterns[ti].results[ei]));
 				if (mi == matches.end())

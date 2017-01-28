@@ -737,7 +737,7 @@ static TreeMatchResult matchTree( const TreeNode* tree, const strus::utils::Docu
 	}
 	if (rt.valid && tree->variable())
 	{
-		strus::analyzer::PatternMatcherResultItem item( tree->variable(), rt.ordpos, 0/*start_origseg*/, rt.startidx, 0/*end_origseg*/, rt.endidx, rt.weight);
+		strus::analyzer::PatternMatcherResultItem item( tree->variable(), rt.ordpos, rt.ordpos + rt.ordsize, 0/*start_origseg*/, rt.startidx, 0/*end_origseg*/, rt.endidx, rt.weight);
 		rt.itemar.push_back( item);
 	}
 	return rt;
@@ -766,7 +766,7 @@ static std::vector<strus::analyzer::PatternMatcherResult>
 			TreeMatchResult match = matchTree( candidateTree, doc, didx, endpos, ri->first);
 			if (match.valid)
 			{
-				strus::analyzer::PatternMatcherResult result( candidateTree->name(), match.ordpos, 0/*start_origseg*/, match.startidx, 0/*end_origseg*/, match.endidx, match.itemar);
+				strus::analyzer::PatternMatcherResult result( candidateTree->name(), match.ordpos, match.ordpos + match.ordsize, 0/*start_origseg*/, match.startidx, 0/*end_origseg*/, match.endidx, match.itemar);
 				rt.push_back( result);
 			}
 		}
@@ -788,7 +788,8 @@ bool compareResultItem( const strus::analyzer::PatternMatcherResultItem &res1, c
 {
 	int cmp = std::strcmp( res1.name(), res2.name());
 	if (cmp) return cmp < 0;
-	if (res1.ordpos() != res2.ordpos()) return res1.ordpos() < res2.ordpos();
+	if (res1.start_ordpos() != res2.start_ordpos()) return res1.start_ordpos() < res2.start_ordpos();
+	if (res1.end_ordpos() != res2.end_ordpos()) return res1.end_ordpos() < res2.end_ordpos();
 	if (res1.start_origseg() != res2.start_origseg()) return res1.start_origseg() < res2.start_origseg();
 	if (res1.start_origpos() != res2.start_origpos()) return res1.start_origpos() < res2.start_origpos();
 	if (res1.end_origseg() != res2.end_origseg()) return res1.end_origseg() < res2.end_origseg();
@@ -800,7 +801,8 @@ bool compareResult( const strus::analyzer::PatternMatcherResult &res1, const str
 {
 	int cmp = std::strcmp( res1.name(), res2.name());
 	if (cmp) return cmp < 0;
-	if (res1.ordpos() != res2.ordpos()) return res1.ordpos() < res2.ordpos();
+	if (res1.start_ordpos() != res2.start_ordpos()) return res1.start_ordpos() < res2.start_ordpos();
+	if (res1.end_ordpos() != res2.end_ordpos()) return res1.end_ordpos() < res2.end_ordpos();
 	if (res1.start_origseg() != res2.start_origseg()) return res1.start_origseg() < res2.start_origseg();
 	if (res1.end_origseg() != res2.end_origseg()) return res1.end_origseg() < res2.end_origseg();
 	if (res1.start_origpos() != res2.start_origpos()) return res1.start_origpos() < res2.start_origpos();
@@ -839,7 +841,7 @@ static std::vector<strus::analyzer::PatternMatcherResult>
 	{
 		std::vector<strus::analyzer::PatternMatcherResultItem> items = ri->items();
 		std::sort( items.begin(), items.end(), compareResultItem);
-		rt.push_back( strus::analyzer::PatternMatcherResult( ri->name(), ri->ordpos(), ri->start_origseg(), ri->start_origpos(), ri->end_origseg(), ri->end_origpos(), items));
+		rt.push_back( strus::analyzer::PatternMatcherResult( ri->name(), ri->start_ordpos(), ri->end_ordpos(), ri->start_origseg(), ri->start_origpos(), ri->end_origseg(), ri->end_origpos(), items));
 	}
 	std::sort( rt.begin(), rt.end(), compareResult);
 	return rt;
@@ -870,13 +872,13 @@ static bool compareResults( const std::vector<strus::analyzer::PatternMatcherRes
 	for (; xi != xe; ++xi)
 	{
 		std::ostringstream item;
-		item << xi->name() << "_" << xi->ordpos() << "(" << xi->start_origseg() << "|" << xi->start_origpos() << " .. " << xi->end_origseg() << "|" << xi->end_origpos() << ")";
+		item << xi->name() << "_" << xi->start_ordpos() << ".." << xi->end_ordpos() << "(" << xi->start_origseg() << "|" << xi->start_origpos() << " .. " << xi->end_origseg() << "|" << xi->end_origpos() << ")";
 		set_exp.insert( item.str());
 	}
 	for (; ri != re; ++ri)
 	{
 		std::ostringstream item;
-		item << ri->name() << "_" << ri->ordpos() << "(" << ri->start_origseg() << "|" << ri->start_origpos() << " .. " << ri->end_origseg() << "|" << ri->end_origpos() << ")";
+		item << ri->name() << "_" << ri->start_ordpos() << ".." << ri->end_ordpos() << "(" << ri->start_origseg() << "|" << ri->start_origpos() << " .. " << ri->end_origseg() << "|" << ri->end_origpos() << ")";
 		set_res.insert( item.str());
 	}
 	std::set<std::string>::const_iterator sri = set_res.begin(), sre = set_res.end();

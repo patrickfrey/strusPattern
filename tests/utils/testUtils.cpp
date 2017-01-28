@@ -132,7 +132,7 @@ void utils::printResults( std::ostream& out, const std::vector<strus::SegmenterP
 		std::size_t start_origsegsrcpos = segmentposmap.empty()?ri->start_origseg():segmentposmap[ ri->start_origseg()];
 		std::size_t end_origsegsrcpos = segmentposmap.empty()?ri->end_origseg():segmentposmap[ ri->end_origseg()];
 
-		out << "match '" << ri->name() << "' at " << ri->ordpos() << " ["
+		out << "match '" << ri->name() << "' at " << ri->start_ordpos() << ".." << ri->end_ordpos() << " ["
 		    << start_origsegsrcpos << "|" << ri->start_origpos() << ".."
 		    << end_origsegsrcpos << "|" << ri->end_origpos()
 		    << "]:";
@@ -144,7 +144,7 @@ void utils::printResults( std::ostream& out, const std::vector<strus::SegmenterP
 			start_origsegsrcpos = segmentposmap.empty()?ei->start_origseg():segmentposmap[ ei->start_origseg()];
 			end_origsegsrcpos = segmentposmap.empty()?ei->end_origseg():segmentposmap[ ei->end_origseg()];
 
-			out << " " << ei->name() << " [" << ei->ordpos()
+			out << " " << ei->name() << " [" << ei->start_ordpos()<< ".." << ei->end_ordpos()
 					<< ", " << start_origsegsrcpos << "|" << ei->start_origpos()
 					<< ".." << end_origsegsrcpos << "|" << ei->end_origpos()
 					<< "]";

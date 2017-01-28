@@ -544,6 +544,10 @@ void ProgramTable::optimize( OptimizeOptions& opt)
 		const ProgramTrigger* programTrigger;
 		while (0!=(programTrigger=m_programTriggerList.nextptr( prglist)))
 		{
+			/*[-]*/if (programTrigger->programidx == 30413872)
+			/*[-]*/{
+			/*[-]*/	std::cout << "HALLY GALLY" << std::endl;
+			/*[-]*/}
 			Program& program = m_programMap[ programTrigger->programidx-1];
 			uint32_t alt_eventid = getAltEventId( eventid, program.triggerListIdx);
 			if (!alt_eventid)
@@ -769,6 +773,10 @@ void StateMachine::fireSignal(
 	ActionSlot& slot, const Trigger& trigger, const EventData& data,
 	DisposeRuleList& disposeRuleList, EventStructList& followList)
 {
+	/*[-]*/if (slot.resultHandle == 413872)
+	/*[-]*/{
+	/*[-]*/	std::cout << "+++ FIRE " << slot.count << std::endl;
+	/*[-]*/}
 	Rule& rule = m_ruleTable[ slot.rule];
 	bool match = false;
 	bool takeEventData = false;
@@ -791,6 +799,10 @@ void StateMachine::fireSignal(
 				match = true;
 				--slot.count;
 				finished = (slot.count == 0);
+				if (slot.end_ordpos < data.end_ordpos)
+				{
+					slot.end_ordpos = data.end_ordpos;
+				}
 			}
 			break;
 		case Trigger::SigAnd:
@@ -798,9 +810,13 @@ void StateMachine::fireSignal(
 			{
 				if (!slot.value)
 				{
-					slot.end_ordpos = slot.value = data.ordpos;
+					slot.value = data.start_ordpos;
+					if (slot.end_ordpos > data.end_ordpos)
+					{
+						slot.end_ordpos = data.end_ordpos;
+					}
 				}
-				if (slot.value == data.ordpos)
+				if (slot.value == data.start_ordpos)
 				{
 					match = true;
 					--slot.count;
@@ -810,9 +826,9 @@ void StateMachine::fireSignal(
 			}
 			break;
 		case Trigger::SigSequence:
-			if (trigger.sigval() == slot.value && slot.end_ordpos < data.ordpos)
+			if (trigger.sigval() == slot.value && slot.end_ordpos <= data.start_ordpos)
 			{
-				slot.end_ordpos = data.ordpos;
+				slot.end_ordpos = data.end_ordpos;
 				slot.value = trigger.sigval()-1;
 				if (slot.count > 0)
 				{
@@ -828,9 +844,9 @@ void StateMachine::fireSignal(
 			}
 			break;
 		case Trigger::SigSequenceImm:
-			if (trigger.sigval() == slot.value && slot.end_ordpos+1 == data.ordpos)
+			if (trigger.sigval() == slot.value && slot.end_ordpos == data.start_ordpos)
 			{
-				slot.end_ordpos = data.ordpos;
+				slot.end_ordpos = data.end_ordpos;
 				slot.value = trigger.sigval()-1;
 				if (slot.count > 0)
 				{
@@ -847,9 +863,9 @@ void StateMachine::fireSignal(
 			break;
 		case Trigger::SigWithin:
 		{
-			if ((trigger.sigval() & slot.value) != 0 && slot.end_ordpos < data.ordpos)
+			if ((trigger.sigval() & slot.value) != 0 && slot.end_ordpos <= data.start_ordpos)
 			{
-				slot.end_ordpos = data.ordpos;
+				slot.end_ordpos = data.end_ordpos;
 				slot.value &= ~trigger.sigval();
 				if (slot.count > 0)
 				{
@@ -909,9 +925,9 @@ void StateMachine::fireSignal(
 				joinEventData( rule.eventDataReferenceIdx, data.subdataref);
 			}
 		}
-		if (slot.start_ordpos == 0 || slot.start_ordpos > data.ordpos)
+		if (slot.start_ordpos == 0 || slot.start_ordpos > data.start_ordpos)
 		{
-			slot.start_ordpos = data.ordpos;
+			slot.start_ordpos = data.start_ordpos;
 			slot.start_origseg = data.start_origseg;
 			slot.start_origpos = data.start_origpos;
 		}
@@ -922,7 +938,7 @@ void StateMachine::fireSignal(
 		{
 			if (slot.event)
 			{
-				EventStruct followEventData( EventData( slot.start_origseg, slot.start_origpos, data.end_origseg, data.end_origpos, slot.start_ordpos, rule.eventDataReferenceIdx), slot.event);
+				EventStruct followEventData( EventData( slot.start_origseg, slot.start_origpos, data.end_origseg, data.end_origpos, slot.start_ordpos, slot.end_ordpos, rule.eventDataReferenceIdx), slot.event);
 				if (rule.eventDataReferenceIdx)
 				{
 					referenceEventData( rule.eventDataReferenceIdx);
@@ -931,7 +947,7 @@ void StateMachine::fireSignal(
 			}
 			if (slot.resultHandle)
 			{
-				m_results.add( Result( slot.resultHandle, rule.eventDataReferenceIdx, slot.start_ordpos, slot.start_origseg, slot.start_origpos, data.end_origseg, data.end_origpos));
+				m_results.add( Result( slot.resultHandle, rule.eventDataReferenceIdx, slot.start_ordpos, slot.end_ordpos, slot.start_origseg, slot.start_origpos, data.end_origseg, data.end_origpos));
 				if (rule.eventDataReferenceIdx)
 				{
 					referenceEventData( rule.eventDataReferenceIdx);
@@ -970,7 +986,7 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 	bool observed = isObservedEvent( event);
 	if (observed)
 	{
-		std::cout << "call doTransition( event=" << event << ", ordpos=" << data.ordpos << ")" << std::endl;
+		std::cout << "call doTransition( event=" << event << ", start_ordpos=" << data.start_ordpos << ", end_ordpos=" << data.end_ordpos << ")" << std::endl;
 	}
 #endif
 	// Some logging:
@@ -1145,23 +1161,27 @@ static bool triggerDefNeedsInstall( const TriggerDef& triggerDef, const ActionSl
 
 void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& programTrigger, const EventData& data, EventStructList& followList, DisposeRuleList& disposeRuleList)
 {
+	/*[-]*/if (programTrigger.programidx == 30173337 || programTrigger.programidx == 30413872)
+	/*[-]*/{
+	/*[-]*/	std::cout << "+++ INSTALL " << programTrigger.programidx << " ON EVENT " << keyevent << std::endl;
+	/*[-]*/}
 	const Program& program = (*m_programTable)[ programTrigger.programidx];
-	if (data.ordpos + program.positionRange < m_curpos)
+	if (data.start_ordpos + program.positionRange < m_curpos)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
 		if (isObservedEvent( keyevent))
 		{
-			std::cout << "failed to install program of rule that rule cannot match anymore because of expired maximum position " << (data.ordpos + program.positionRange) << std::endl;
+			std::cout << "failed to install program of rule that rule cannot match anymore because of expired maximum position " << (data.start_ordpos + program.positionRange) << std::endl;
 		}
 #endif
 		return; /*rule cannot match anymore because of expired maximum position*/
 	}
-	uint32_t ruleidx = createRule( data.ordpos + program.positionRange);
+	uint32_t ruleidx = createRule( data.start_ordpos + program.positionRange);
 	Rule& rule = m_ruleTable[ ruleidx];
 #ifdef STRUS_LOWLEVEL_DEBUG
 	if (isObservedEvent( keyevent))
 	{
-		std::cout << "key event " << keyevent << " install program " << programTrigger.programidx << " as rule " << ruleidx << " at " << data.ordpos << std::endl;
+		std::cout << "key event " << keyevent << " install program " << programTrigger.programidx << " as rule " << ruleidx << " at " << data.start_ordpos << std::endl;
 	}
 #endif
 	rule.actionSlotIdx =
@@ -1250,7 +1270,7 @@ void StateMachine::replayPastEvent( uint32_t eventid, const Rule& rule, uint32_t
 	// to fire on the slot of the installed rule
 	std::map<uint32_t,EventLog>::const_iterator
 		ei = m_stopWordsEventLogMap.find( eventid);
-	if (ei != m_stopWordsEventLogMap.end() && ei->second.data.ordpos + positionRange >= m_curpos)
+	if (ei != m_stopWordsEventLogMap.end() && ei->second.data.start_ordpos + positionRange >= m_curpos)
 	{
 		ActionSlot& slot = m_actionSlotTable[ rule.actionSlotIdx-1];
 

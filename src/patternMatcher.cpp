@@ -86,9 +86,10 @@ public:
 				throw strus::runtime_error(_TXT("term event orig segment byte position out of range"));
 			}
 			uint32_t eventid = eventHandle( TermEvent, term.id());
-			EventData data( term.origseg(), term.origpos(), term.origseg(), term.origpos() + term.origsize(), term.ordpos(), 0/*subdataref*/);
+			EventData data( term.origseg(), term.origpos(), term.origseg(), term.origpos() + term.origsize(), term.ordpos(), term.ordpos()+1, 0/*subdataref*/);
 			m_statemachine->doTransition( eventid, data);
 			++m_nofEvents;
+			/*[-]*/std::cerr << "+++ INPUT " << term.id() << " at " << term.ordpos() << " event " << eventid << std::endl;
 		}
 		CATCH_ERROR_MAP( _TXT("failed to feed input to pattern matcher: %s"), *m_errorhnd);
 	}
@@ -100,7 +101,7 @@ public:
 		while (0!=(item=m_statemachine->nextResultItem( itemList)))
 		{
 			const char* itemName = m_data->variableMap.key( item->variable);
-			PatternMatcherResultItem rtitem( itemName, item->data.ordpos, item->data.start_origseg, item->data.start_origpos, item->data.end_origseg, item->data.end_origpos, item->weight);
+			PatternMatcherResultItem rtitem( itemName, item->data.start_ordpos, item->data.end_ordpos, item->data.start_origseg, item->data.start_origpos, item->data.end_origseg, item->data.end_origpos, item->weight);
 			resitemlist.push_back( rtitem);
 			if (item->data.subdataref)
 			{
@@ -183,7 +184,7 @@ public:
 #ifdef STRUS_LOWLEVEL_DEBUG
 				std::cerr << "result " << resultName << " at " << result.ordpos << std::endl;
 #endif
-				rt.push_back( PatternMatcherResult( resultName, result.ordpos, result.start_origseg, result.start_origpos, result.end_origseg, result.end_origpos, rtitemlist));
+				rt.push_back( PatternMatcherResult( resultName, result.start_ordpos, result.end_ordpos, result.start_origseg, result.start_origpos, result.end_origseg, result.end_origpos, rtitemlist));
 			}
 			return rt;
 		}
@@ -474,6 +475,8 @@ public:
 			std::cout << "ATM define token pattern '" << name << "'" << (visible?" (visible)":"") << " as program " << program << std::endl;
 			std::cout << "ATM stack size " << m_stack.size() << std::endl;
 #endif
+			/*[-]*/if (name == "F436558") std::cout << "+++ INSTALL PROGRAM [Wall of Voodoo] id=" << program << std::endl;
+			/*[-]*/if (name == "_9008") std::cout << "+++ INSTALL PROGRAM [Wall of] id=" << program << std::endl;
 		}
 		CATCH_ERROR_MAP( _TXT("failed to close pattern definition on the pattern match expression stack: %s"), *m_errorhnd);
 	}
