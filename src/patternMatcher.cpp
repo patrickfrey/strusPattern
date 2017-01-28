@@ -89,7 +89,6 @@ public:
 			EventData data( term.origseg(), term.origpos(), term.origseg(), term.origpos() + term.origsize(), term.ordpos(), term.ordpos()+1, 0/*subdataref*/);
 			m_statemachine->doTransition( eventid, data);
 			++m_nofEvents;
-			/*[-]*/std::cerr << "+++ INPUT " << term.id() << " at " << term.ordpos() << " event " << eventid << std::endl;
 		}
 		CATCH_ERROR_MAP( _TXT("failed to feed input to pattern matcher: %s"), *m_errorhnd);
 	}
@@ -475,8 +474,6 @@ public:
 			std::cout << "ATM define token pattern '" << name << "'" << (visible?" (visible)":"") << " as program " << program << std::endl;
 			std::cout << "ATM stack size " << m_stack.size() << std::endl;
 #endif
-			/*[-]*/if (name == "F436558") std::cout << "+++ INSTALL PROGRAM [Wall of Voodoo] id=" << program << std::endl;
-			/*[-]*/if (name == "_9008") std::cout << "+++ INSTALL PROGRAM [Wall of] id=" << program << std::endl;
 		}
 		CATCH_ERROR_MAP( _TXT("failed to close pattern definition on the pattern match expression stack: %s"), *m_errorhnd);
 	}

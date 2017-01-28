@@ -544,10 +544,6 @@ void ProgramTable::optimize( OptimizeOptions& opt)
 		const ProgramTrigger* programTrigger;
 		while (0!=(programTrigger=m_programTriggerList.nextptr( prglist)))
 		{
-			/*[-]*/if (programTrigger->programidx == 30413872)
-			/*[-]*/{
-			/*[-]*/	std::cout << "HALLY GALLY" << std::endl;
-			/*[-]*/}
 			Program& program = m_programMap[ programTrigger->programidx-1];
 			uint32_t alt_eventid = getAltEventId( eventid, program.triggerListIdx);
 			if (!alt_eventid)
@@ -773,10 +769,6 @@ void StateMachine::fireSignal(
 	ActionSlot& slot, const Trigger& trigger, const EventData& data,
 	DisposeRuleList& disposeRuleList, EventStructList& followList)
 {
-	/*[-]*/if (slot.resultHandle == 413872)
-	/*[-]*/{
-	/*[-]*/	std::cout << "+++ FIRE " << slot.count << std::endl;
-	/*[-]*/}
 	Rule& rule = m_ruleTable[ slot.rule];
 	bool match = false;
 	bool takeEventData = false;
@@ -1161,10 +1153,6 @@ static bool triggerDefNeedsInstall( const TriggerDef& triggerDef, const ActionSl
 
 void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& programTrigger, const EventData& data, EventStructList& followList, DisposeRuleList& disposeRuleList)
 {
-	/*[-]*/if (programTrigger.programidx == 30173337 || programTrigger.programidx == 30413872)
-	/*[-]*/{
-	/*[-]*/	std::cout << "+++ INSTALL " << programTrigger.programidx << " ON EVENT " << keyevent << std::endl;
-	/*[-]*/}
 	const Program& program = (*m_programTable)[ programTrigger.programidx];
 	if (data.start_ordpos + program.positionRange < m_curpos)
 	{
