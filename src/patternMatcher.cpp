@@ -109,6 +109,75 @@ public:
 		}
 	}
 
+	std::vector<bool> getCoveredFlags( const StateMachine::ResultList& results) const
+	{
+		std::vector<bool> rt( results.size(), false);
+		std::size_t ai = 0, ae = results.size();
+		for (; ai != ae; ++ai)
+		{
+			const Result& result = results[ ai];
+			std::size_t ni = ai;
+			for (; ni != ae; ++ni)
+			{
+				const Result& follow_result = results[ ni];
+				if (follow_result.start_origseg > result.end_origseg
+				||  follow_result.start_origpos >= result.end_origpos)
+				{
+					// ... follow_result is not overlapping with result,
+					// so there are no more left to check for result.
+					break;
+				}
+				if (follow_result.start_origseg <= result.start_origseg
+				&&  follow_result.start_origpos <= result.start_origpos
+				&&  follow_result.end_origseg >= result.end_origseg
+				&&  follow_result.end_origpos >= result.end_origpos)
+				{
+					// ... result is covered by follow_result
+					if (follow_result.end_origseg != result.end_origseg
+					||  follow_result.end_origpos != result.end_origpos
+					||  follow_result.start_origseg != result.start_origseg
+					||  follow_result.start_origpos != result.start_origpos)
+					{
+						// ... and not equal, so result is 
+						// marked to be eliminated
+						rt[ ai] = true;
+					}
+				}
+				if (follow_result.start_origseg >= result.start_origseg
+				&&  follow_result.start_origpos >= result.start_origpos
+				&&  follow_result.end_origseg <= result.end_origseg
+				&&  follow_result.end_origpos <= result.end_origpos)
+				{
+					// ... follow_result is covered by result
+					if (follow_result.end_origseg != result.end_origseg
+					||  follow_result.end_origpos != result.end_origpos
+					||  follow_result.start_origseg != result.start_origseg
+					||  follow_result.start_origpos != result.start_origpos)
+					{
+						// ... and not equal, so follow_result is 
+						// marked to be eliminated
+						rt[ ni] = true;
+					}
+				}
+			}
+		}
+		return rt;
+	}
+
+	void pushResult( std::vector<analyzer::PatternMatcherResult>& res, const Result& result) const
+	{
+		const char* resultName = m_data->patternMap.key( result.resultHandle);
+		std::vector<PatternMatcherResultItem> rtitemlist;
+		if (result.eventDataReferenceIdx)
+		{
+			gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
+		}
+#ifdef STRUS_LOWLEVEL_DEBUG
+		std::cerr << "result " << resultName << " at " << result.ordpos << std::endl;
+#endif
+		res.push_back( PatternMatcherResult( resultName, result.start_ordpos, result.end_ordpos, result.start_origseg, result.start_origpos, result.end_origseg, result.end_origpos, rtitemlist));
+	}
+
 	virtual std::vector<analyzer::PatternMatcherResult> fetchResults() const
 	{
 		try
@@ -116,74 +185,25 @@ public:
 			std::vector<analyzer::PatternMatcherResult> rt;
 			const StateMachine::ResultList& results = m_statemachine->results();
 			rt.reserve( results.size());
-			std::size_t ai = 0, ae = results.size();
-			for (; ai != ae; ++ai)
+			if (m_data->exclusive)
 			{
-				const Result& result = results[ ai];
-				if (m_data->exclusive)
+				std::vector<bool> eliminate( getCoveredFlags( results));
+				std::size_t ai = 0, ae = results.size();
+				for (; ai != ae; ++ai)
 				{
-					if (!rt.empty())
+					if (!eliminate[ai])
 					{
-						const PatternMatcherResult& last_result = rt.back();
-						if (last_result.end_origpos() == result.end_origpos
-						&&  last_result.end_origseg() == result.end_origseg
-						&&  last_result.start_origseg() <= result.start_origseg
-						&&  last_result.start_origpos() <= result.start_origpos)
-						{
-							if (last_result.start_origseg() != result.start_origseg
-							||  last_result.start_origpos() != result.start_origpos)
-							{
-								// ... we ignore this covered result
-								continue;
-							}
-						}
-					}
-					if (ai+1 < ae)
-					{
-						// Try to find succeeding result covering current result:
-						std::size_t an = ai+1;
-						for (; an < ae; ++an)
-						{
-							const Result& next_result = results[ an];
-	
-							if (next_result.start_origseg > result.end_origseg
-							||  next_result.start_origpos > result.end_origpos)
-							{
-								an = ae;
-								break;
-							}
-							if (next_result.start_origseg <= result.start_origseg
-							&&  next_result.start_origpos <= result.start_origpos
-							&&  next_result.end_origseg >= result.end_origseg
-							&&  next_result.end_origpos >= result.end_origpos)
-							{
-								if (next_result.end_origseg != result.end_origseg
-								||  next_result.end_origpos != result.end_origpos
-								||  next_result.start_origseg != result.start_origseg
-								||  next_result.start_origpos != result.start_origpos)
-								{
-									// ... we ignore this covered result
-									break;
-								}
-							}
-						}
-						if (an != ae)
-						{
-							// ... ingnore results covered by bigger pattern
-							continue;
-						}
+						pushResult( rt, results[ ai]);
 					}
 				}
-				const char* resultName = m_data->patternMap.key( result.resultHandle);
-				std::vector<PatternMatcherResultItem> rtitemlist;
-				if (result.eventDataReferenceIdx)
+			}
+			else
+			{
+				std::size_t ai = 0, ae = results.size();
+				for (; ai != ae; ++ai)
 				{
-					gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
+					pushResult( rt, results[ ai]);
 				}
-#ifdef STRUS_LOWLEVEL_DEBUG
-				std::cerr << "result " << resultName << " at " << result.ordpos << std::endl;
-#endif
-				rt.push_back( PatternMatcherResult( resultName, result.start_ordpos, result.end_ordpos, result.start_origseg, result.start_origpos, result.end_origseg, result.end_origpos, rtitemlist));
 			}
 			return rt;
 		}
