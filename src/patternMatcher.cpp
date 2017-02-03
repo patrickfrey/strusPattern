@@ -33,12 +33,13 @@ using namespace strus::analyzer;
 struct PatternMatcherData
 {
 	explicit PatternMatcherData( ErrorBufferInterface* errorhnd)
-		:variableMap(),patternMap(),programTable(),exclusive(false){}
+		:variableMap(),patternMap(),programTable(),exclusive(false),maxResultSize(100){}
 
 	SymbolTable variableMap;
 	SymbolTable patternMap;
 	ProgramTable programTable;
 	bool exclusive;
+	unsigned int maxResultSize;
 };
 
 enum PatternEventType {TermEvent=0, ExpressionEvent=1, ReferenceEvent=2};
@@ -121,7 +122,7 @@ public:
 			{
 				const Result& follow_result = results[ ni];
 				if (follow_result.start_origseg > result.end_origseg
-				||  follow_result.start_origpos >= result.end_origpos)
+				||  follow_result.start_origpos >= result.end_origpos + m_data->maxResultSize)
 				{
 					// ... follow_result is not overlapping with result,
 					// so there are no more left to check for result.
@@ -544,6 +545,10 @@ public:
 			{
 				m_popt.maxRange = (unsigned int)(value + std::numeric_limits<double>::epsilon());
 			}
+			else if (utils::caseInsensitiveEquals( name, "maxResultSize"))
+			{
+				m_data.maxResultSize = (unsigned int)(value + std::numeric_limits<double>::epsilon());
+			}
 			else if (utils::caseInsensitiveEquals( name, "exclusive"))
 			{
 				m_data.exclusive = true;
@@ -603,7 +608,7 @@ private:
 std::vector<std::string> PatternMatcher::getCompileOptionNames() const
 {
 	std::vector<std::string> rt;
-	static const char* ar[] = {"stopwordOccurrenceFactor","weightFactor","maxRange","exclusive",0};
+	static const char* ar[] = {"stopwordOccurrenceFactor","weightFactor","maxRange","exclusive","maxResultSize",0};
 	for (std::size_t ai=0; ar[ai]; ++ai)
 	{
 		rt.push_back( ar[ ai]);
