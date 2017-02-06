@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>strusStream: /home/patrick/Projects/github/strusStream/include/strus/tokenPatternMatchInstanceInterface.hpp File Reference</title>
+<title>strusStream: /home/patrick/Projects/github/strusPattern/include/strus/lib/pattern.hpp File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -27,7 +27,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">strusStream
-   &#160;<span id="projectnumber">0.10</span>
+   &#160;<span id="projectnumber">0.13</span>
    </div>
   </td>
  </tr>
@@ -40,7 +40,6 @@
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li><a href="namespaces.html"><span>Namespaces</span></a></li>
-      <li><a href="annotated.html"><span>Classes</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
     </ul>
   </div>
@@ -52,44 +51,41 @@
   </div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_4c7fe52541d540b59710786f705b50e0.html">strus</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_4c7fe52541d540b59710786f705b50e0.html">strus</a></li><li class="navelem"><a class="el" href="dir_a73361def35442ed7e38ef668dbae29f.html">lib</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
-<a href="#namespaces">Namespaces</a>  </div>
+<a href="#namespaces">Namespaces</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
-<div class="title">tokenPatternMatchInstanceInterface.hpp File Reference</div>  </div>
+<div class="title">pattern.hpp File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Interface for building the automaton for detecting patterns of tokens in a document stream.  
-<a href="#details">More...</a></p>
-<div class="textblock"><code>#include &quot;<a class="el" href="tokenPatternMatchOptions_8hpp_source.html">strus/stream/tokenPatternMatchOptions.hpp</a>&quot;</code><br/>
-<code>#include &lt;string&gt;</code><br/>
+<div class="textblock"><code>#include &lt;cstdio&gt;</code><br/>
 </div>
-<p><a href="tokenPatternMatchInstanceInterface_8hpp_source.html">Go to the source code of this file.</a></p>
+<p><a href="pattern_8hpp_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
-Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstrus_1_1TokenPatternMatchInstanceInterface.html">strus::TokenPatternMatchInstanceInterface</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interface for building the automaton for detecting patterns of tokens in a document stream.  <a href="classstrus_1_1TokenPatternMatchInstanceInterface.html#details">More...</a><br/></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="namespaces"></a>
 Namespaces</h2></td></tr>
 <tr class="memitem:namespacestrus"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html">strus</a></td></tr>
 <tr class="memdesc:namespacestrus"><td class="mdescLeft">&#160;</td><td class="mdescRight">strus toplevel namespace <br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a231b2fef86010442b863f8c34608b87c"><td class="memItemLeft" align="right" valign="top">PatternLexerInterface *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a231b2fef86010442b863f8c34608b87c">strus::createPatternLexer_stream</a> (ErrorBufferInterface *errorhnd)</td></tr>
+<tr class="memdesc:a231b2fef86010442b863f8c34608b87c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create the interface for regular expression matching on text.  <a href="#a231b2fef86010442b863f8c34608b87c">More...</a><br/></td></tr>
+<tr class="separator:a231b2fef86010442b863f8c34608b87c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a007fa27288a1fec6d4207e609498f02c"><td class="memItemLeft" align="right" valign="top">PatternMatcherInterface *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a007fa27288a1fec6d4207e609498f02c">strus::createPatternMatcher_stream</a> (ErrorBufferInterface *errorhnd)</td></tr>
+<tr class="memdesc:a007fa27288a1fec6d4207e609498f02c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create the interface for pattern matching on a stream of tokens.  <a href="#a007fa27288a1fec6d4207e609498f02c">More...</a><br/></td></tr>
+<tr class="separator:a007fa27288a1fec6d4207e609498f02c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Interface for building the automaton for detecting patterns of tokens in a document stream. </p>
-</div></div><!-- contents -->
+</div><!-- contents -->
 <!-- HTML footer for doxygen 1.8.6-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Jul 10 2016 19:44:47 for strusStream by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Feb 6 2017 17:59:55 for strusStream by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
