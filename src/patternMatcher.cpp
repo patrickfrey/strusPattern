@@ -124,7 +124,8 @@ public:
 				if (follow_result.start_origseg > result.end_origseg
 				||  follow_result.start_origpos >= result.end_origpos + m_data->maxResultSize)
 				{
-					// ... follow_result is not overlapping with result,
+					// ... follow_result is not overlapping with end 
+					// of the result plus a maximum result length distance,
 					// so there are no more left to check for result.
 					break;
 				}
