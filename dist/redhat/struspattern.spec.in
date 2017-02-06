@@ -252,6 +252,14 @@ make test
 %{_includedir}/strus/lib/*.hpp
 
 %changelog
+* Mon Feb 6 2017 Patrick Frey <patrickpfrey@yahoo.com> 0.13.0-0.1
+- rename project from strusStream to strusPattern
+- adapt interface changes in analyzer
+- elimination of covered results if specified by option
+- SymbolTable moved to strus base
+- rearrange code
+- many build fixes
+
 * Sat Oct 1 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.12.0-0.1
 - adapt interface changes in analyzer (some interface files reorganization)
 - moved interfaces to analyzer (only implementation in this project)
