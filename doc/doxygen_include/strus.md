@@ -1,7 +1,7 @@
-strusStream	 {#mainpage}
+strusPattern	 {#mainpage}
 ==========
 
-The project strusStream implements pattern matching as stream processing on documents.
+The project strusPattern implements pattern matching on documents and queries.
 
-The project strusStream is hosted at <a href="https://github.com/patrickfrey/strusStream">github</a>.
+The project strusPattern is hosted at <a href="https://github.com/patrickfrey/strusPattern">github</a>.
 
