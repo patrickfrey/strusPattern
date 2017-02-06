@@ -347,12 +347,12 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
 endif()
 endif()
 
-add_subdirectory(util)
-add_subdirectory(unit)
-add_subdirectory(doc/dev-reference)
-if (EXISTS ${CMAKE_SOURCE_DIR}/tools/CMakeLists.txt)
-    add_subdirectory(tools)
-endif()
+# EXCLUDED add_subdirectory(util)
+# EXCLUDED add_subdirectory(unit)
+# EXCLUDED add_subdirectory(doc/dev-reference)
+# EXCLUDED if (EXISTS ${CMAKE_SOURCE_DIR}/tools/CMakeLists.txt)
+# EXCLUDED    add_subdirectory(tools)
+# EXCLUDED endif()
 
 # do substitutions
 configure_file(${CMAKE_MODULE_PATH}/config.h.in ${PROJECT_SOURCE_DIR}/config.h)
@@ -372,9 +372,18 @@ if (NOT WIN32)
 #            DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")
 endif()
 
+# reset compiler flags set by super-CMakeList.txt (strusPattern)
+# and setting some more for newer gcc's
+set(HYPERSCAN_CMAKE_C_FLAGS "-fPIC")
+set(HYPERSCAN_CMAKE_CXX_FLAGS "-Wno-ignored-attributes -fPIC")
+
 # only set these after all tests are done
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_C_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CXX_FLAGS}")
+set(CMAKE_C_FLAGS "${HYPERSCAN_CMAKE_C_FLAGS} ${EXTRA_C_FLAGS}")
+set(CMAKE_CXX_FLAGS "${HYPERSCAN_CMAKE_CXX_FLAGS} ${EXTRA_CXX_FLAGS}")
+
+MESSAGE("Compiler used for Hyperscan:")
+MESSAGE("  C++ compilation flags: ${CMAKE_CXX_FLAGS}")
+MESSAGE("  C compilation flags: ${CMAKE_C_FLAGS}")
 
 
 if(NOT WIN32)
@@ -396,7 +405,7 @@ SET(hs_HEADERS
     src/hs_compile.h
     src/hs_runtime.h
 )
-install(FILES ${hs_HEADERS} DESTINATION include/hs)
+#install(FILES ${hs_HEADERS} DESTINATION include/hs)
 
 set (hs_exec_SRCS
     ${hs_HEADERS}
@@ -968,7 +977,7 @@ add_library(hs_runtime STATIC src/hs_version.c $<TARGET_OBJECTS:hs_exec>)
 set_target_properties(hs_runtime PROPERTIES
     LINKER_LANGUAGE C)
 if (NOT BUILD_SHARED_LIBS)
-    install(TARGETS hs_runtime DESTINATION lib)
+#    install(TARGETS hs_runtime DESTINATION lib)
 endif()
 
 if (BUILD_STATIC_AND_SHARED OR BUILD_SHARED_LIBS)
@@ -979,10 +988,10 @@ if (BUILD_STATIC_AND_SHARED OR BUILD_SHARED_LIBS)
         OUTPUT_NAME hs_runtime
         MACOSX_RPATH ON
         LINKER_LANGUAGE C)
-    install(TARGETS hs_runtime_shared
-        RUNTIME DESTINATION bin
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib)
+#    install(TARGETS hs_runtime_shared
+#        RUNTIME DESTINATION bin
+#        ARCHIVE DESTINATION lib
+#        LIBRARY DESTINATION lib)
 endif()
 
 # we want the static lib for testing
@@ -993,7 +1002,7 @@ add_dependencies(hs ragel_Parser)
 ENDIF (WITH_RAGEL STREQUAL "YES")
 
 if (NOT BUILD_SHARED_LIBS)
-install(TARGETS hs DESTINATION lib)
+#install(TARGETS hs DESTINATION lib)
 endif()
 
 if (BUILD_STATIC_AND_SHARED OR BUILD_SHARED_LIBS)
@@ -1006,12 +1015,12 @@ if (BUILD_STATIC_AND_SHARED OR BUILD_SHARED_LIBS)
         VERSION ${LIB_VERSION}
         SOVERSION ${LIB_SOVERSION}
         MACOSX_RPATH ON)
-install(TARGETS hs_shared
-    RUNTIME DESTINATION bin
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib)
+#install(TARGETS hs_shared
+#    RUNTIME DESTINATION bin
+#    ARCHIVE DESTINATION lib
+#    LIBRARY DESTINATION lib)
 endif()
 
-if(NOT WIN32)
-    add_subdirectory(examples)
-endif()
+#EXCLUDED if(NOT WIN32)
+#EXCLUDED     add_subdirectory(examples)
+#EXCLUDED endif()

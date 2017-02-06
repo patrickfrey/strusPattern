@@ -6,16 +6,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 /// \brief Implementation of detecting tokens defined as regular expressions on text
-/// \file "charRegexMatch.hpp"
-#include "charRegexMatch.hpp"
-#include "strus/stream/patternMatchToken.hpp"
-#include "strus/charRegexMatchInstanceInterface.hpp"
-#include "strus/charRegexMatchContextInterface.hpp"
+/// \file "patternLexer.hpp"
+#include "patternLexer.hpp"
+#include "strus/analyzer/patternLexem.hpp"
+#include "strus/analyzer/positionBind.hpp"
+#include "strus/patternLexerInstanceInterface.hpp"
+#include "strus/patternLexerContextInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/reference.hpp"
 #include "strus/base/stdint.h"
+#include "strus/base/symbolTable.hpp"
 #include "compactNodeTrie.hpp"
-#include "symbolTable.hpp"
 #include "utils.hpp"
 #include "errorUtils.hpp"
 #include "internationalization.hpp"
@@ -31,7 +32,7 @@
 #undef STRUS_LOWLEVEL_DEBUG
 
 using namespace strus;
-using namespace strus::stream;
+using namespace strus::analyzer;
 
 typedef unsigned long long unsigned_long_long;
 
@@ -44,14 +45,14 @@ public:
 		:m_expression()
 		,m_subexpref(0)
 		,m_id(0)
-		,m_posbind(CharRegexMatchInstanceInterface::BindContent)
+		,m_posbind(analyzer::BindContent)
 		,m_level(0)
 		,m_symtabref(0){}
 	PatternDef(
 			const std::string& expression_,
 			unsigned int subexpref_,
 			unsigned int id_,
-			CharRegexMatchInstanceInterface::PositionBind posbind_,
+			analyzer::PositionBind posbind_,
 			unsigned int level_,
 			unsigned int symtabref_=0)
 		:m_expression(expression_)
@@ -94,9 +95,9 @@ public:
 	{
 		return m_id;
 	}
-	CharRegexMatchInstanceInterface::PositionBind posbind() const
+	analyzer::PositionBind posbind() const
 	{
-		return (CharRegexMatchInstanceInterface::PositionBind)m_posbind;
+		return (analyzer::PositionBind)m_posbind;
 	}
 	unsigned int level() const
 	{
@@ -171,14 +172,15 @@ public:
 class PatternTable
 {
 public:
-	PatternTable(){}
+	explicit PatternTable( ErrorBufferInterface* errorhnd_)
+		:m_errorhnd(errorhnd_){}
 
 	void definePattern(
 			unsigned int id,
 			const std::string& expression,
 			unsigned int resultIndex,
 			unsigned int level,
-			CharRegexMatchInstanceInterface::PositionBind posbind)
+			analyzer::PositionBind posbind)
 	{
 		unsigned int subexpref = 0;
 		if (resultIndex)
@@ -224,6 +226,7 @@ public:
 		uint32_t symidx = m_symtabmap[ symtabref-1]->getOrCreate( name);
 		if (symidx != m_symidmap.size()+1)
 		{
+			if (symidx == 0) throw strus::runtime_error( m_errorhnd->fetchError());
 			throw strus::runtime_error(_TXT("symbol defined twice: '%s'"), name.c_str());
 		}
 #ifdef STRUS_LOWLEVEL_DEBUG
@@ -232,18 +235,26 @@ public:
 		m_symidmap.push_back( symbolid);
 	}
 
-	unsigned int symbolId( unsigned int id, const std::string& value) const
+	unsigned int getSymbol( unsigned int patternid, const std::string& name) const
 	{
-		uint8_t symtabref = m_defar[ id].symtabref();
-		if (symtabref)
+		uint8_t symtabref;
+		IdSymTabMap::const_iterator yi = m_idsymtabmap.find( patternid);
+		if (yi == m_idsymtabmap.end())
 		{
-			uint32_t symidx = m_symtabmap[ symtabref-1]->get( value);
-			if (symidx)
-			{
-				return m_symidmap[ symidx-1];
-			}
+			return 0;
 		}
-		return id;
+		else
+		{
+			symtabref = yi->second;
+			uint32_t symidx = m_symtabmap[ symtabref-1]->get( name);
+			return symidx==0?0:m_symidmap[ symidx-1];
+		}
+	}
+
+	unsigned int symbolId( uint8_t symtabref, const char* keystr, std::size_t keylen) const
+	{
+		uint32_t symidx = m_symtabmap[ symtabref-1]->get( keystr, keylen);
+		return (symidx)?m_symidmap[ symidx-1]:0;
 	}
 
 	const PatternDef& patternDef( unsigned int id) const
@@ -311,6 +322,7 @@ private:
 	};
 
 private:
+	ErrorBufferInterface* m_errorhnd;
 	std::vector<PatternDef> m_defar;			///< list of expressions and their attributes defined for the automaton to recognize
 	std::vector<Reference<SymbolTable> > m_symtabmap;	///< map PatternDef::symtabref -> symbol table
 	std::vector<uint32_t> m_symidmap;			///< map symbol table id -> symbol identifier id given by defineSymbol
@@ -325,8 +337,8 @@ struct TermMatchData
 	PatternTable patternTable;
 	hs_database_t* patterndb;
 
-	TermMatchData()
-		:patternTable(),patterndb(0){}
+	explicit TermMatchData( ErrorBufferInterface* errorhnd_)
+		:patternTable( errorhnd_),patterndb(0){}
 	~TermMatchData()
 	{
 		if (patterndb) hs_free_database(patterndb);
@@ -349,11 +361,11 @@ struct MatchEvent
 		:id(o.id),level(o.level),posbind(o.posbind),origsize(o.origsize),origpos(o.origpos){}
 };
 
-class CharRegexMatchContext
-	:public CharRegexMatchContextInterface
+class PatternLexerContext
+	:public PatternLexerContextInterface
 {
 public:
-	CharRegexMatchContext( const TermMatchData* data_, ErrorBufferInterface* errorhnd_)
+	PatternLexerContext( const TermMatchData* data_, ErrorBufferInterface* errorhnd_)
 		:m_errorhnd(errorhnd_),m_data(data_),m_hs_scratch(0),m_src(0)
 	{
 		hs_error_t err = hs_alloc_scratch( m_data->patterndb, &m_hs_scratch);
@@ -363,14 +375,31 @@ public:
 		}
 	}
 
-	virtual ~CharRegexMatchContext()
+	virtual ~PatternLexerContext()
 	{
 		hs_free_scratch( m_hs_scratch);
 	}
 
+	virtual void reset()
+	{
+		try
+		{
+			hs_scratch_t* new_scratch = 0;
+			hs_error_t err = hs_alloc_scratch( m_data->patterndb, &m_hs_scratch);
+			if (err != HS_SUCCESS)
+			{
+				throw std::bad_alloc();
+			}
+			hs_free_scratch( m_hs_scratch);
+			m_hs_scratch = new_scratch;
+			m_src = 0;
+		}
+		CATCH_ERROR_MAP( _TXT("error calling hyperscan lexer reset: %s"), *m_errorhnd);
+	}
+	
 	static int match_event_handler( unsigned int patternIdx, unsigned_long_long from, unsigned_long_long to, unsigned int, void *context)
 	{
-		CharRegexMatchContext* THIS = (CharRegexMatchContext*)context;
+		PatternLexerContext* THIS = (PatternLexerContext*)context;
 		try
 		{
 			if (to - from >= std::numeric_limits<uint16_t>::max())
@@ -385,10 +414,20 @@ public:
 					return 0;
 				}
 			}
+			unsigned int patternid = patternDef.id();
+			if (patternDef.symtabref())
+			{
+				unsigned int symid = THIS->m_data->patternTable.symbolId( patternDef.symtabref(), THIS->m_src + from, (uint32_t)(to-from));
+				if (symid) patternid = symid;
+			}
 			MatchEvent matchEvent( patternDef.id(), patternDef.level(), patternDef.posbind(), (uint32_t)from, (uint32_t)(to-from));
 			if (THIS->m_matchEventAr.empty())
 			{
 				THIS->m_matchEventAr.push_back( matchEvent);
+				if (patternid != patternDef.id())
+				{
+					THIS->m_matchEventAr.push_back( MatchEvent( patternid, patternDef.level(), patternDef.posbind(), (uint32_t)from, (uint32_t)(to-from)));
+				}
 			}
 			else
 			{
@@ -430,16 +469,34 @@ public:
 					}
 				}
 				// Insert the new element with ascending order of origpos
-				THIS->m_matchEventAr.resize( THIS->m_matchEventAr.size()+1);
-				mi = THIS->m_matchEventAr.rbegin();
-				me = THIS->m_matchEventAr.rend();
-				std::vector<MatchEvent>::reverse_iterator prev_mi = mi;
-				for (++mi; mi != me && mi->origpos > matchEvent.origpos; prev_mi=mi++)
+				if (patternid == patternDef.id())
 				{
-					*prev_mi = *mi;
+					THIS->m_matchEventAr.resize( THIS->m_matchEventAr.size() + 1);
+					mi = THIS->m_matchEventAr.rbegin();
+					me = THIS->m_matchEventAr.rend();
+					std::vector<MatchEvent>::reverse_iterator prev_mi = mi;
+					for (++mi; mi != me && mi->origpos > matchEvent.origpos; prev_mi=mi++)
+					{
+						*prev_mi = *mi;
+					}
+					--mi;
+					*mi = matchEvent;
 				}
-				--mi;
-				*mi = matchEvent;
+				else
+				{
+					THIS->m_matchEventAr.resize( THIS->m_matchEventAr.size() + 2);
+					mi = THIS->m_matchEventAr.rbegin();
+					me = THIS->m_matchEventAr.rend();
+					std::vector<MatchEvent>::reverse_iterator prev_mi = mi;
+					for (mi+=2; mi != me && mi->origpos > matchEvent.origpos; prev_mi=mi++)
+					{
+						*prev_mi = *mi;
+					}
+					--mi;
+					*mi = matchEvent;
+					--mi;
+					*mi = MatchEvent( patternid, patternDef.level(), patternDef.posbind(), (uint32_t)from, (uint32_t)(to-from));
+				}
 			}
 			return 0;
 		}
@@ -476,11 +533,11 @@ public:
 		}
 	}
 
-	virtual std::vector<stream::PatternMatchToken> match( const char* src, std::size_t srclen)
+	virtual std::vector<analyzer::PatternLexem> match( const char* src, std::size_t srclen)
 	{
 		try
 		{
-			std::vector<stream::PatternMatchToken> rt;
+			std::vector<analyzer::PatternLexem> rt;
 			unsigned int nofExpectedTokens = srclen / 4 + 10;
 			m_matchEventAr.reserve( nofExpectedTokens);
 			m_src = src;
@@ -509,18 +566,18 @@ public:
 			uint32_t origpos = 0;
 			for (; mi != me; ++mi)
 			{
-				switch ((CharRegexMatchInstanceInterface::PositionBind)mi->posbind)
+				switch ((analyzer::PositionBind)mi->posbind)
 				{
-					case CharRegexMatchInstanceInterface::BindContent:
+					case analyzer::BindContent:
 						ordpos = 1;
 						origpos = mi->origpos;
-						rt.push_back( stream::PatternMatchToken( mi->id, 1, 0/*origseg*/, mi->origpos, mi->origsize));
+						rt.push_back( analyzer::PatternLexem( mi->id, 1, 0/*origseg*/, mi->origpos, mi->origsize));
 						++mi;
 						goto EXITLOOP;
-					case CharRegexMatchInstanceInterface::BindSuccessor:
-						rt.push_back( stream::PatternMatchToken( mi->id, 1, 0/*origseg*/, mi->origpos, mi->origsize));
+					case analyzer::BindSuccessor:
+						rt.push_back( analyzer::PatternLexem( mi->id, 1, 0/*origseg*/, mi->origpos, mi->origsize));
 						break;
-					case CharRegexMatchInstanceInterface::BindPredecessor:
+					case analyzer::BindPredecessor:
 						break;
 				}
 			}
@@ -531,28 +588,28 @@ public:
 			}
 			for (; mi != me; ++mi)
 			{
-				switch ((CharRegexMatchInstanceInterface::PositionBind)mi->posbind)
+				switch ((analyzer::PositionBind)mi->posbind)
 				{
-					case CharRegexMatchInstanceInterface::BindContent:
+					case analyzer::BindContent:
 						if (mi->origpos > origpos)
 						{
 							origpos = mi->origpos;
 							++ordpos;
 						}
-						rt.push_back( stream::PatternMatchToken( mi->id, ordpos, 0/*origseg*/, mi->origpos, mi->origsize));
+						rt.push_back( analyzer::PatternLexem( mi->id, ordpos, 0/*origseg*/, mi->origpos, mi->origsize));
 						break;
-					case CharRegexMatchInstanceInterface::BindSuccessor:
-						rt.push_back( stream::PatternMatchToken( mi->id, ordpos+1, 0/*origseg*/, mi->origpos, mi->origsize));
+					case analyzer::BindSuccessor:
+						rt.push_back( analyzer::PatternLexem( mi->id, ordpos+1, 0/*origseg*/, mi->origpos, mi->origsize));
 						break;
-					case CharRegexMatchInstanceInterface::BindPredecessor:
-						rt.push_back( stream::PatternMatchToken( mi->id, ordpos, 0/*origseg*/, mi->origpos, mi->origsize));
+					case analyzer::BindPredecessor:
+						rt.push_back( analyzer::PatternLexem( mi->id, ordpos, 0/*origseg*/, mi->origpos, mi->origsize));
 						break;
 				}
 			}
 			m_matchEventAr.clear();
 			return rt;
 		}
-		CATCH_ERROR_MAP_RETURN( _TXT("failed to run pattern matching terms with regular expressions: %s"), *m_errorhnd, std::vector<stream::PatternMatchToken>());
+		CATCH_ERROR_MAP_RETURN( _TXT("failed to run pattern matching terms with regular expressions: %s"), *m_errorhnd, std::vector<analyzer::PatternLexem>());
 	}
 
 private:
@@ -563,22 +620,22 @@ private:
 	std::vector<MatchEvent> m_matchEventAr;
 };
 
-class CharRegexMatchInstance
-	:public CharRegexMatchInstanceInterface
+class PatternLexerInstance
+	:public PatternLexerInstanceInterface
 {
 public:
-	explicit CharRegexMatchInstance( ErrorBufferInterface* errorhnd_)
-		:m_errorhnd(errorhnd_),m_data(),m_state(DefinitionPhase)
+	explicit PatternLexerInstance( ErrorBufferInterface* errorhnd_)
+		:m_errorhnd(errorhnd_),m_data(errorhnd_),m_state(DefinitionPhase),m_flags(0)
 	{}
 
-	virtual ~CharRegexMatchInstance(){}
+	virtual ~PatternLexerInstance(){}
 
-	virtual void definePattern(
+	virtual void defineLexem(
 			unsigned int id,
 			const std::string& expression,
 			unsigned int resultIndex,
 			unsigned int level,
-			PositionBind posbind)
+			analyzer::PositionBind posbind)
 	{
 		try
 		{
@@ -601,10 +658,53 @@ public:
 			}
 			m_data.patternTable.defineSymbol( symbolid, patternid, name);
 		}
-		CATCH_ERROR_MAP( _TXT("failed to define term match regular expression pattern: %s"), *m_errorhnd);
+		CATCH_ERROR_MAP( _TXT("failed to define regular expression pattern symbol: %s"), *m_errorhnd);
+	}
+	virtual unsigned int getSymbol(
+			unsigned int patternid,
+			const std::string& name) const
+	{
+		try
+		{
+			return m_data.patternTable.getSymbol( patternid, name);
+		}
+		CATCH_ERROR_MAP_RETURN( _TXT("failed to retrieve regular expression pattern symbol: %s"), *m_errorhnd, 0);
 	}
 
-	virtual bool compile( const CharRegexMatchOptions& opts)
+	virtual void defineOption( const std::string& name, double)
+	{
+		try
+		{
+			if (utils::caseInsensitiveEquals( name, "CASELESS"))
+			{
+				m_flags |= HS_FLAG_CASELESS;
+			}
+			else if (utils::caseInsensitiveEquals( name, "DOTALL"))
+			{
+				m_flags |= HS_FLAG_DOTALL;
+			}
+			else if (utils::caseInsensitiveEquals( name, "MULTILINE"))
+			{
+				m_flags |= HS_FLAG_MULTILINE;
+			}
+			else if (utils::caseInsensitiveEquals( name, "ALLOWEMPTY"))
+			{
+				m_flags |= HS_FLAG_ALLOWEMPTY;
+			}
+			else if (utils::caseInsensitiveEquals( name, "UCP"))
+			{
+				m_flags |= HS_FLAG_UCP;
+			}
+			else
+			{
+				throw strus::runtime_error(_TXT("unknown option '%s'"), name.c_str());
+			}
+			
+		}
+		CATCH_ERROR_MAP( _TXT("define option failed for hyperscan pattern lexer: %s"), *m_errorhnd);
+	}
+
+	virtual bool compile()
 	{
 		try
 		{
@@ -612,7 +712,7 @@ public:
 			m_data.patterndb = 0;
 
 			HsPatternTable hspt;
-			m_data.patternTable.complete( hspt, getFlags( opts));
+			m_data.patternTable.complete( hspt, m_flags);
 
 			hs_platform_info_t platform;
 			std::memset( &platform, 0, sizeof(platform));
@@ -652,7 +752,7 @@ public:
 		CATCH_ERROR_MAP_RETURN( _TXT("failed to compile regular expression patterns: %s"), *m_errorhnd, false);
 	}
 
-	virtual CharRegexMatchContextInterface* createContext() const
+	virtual PatternLexerContextInterface* createContext() const
 	{
 		try
 		{
@@ -660,44 +760,9 @@ public:
 			{
 				throw strus::runtime_error(_TXT("called create context without calling 'compile'"));
 			}
-			return new CharRegexMatchContext( &m_data, m_errorhnd);
+			return new PatternLexerContext( &m_data, m_errorhnd);
 		}
 		CATCH_ERROR_MAP_RETURN( _TXT("failed to create term match context: %s"), *m_errorhnd, 0);
-	}
-
-private:
-	static unsigned int getFlags( const CharRegexMatchOptions& opts)
-	{
-		unsigned int rt = 0;
-		CharRegexMatchOptions::const_iterator ai = opts.begin(), ae = opts.end();
-		for (; ai != ae; ++ai)
-		{
-			if (utils::caseInsensitiveEquals( *ai, "CASELESS"))
-			{
-				rt |= HS_FLAG_CASELESS;
-			}
-			else if (utils::caseInsensitiveEquals( *ai, "DOTALL"))
-			{
-				rt |= HS_FLAG_DOTALL;
-			}
-			else if (utils::caseInsensitiveEquals( *ai, "MULTILINE"))
-			{
-				rt |= HS_FLAG_MULTILINE;
-			}
-			else if (utils::caseInsensitiveEquals( *ai, "ALLOWEMPTY"))
-			{
-				rt |= HS_FLAG_ALLOWEMPTY;
-			}
-			else if (utils::caseInsensitiveEquals( *ai, "UCP"))
-			{
-				rt |= HS_FLAG_UCP;
-			}
-			else
-			{
-				throw strus::runtime_error(_TXT("unknown option '%s'"), ai->c_str());
-			}
-		}
-		return rt;
 	}
 
 private:
@@ -705,10 +770,11 @@ private:
 	TermMatchData m_data;
 	enum State {DefinitionPhase,MatchPhase};
 	State m_state;
+	unsigned int m_flags;
 };
 
 
-std::vector<std::string> CharRegexMatch::getCompileOptions() const
+std::vector<std::string> PatternLexer::getCompileOptionNames() const
 {
 	std::vector<std::string> rt;
 	static const char* ar[] = {"CASELESS", "DOTALL", "MULTILINE", "ALLOWEMPTY", "UCP", 0};
@@ -719,14 +785,18 @@ std::vector<std::string> CharRegexMatch::getCompileOptions() const
 	return rt;
 }
 
-CharRegexMatchInstanceInterface* CharRegexMatch::createInstance() const
+PatternLexerInstanceInterface* PatternLexer::createInstance() const
 {
 	try
 	{
-		return new CharRegexMatchInstance( m_errorhnd);
+		return new PatternLexerInstance( m_errorhnd);
 	}
 	CATCH_ERROR_MAP_RETURN( _TXT("failed to create term match instance: %s"), *m_errorhnd, 0);
 }
 
+const char* PatternLexer::getDescription() const
+{
+	return _TXT( "pattern lexer based the Intel hyperscan library");
+}
 
 

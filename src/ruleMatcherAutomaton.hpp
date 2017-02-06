@@ -46,7 +46,7 @@ public:
 	enum SigType {SigAny=0x0,SigSequence=0x1,SigSequenceImm=0x2,SigWithin=0x3,SigDel=0x4,SigAnd=0x5};
 	static const char* sigTypeName( SigType i)
 	{
-		static const char* ar[] = {"Any","Sequence","SequenceImm","Within","Del"};
+		static const char* ar[] = {"Any","Sequence","SequenceImm","Within","Del","And"};
 		return ar[i];
 	}
 
@@ -87,19 +87,19 @@ struct EventTrigger
 struct ActionSlot
 {
 	uint32_t value;
-	uint32_t count;
 	uint32_t event;
 	uint32_t rule;
 	uint32_t resultHandle;
 	uint32_t start_ordpos;
 	uint32_t end_ordpos;
-	uint16_t start_origseg;
-	uint16_t start_origpos;
+	uint32_t start_origseg;
+	uint32_t start_origpos;
+	uint16_t count;
 
-	ActionSlot( uint32_t value_, uint32_t count_, uint32_t event_, uint32_t rule_, uint32_t resultHandle_)
-		:value(value_),count(count_),event(event_),rule(rule_),resultHandle(resultHandle_),start_ordpos(0),end_ordpos(0),start_origseg(0),start_origpos(0){}
+	ActionSlot( uint32_t value_, uint16_t count_, uint32_t event_, uint32_t rule_, uint32_t resultHandle_)
+		:value(value_),event(event_),rule(rule_),resultHandle(resultHandle_),start_ordpos(0),end_ordpos(0),start_origseg(0),start_origpos(0),count(count_){}
 	ActionSlot( const ActionSlot& o)
-		:value(o.value),count(o.count),event(o.event),rule(o.rule),resultHandle(o.resultHandle),start_ordpos(o.start_ordpos),end_ordpos(o.end_ordpos),start_origseg(o.start_origseg),start_origpos(o.start_origpos){}
+		:value(o.value),event(o.event),rule(o.rule),resultHandle(o.resultHandle),start_ordpos(o.start_ordpos),end_ordpos(o.end_ordpos),start_origseg(o.start_origseg),start_origpos(o.start_origpos),count(o.count){}
 };
 
 struct ActionSlotTableFreeListElem {uint32_t _;uint32_t next;};
@@ -131,6 +131,7 @@ typedef PodStructTableBase<LinkedTrigger,uint32_t,LinkedTriggerTableFreeListElem
 class EventTriggerTable
 {
 public:
+	~EventTriggerTable(){}
 	EventTriggerTable();
 	EventTriggerTable( const EventTriggerTable& o);
 
@@ -142,6 +143,7 @@ public:
 	typedef PodStructArrayBase<Trigger const*,std::size_t,0> TriggerRefList;
 	void getTriggers( TriggerRefList& triggers, uint32_t event) const;
 	uint32_t nofTriggers() const			{return m_nofTriggers;}
+	void clear();
 
 public:
 	enum {BlockSize=1024,EventHashTabSize=16,EventHashTabIdxShift=28,EventHashTabIdxMask=15};
@@ -156,7 +158,9 @@ private:
 		uint32_t m_size;
 
 		TriggerInd() :m_eventAr(0),m_ar(0),m_allocsize(0),m_size(0){}
+		~TriggerInd();
 		void expand( uint32_t newallocsize);
+		void clear();
 	};
 	TriggerInd m_triggerIndAr[ EventHashTabSize];
 	LinkedTriggerTable m_triggerTab;
@@ -194,19 +198,20 @@ public:
 
 struct EventData
 {
-	uint16_t start_origseg;
-	uint16_t start_origpos;
-	uint16_t end_origseg;
-	uint16_t end_origpos;
-	uint32_t ordpos;
+	uint32_t start_origseg;
+	uint32_t end_origseg;
+	uint32_t start_origpos;
+	uint32_t end_origpos;
+	uint32_t start_ordpos;
+	uint32_t end_ordpos;
 	uint32_t subdataref;
 
 	EventData()
-		:start_origseg(0),start_origpos(0),end_origseg(0),end_origpos(0),ordpos(0),subdataref(0){}
-	EventData( uint16_t start_origseg_, uint16_t start_origpos_, uint16_t end_origseg_, uint16_t end_origpos_, uint32_t ordpos_, uint32_t subdataref_)
-		:start_origseg(start_origseg_),start_origpos(start_origpos_),end_origseg(end_origseg_),end_origpos(end_origpos_),ordpos(ordpos_),subdataref(subdataref_){}
+		:start_origseg(0),end_origseg(0),start_origpos(0),end_origpos(0),start_ordpos(0),end_ordpos(0),subdataref(0){}
+	EventData( uint32_t start_origseg_, uint32_t start_origpos_, uint32_t end_origseg_, uint32_t end_origpos_, uint32_t start_ordpos_, uint32_t end_ordpos_, uint32_t subdataref_)
+		:start_origseg(start_origseg_),end_origseg(end_origseg_),start_origpos(start_origpos_),end_origpos(end_origpos_),start_ordpos(start_ordpos_),end_ordpos(end_ordpos_),subdataref(subdataref_){}
 	EventData( const EventData& o)
-		:start_origseg(o.start_origseg),start_origpos(o.start_origpos),end_origseg(o.end_origseg),end_origpos(o.end_origpos),ordpos(o.ordpos),subdataref(o.subdataref){}
+		:start_origseg(o.start_origseg),end_origseg(o.end_origseg),start_origpos(o.start_origpos),end_origpos(o.end_origpos),start_ordpos(o.start_ordpos),end_ordpos(o.end_ordpos),subdataref(o.subdataref){}
 };
 
 struct EventStruct
@@ -267,16 +272,17 @@ struct Result
 {
 	uint32_t resultHandle;
 	uint32_t eventDataReferenceIdx;
-	uint32_t ordpos;
-	uint16_t start_origseg;
-	uint16_t start_origpos;
-	uint16_t end_origseg;
-	uint16_t end_origpos;
+	uint32_t start_ordpos;
+	uint32_t end_ordpos;
+	uint32_t start_origseg;
+	uint32_t end_origseg;
+	uint32_t start_origpos;
+	uint32_t end_origpos;
 
-	Result( uint32_t resultHandle_, uint32_t eventDataReferenceIdx_, uint32_t ordpos_, uint16_t start_origseg_, uint16_t start_origpos_, uint16_t end_origseg_, uint16_t end_origpos_)
-		:resultHandle(resultHandle_),eventDataReferenceIdx(eventDataReferenceIdx_),ordpos(ordpos_),start_origseg(start_origseg_),start_origpos(start_origpos_),end_origseg(end_origseg_),end_origpos(end_origpos_){}
+	Result( uint32_t resultHandle_, uint32_t eventDataReferenceIdx_, uint32_t start_ordpos_, uint32_t end_ordpos_, uint32_t start_origseg_, uint32_t start_origpos_, uint32_t end_origseg_, uint32_t end_origpos_)
+		:resultHandle(resultHandle_),eventDataReferenceIdx(eventDataReferenceIdx_),start_ordpos(start_ordpos_),end_ordpos(end_ordpos_),start_origseg(start_origseg_),end_origseg(end_origseg_),start_origpos(start_origpos_),end_origpos(end_origpos_){}
 	Result( const Result& o)
-		:resultHandle(o.resultHandle),eventDataReferenceIdx(o.eventDataReferenceIdx),ordpos(o.ordpos),start_origseg(o.start_origseg),start_origpos(o.start_origpos),end_origseg(o.end_origseg),end_origpos(o.end_origpos){}
+		:resultHandle(o.resultHandle),eventDataReferenceIdx(o.eventDataReferenceIdx),start_ordpos(o.start_ordpos),end_ordpos(o.end_ordpos),start_origseg(o.start_origseg),end_origseg(o.end_origseg),start_origpos(o.start_origpos),end_origpos(o.end_origpos){}
 };
 
 struct ActionSlotDef
@@ -425,6 +431,9 @@ public:
 	explicit StateMachine( const ProgramTable* programTable_);
 	StateMachine( const StateMachine& o);
 
+	void addObserveEvent( uint32_t event);
+	bool isObservedEvent( uint32_t event) const;
+
 	void doTransition( uint32_t event, const EventData& data);
 	void setCurrentPos( uint32_t pos);
 
@@ -441,6 +450,7 @@ public:
 	{
 		return m_eventItemList.nextptr( list);
 	}
+	void clear();
 
 public://getStatistics
 	unsigned int nofProgramsInstalled() const	{return m_nofProgramsInstalled;}
@@ -486,6 +496,8 @@ private:
 	unsigned int m_nofSignalsFired;
 	double m_nofOpenPatterns;
 	unsigned int m_timestmp;
+	enum {MaxNofObserveEvents=8};
+	uint32_t m_observeEvents[ MaxNofObserveEvents];
 };
 
 } //namespace

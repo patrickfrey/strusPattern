@@ -4,19 +4,19 @@
 	<link rel="icon" type="image/ico" href="images/strus.ico" />
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="Strus stream, a library for fast document stream processing for Strus." />
-	<meta name="keywords" content="high performance document stream processing pattern matching C++" />
+	<meta name="description" content="Strus pattern, a library for fast document pattern matching for Strus." />
+	<meta name="keywords" content="high performance pattern matching on text C++" />
 	<meta name="author" content="Patrick Frey &lt;patrickpfrey (a) yahoo (dt) com&gt;" />
 	<link rel="stylesheet" type="text/css" href="text-profile.css" title="Text Profile" media="all" />
-	<title>Strus Stream</title>
+	<title>Strus Pattern</title>
 </head>
 
 <body>
 <div id="wrap">
 <div id="content">
-	<h1>Strus Stream</h1>
+	<h1>Strus Pattern</h1>
 	<h2>Description</h2>
-	<p id="description"><i>StrusStream</i> is an event or dataflow driven pattern detection library for 
+	<p id="description"><i>StrusPattern</i> is an event or dataflow driven pattern detection library for 
 	text processing with a competitive performance, suitable for processing large sets of patterns.
 	It can be used for detecting multipart entities or structures in text. In a bigger context it can
 	support NLP and entity recognition.<br/>
@@ -28,20 +28,8 @@
 	processing and storing features for retrieval in this context.
 	</p>
 
-	<h2>Justification of the name StrusStream</h2>
-	<p id="description">
-	The name <i>StrusStream</i> reflects its event or data flow driven processing of text.
-	Its programming paradigms borrow from concepts of <a href=https://en.wikipedia.org/wiki/Stream_processing">
-	stream processing</a>. But it is not related to modern stream processing frameworks for event
-	driven processing. The association to distributed systems (like for example <a href="http://flink.apache.org/">Apache Flink</a>)
-	that process streams of huge amount of events with a big flow rate under many different constraints as 
-	latency, throughput, fault tolerance and uniqueness guarantees makes the name <i>StrusStream</i> a 
-	sort of a misnamer.<br/>
-	We just did not find a better name yet.
-	</p>
-
 	<h2>The Intel hyperscan library</h3>
-	<p id="description"><i>StrusStream</i> uses the <a href="https://01.org/hyperscan">hyperscan</a> library from <i>Intel</i>
+	<p id="description"><i>StrusPattern</i> uses the <a href="https://01.org/hyperscan">hyperscan</a> library from <i>Intel</i>
 	for tokenization.<br/>
 	Thanks to <i>Intel</i> for publishing this great work as open source.
 	</p>
@@ -67,9 +55,9 @@
 	</ol>
 	</p>
 
-	<h2>How StrusStream works</h2>
+	<h2>How StrusPattern works</h2>
 	<p id="description">
-	<i>StrusStream</i> is completely dataflow driven. It does not detect patterns by an imperative procedure 
+	<i>StrusPattern</i> is completely dataflow driven. It does not detect patterns by an imperative procedure 
 	triggered by events in the source data stream. Though it does start the initiation of a pattern
 	detection with a key event triggering it.
 	But rather than subsequently executing a program, it installs for every pattern node triggered a small set
@@ -83,10 +71,10 @@
 
 	<h3>Operators</h3>
 	<p id="description">
-	<i>StrusStream</i> defines patterns as expression trees of nodes. Each node represents a basic token
+	<i>StrusPattern</i> defines patterns as expression trees of nodes. Each node represents a basic token
 	in the source or operators on tuples of nodes. Most of the operators supported are named according to the
 	<a href="http://www.project-strus.net/builtin_functions.htm">posting join operators</a> in the
-	strus query evaluation. Not all of them are implemented though and some exist in <i>StrusStream</i>,
+	strus query evaluation. Not all of them are implemented though and some exist in <i>StrusPattern</i>,
 	but not in this form in the query evaluation:
 	<h4>Token pattern matching operators</h4>
 	<ol>
@@ -101,7 +89,7 @@
 	</p>
 
 	<h2>Example</h2>
-	<p id="description">The following example illustrates how <i>StrusStream</i> works.
+	<p id="description">The following example illustrates how <i>StrusPattern</i> works.
 	</p>
 	<h3>Example patterns defined</h3>
 	<h4>Define the patterns with in a configuration file</h4>
@@ -135,7 +123,7 @@ Contact		= sequence_struct( SENT, Name, email=EMAIL | 10 );
 	<p id="description">
 	A "Name" is defined as a sequence of two words with capitalized first letter in a proximity distance of 2 (ordinal position distance, number of tokens)
 	In this example the variable assignment of firstname gets the weight 0.75 assigned. Weigths are currently not
-	interpreted or used by <i>StrusStream</i>. They are there for the user if part or the interpretation of the result.
+	interpreted or used by <i>StrusPattern</i>. They are there for the user if part or the interpretation of the result.
 	<br/>
 	A "PersonMail" is defined as sequence of a name as we defined it and an email address in in a proximity
 	distance of maximum 10 tokens, without an end of sentence marker appearing in between a candidate match.
@@ -217,7 +205,7 @@ OK done
 	</pre>
 
 	<h2>Performance measurements on an Intel NUC (NUC6i3SYK)</h2>
-	<p id="description">The following runs show the behaviour of the <i>StrusStream</i> pattern matching without tokenization. We just use random documents represented as <a href="http://mathworld.wolfram.com/ZipfDistribution.html">Zipf distributed</a> random numbers, assuming 30'000 different terms in the whole collection. Each document contains 1000 such terms.
+	<p id="description">The following runs show the behaviour of the <i>StrusPattern</i> pattern matching without tokenization. We just use random documents represented as <a href="http://mathworld.wolfram.com/ZipfDistribution.html">Zipf distributed</a> random numbers, assuming 30'000 different terms in the whole collection. Each document contains 1000 such terms.
 	The patterns are sequences of two random terms (<i>Zipf distribution</i> applied here too) within a proximity range of 1 to 10 with smaller proximity being much more likely than larger proximity conditions.
 	We start 4 threads with the same pattern set with different input documents and test with 10 to 10'000'000 patterns evaluated.
 	<br/><br/>
@@ -336,14 +324,14 @@ Sequences do not have this problem.
 <h4>Symbols and identifiers</h4>
 <p id="description">It does not make sense to implement every symbol or identifier as item in
 the regular expression automaton. For representing ordinary words, we need the possibility
-to declare identifiers in our rule language. The <a href="http://patrickfrey.github.io/strusStream/doc/doxygen/html/classstrus_1_1CharRegexMatchInstanceInterface.html">CharRegexMatchInstanceInterface</a>
+to declare identifiers in our rule language. The <a href="http://patrickfrey.github.io/strusPattern/doc/doxygen/html/classstrus_1_1CharRegexMatchInstanceInterface.html">CharRegexMatchInstanceInterface</a>
 already has a method to declare such a symbol with the method <i>defineSymbol</i>. 
 But this is one feature not tested yet and not available in our example language.
 </p>
 
 
 <h2>Testing</h2>
-<p id="description">We tested the token pattern matching of <i>StrusStream</i> with random generated
+<p id="description">We tested the token pattern matching of <i>StrusPattern</i> with random generated
 rules on random generated documents verified with an alternative implementation.
 The test program can be run manually
 <pre>
@@ -357,7 +345,7 @@ non disjuct sets of accepted input. We are working on the problem.
 </p>
 
 <h2>Caveats</h2>
-<p id="description"><i>StrusStream</i> handles events immediately when they are seen.
+<p id="description"><i>StrusPattern</i> handles events immediately when they are seen.
 This can lead to anomalies, when formulating restrictions, e.g. with 'sequence_struct' or 'within_struct'
 in cases the structure delimiter gets the same ordinal position assigned than another token that is part of the
 pattern. When the last element of a rule is detected without passing over a structure element, that is part of 
@@ -372,7 +360,7 @@ At the moment we just premention the expected behaviour.
 </p>
 
 <h2>Resume</h2>
-<p id="description"><i>StrusStream</i> provides token pattern matching in a competitive performance for
+<p id="description"><i>StrusPattern</i> provides token pattern matching in a competitive performance for
 matching large sets of patterns. <br/>
 The implementation is maybe not optimal in numbers of reads and writes of memory and in 
 numbers of branching instructions, but it is software with a good flow. It has
@@ -380,7 +368,7 @@ simple operations mainly operating on local (near, on chip) memory, able to use 
 of modern CPUs and it accesses new (far away) memory mainly for feeding the system.
 <br/>
 For users that do not need arbitrary programs to define patterns and for users, that can live with 
-the restrictions of the model of <i>StrusStream</i>, the prospect of the performance may be convincing.
+the restrictions of the model of <i>StrusPattern</i>, the prospect of the performance may be convincing.
 </p>
 </div>
 </div>

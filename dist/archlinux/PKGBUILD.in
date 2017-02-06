@@ -1,15 +1,16 @@
 # Contributor: Patrick Frey <patrickpfrey@yahoo.com> 
 # Maintainer: Patrick Frey <patrickpfrey@yahoo.com> 
 
-pkgname=strusstream
+pkgname=struspattern
 _mainpkgver=@STRUS_VERSION@
+_deppkgver=@STRUS_MAJOR_VERSION@.@STRUS_MINOR_VERSION@
 pkgver=${_mainpkgver}
 pkgrel=1
-pkgdesc='Library implementing stream processing of documents matching against patterns and extracting result matches.'
+pkgdesc='Library implementing pattern matching on text for document and query analysis.'
 license=('MPL2')
 arch=('i686' 'x86_64')
 url="http://project-strus.net"
-depends=('boost>=1.53' 'boost-libs>=1.53' "strusbase>=${_deppkgver}" "strusanalyzer>=${_deppkgver}")
+depends=('boost>=1.53' 'boost-libs>=1.53' "strusbase>=${_deppkgver}" "strus>=${_deppkgver}" "strusanalyzer>=${_deppkgver}" "strustrace>=${_deppkgver}" "strusmodule>=${_deppkgver}")
 makedepends=('cmake')
 source=("${pkgname}-${_mainpkgver}.tar.gz")
 
@@ -30,7 +31,7 @@ package() {
   cd build
   make DESTDIR=${pkgdir} install
   
-  msg "Adding strusstream to ld.so.conf..."
+  msg "Adding struspattern to ld.so.conf..."
   install -d ${pkgdir}/etc/ld.so.conf.d
   echo "/usr/lib/${pkgname}" > ${pkgdir}/etc/ld.so.conf.d/${pkgname}.conf  
 }

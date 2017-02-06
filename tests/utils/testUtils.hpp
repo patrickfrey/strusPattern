@@ -5,13 +5,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// \brief Some utility classes and funtions for the StrusStream tests
+/// \brief Some utility classes and funtions for the strus pattern tests
 /// \file "testUtils.hpp"
-#ifndef _STRUS_STREAM_TEST_UTILS_HPP_INCLUDED
-#define _STRUS_STREAM_TEST_UTILS_HPP_INCLUDED
-#include "strus/tokenPatternMatchInstanceInterface.hpp"
-#include "strus/stream/tokenPatternMatchResult.hpp"
-#include "strus/stream/tokenPatternMatchStatistics.hpp"
+#ifndef _STRUS_PATTERN_TEST_UTILS_HPP_INCLUDED
+#define _STRUS_PATTERN_TEST_UTILS_HPP_INCLUDED
+#include "strus/patternMatcherInstanceInterface.hpp"
+#include "strus/analyzer/patternMatcherResult.hpp"
+#include "strus/analyzer/patternMatcherStatistics.hpp"
 #include "strus/segmenterContextInterface.hpp"
 #include <vector>
 #include <string>
@@ -59,12 +59,12 @@ unsigned int termId( TermType tp, unsigned int no);
 
 Document createRandomDocument( unsigned int no, unsigned int size, unsigned int mod);
 
-typedef strus::TokenPatternMatchInstanceInterface::JoinOperation JoinOperation;
+typedef strus::PatternMatcherInstanceInterface::JoinOperation JoinOperation;
 JoinOperation joinOperation( const char* joinopstr);
 
 unsigned int getUintValue( const char* arg);
-void printResults( std::ostream& out, const std::vector<strus::SegmenterPosition>& segmentposmap, const std::vector<strus::stream::TokenPatternMatchResult>& results, const char* src=0);
-void printStatistics( std::ostream& out, const strus::stream::TokenPatternMatchStatistics& stats);
+void printResults( std::ostream& out, const std::vector<strus::SegmenterPosition>& segmentposmap, const std::vector<strus::analyzer::PatternMatcherResult>& results, const char* src=0);
+void printStatistics( std::ostream& out, const strus::analyzer::PatternMatcherStatistics& stats);
 
 }} //namespace
 #endif

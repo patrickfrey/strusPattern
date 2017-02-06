@@ -6,8 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 ///\brief Definition of a pool of basic POD stack structures for the rule matcher automaton
-#ifndef _STRUS_STREAM_POD_STACK_POOL_BASE_HPP_INCLUDED
-#define _STRUS_STREAM_POD_STACK_POOL_BASE_HPP_INCLUDED
+#ifndef _STRUS_PATTERN_POD_STACK_POOL_BASE_HPP_INCLUDED
+#define _STRUS_PATTERN_POD_STACK_POOL_BASE_HPP_INCLUDED
 #include "strus/base/stdint.h"
 #include "podStructArrayBase.hpp"
 #include "podStructTableBase.hpp"
@@ -19,6 +19,9 @@
 
 namespace strus
 {
+
+#undef STRUS_LOWLEVEL_DEBUG
+#undef STRUS_LOWLEVEL_DEBUG_CHECK_CIRCULAR
 
 template <typename ELEMTYPE, typename SIZETYPE>
 struct PodStackElement
@@ -44,13 +47,32 @@ public:
 
 	void push( SIZETYPE& stk, const ELEMTYPE& elem)
 	{
+#ifdef STRUS_LOWLEVEL_DEBUG
+		if (stk != 0 && !Parent::exists( stk-1))
+		{
+			throw strus::runtime_error(_TXT( "illegal list access (push)"));
+		}
+#endif
 		PodStackElement<ELEMTYPE,SIZETYPE> listelem( elem, stk);
-		stk = Parent::add( listelem)+1;
+		SIZETYPE new_idx = Parent::add( listelem);
+		stk = new_idx+1;
+#ifdef STRUS_LOWLEVEL_DEBUG_CHECK_CIRCULAR
+		checkCircular( stk);
+#endif
 	}
 
 	void remove( SIZETYPE stk)
 	{
 		if (stk == 0) return;
+#ifdef STRUS_LOWLEVEL_DEBUG
+		if (!Parent::exists( stk-1))
+		{
+			throw strus::runtime_error(_TXT( "illegal list access (remove)"));
+		}
+#ifdef STRUS_LOWLEVEL_DEBUG_CHECK_CIRCULAR
+		checkCircular( stk);
+#endif
+#endif
 		SIZETYPE idx = stk;
 		while (idx)
 		{
@@ -63,22 +85,42 @@ public:
 	bool pop( SIZETYPE& stk, ELEMTYPE& elem)
 	{
 		if (stk == 0) return false;
+#ifdef STRUS_LOWLEVEL_DEBUG
+		if (!Parent::exists( stk-1))
+		{
+			throw strus::runtime_error(_TXT( "illegal list access (pop)"));
+		}
+#endif
 		elem = (*this)[ stk-1].value;
 		SIZETYPE nextidx = (*this)[ stk-1].next;
 		Parent::remove( stk-1);
 		stk = nextidx;
+#ifdef STRUS_LOWLEVEL_DEBUG_CHECK_CIRCULAR
+		checkCircular( stk);
+#endif
 		return true;
 	}
 
-	void set( SIZETYPE stk, const ELEMTYPE& elem) const
+	void set( SIZETYPE stk, const ELEMTYPE& elem)
 	{
-		if (stk == 0 || stk > Parent::size()) throw strus::runtime_error(_TXT( "illegal list access (set)"));
+#ifdef STRUS_LOWLEVEL_DEBUG
+		if (!Parent::exists( stk-1))
+		{
+			throw strus::runtime_error(_TXT( "illegal list access (set)"));
+		}
+#endif
 		(*this)[ stk-1].value = elem;
 	}
 
 	bool next( SIZETYPE& stk, ELEMTYPE& elem) const
 	{
 		if (stk == 0) return false;
+#ifdef STRUS_LOWLEVEL_DEBUG
+		if (!Parent::exists( stk-1))
+		{
+			throw strus::runtime_error(_TXT( "illegal list access (next)"));
+		}
+#endif
 		elem = (*this)[ stk-1].value;
 		stk = (*this)[ stk-1].next;
 		return true;
@@ -86,6 +128,12 @@ public:
 	const ELEMTYPE* nextptr( SIZETYPE& stk) const
 	{
 		if (stk == 0) return 0;
+#ifdef STRUS_LOWLEVEL_DEBUG
+		if (!Parent::exists( stk-1))
+		{
+			throw strus::runtime_error(_TXT( "illegal list access (nextptr)"));
+		}
+#endif
 		const ELEMTYPE* rt = &(*this)[ stk-1].value;
 		stk = (*this)[ stk-1].next;
 		return rt;
@@ -93,6 +141,38 @@ public:
 	void check( SIZETYPE idx) const
 	{
 		(*this)[ idx-1];
+	}
+
+	void checkTable()
+	{
+		Parent::checkTable();
+	}
+
+	void clear()
+	{
+		Parent::clear();
+	}
+
+private:
+	void checkCircular( SIZETYPE idx) const
+	{
+		std::size_t ii = 0, ie = Parent::size();
+		SIZETYPE si = idx;
+		for (; ii!=ie && si; ++ii)
+		{
+#ifdef STRUS_LOWLEVEL_DEBUG
+		if (!Parent::exists( si-1))
+		{
+			throw strus::runtime_error(_TXT( "illegal list access (checkCircular)"));
+		}
+#endif
+			si = (*this)[ si-1].next;
+			if (si == idx || si == 0) break;
+		}
+		if (ii != ie && si != 0)
+		{
+			throw strus::runtime_error(_TXT( "internal: circular list"));
+		}
 	}
 };
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Debian postinst script for strusstream
+# Debian postinst script for struspattern
 
 # summary of how this script can be called:
 #        * <postinst> `configure' <most-recently-configured-version>

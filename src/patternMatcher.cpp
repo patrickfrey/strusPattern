@@ -6,17 +6,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 /// \brief Implementation of an automaton for detecting patterns of tokens in a document stream
-/// \file "tokenPatternMatch.cpp"
-#include "tokenPatternMatch.hpp"
-#include "symbolTable.hpp"
+/// \file "patternMatcher.cpp"
+#include "patternMatcher.hpp"
 #include "utils.hpp"
 #include "errorUtils.hpp"
 #include "internationalization.hpp"
-#include "strus/stream/tokenPatternMatchResultItem.hpp"
-#include "strus/stream/tokenPatternMatchResult.hpp"
-#include "strus/tokenPatternMatchInstanceInterface.hpp"
-#include "strus/tokenPatternMatchContextInterface.hpp"
+#include "strus/analyzer/patternMatcherResultItem.hpp"
+#include "strus/analyzer/patternMatcherResult.hpp"
+#include "strus/patternMatcherInstanceInterface.hpp"
+#include "strus/patternMatcherContextInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
+#include "strus/base/symbolTable.hpp"
+#include "strus/reference.hpp"
 #include "ruleMatcherAutomaton.hpp"
 #include <map>
 #include <limits>
@@ -27,15 +28,18 @@
 #undef STRUS_LOWLEVEL_DEBUG
 
 using namespace strus;
-using namespace strus::stream;
+using namespace strus::analyzer;
 
-struct TokenPatternMatchData
+struct PatternMatcherData
 {
-	TokenPatternMatchData(){}
+	explicit PatternMatcherData( ErrorBufferInterface* errorhnd)
+		:variableMap(),patternMap(),programTable(),exclusive(false),maxResultSize(100){}
 
 	SymbolTable variableMap;
 	SymbolTable patternMap;
 	ProgramTable programTable;
+	bool exclusive;
+	unsigned int maxResultSize;
 };
 
 enum PatternEventType {TermEvent=0, ExpressionEvent=1, ReferenceEvent=2};
@@ -45,56 +49,59 @@ static uint32_t eventHandle( PatternEventType type_, uint32_t idx)
 	return idx | ((uint32_t)type_ << 30);
 }
 
-class TokenPatternMatchContext
-	:public TokenPatternMatchContextInterface
+class PatternMatcherContext
+	:public PatternMatcherContextInterface
 {
 public:
-	TokenPatternMatchContext( const TokenPatternMatchData* data_, ErrorBufferInterface* errorhnd_)
-		:m_errorhnd(errorhnd_),m_data(data_),m_statemachine(&data_->programTable),m_nofEvents(0),m_curPosition(0){}
+	PatternMatcherContext( const PatternMatcherData* data_, ErrorBufferInterface* errorhnd_)
+		:m_errorhnd(errorhnd_),m_data(data_),m_statemachine(new StateMachine(&data_->programTable)),m_nofEvents(0),m_curPosition(0){}
 
-	virtual ~TokenPatternMatchContext()
+	virtual ~PatternMatcherContext()
 	{}
 
-	virtual void putInput( const PatternMatchToken& term)
+	virtual void putInput( const analyzer::PatternLexem& term)
 	{
 		try
 		{
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cerr << "put input " << term.id() << " at " << term.ordpos() << std::endl;
+#endif
 			if (m_curPosition > term.ordpos())
 			{
 				throw strus::runtime_error(_TXT("term events not fed in ascending order (%u > %u)"), m_curPosition, term.ordpos());
 			}
 			else if (m_curPosition < term.ordpos())
 			{
-				m_statemachine.setCurrentPos( m_curPosition = term.ordpos());
+				m_statemachine->setCurrentPos( m_curPosition = term.ordpos());
 			}
-			else if (term.origsize() >= (std::size_t)std::numeric_limits<uint16_t>::max())
+			else if (term.origsize() >= (std::size_t)std::numeric_limits<uint32_t>::max())
 			{
 				throw strus::runtime_error(_TXT("term event orig size out of range"));
 			}
-			else if (term.origseg() >= (std::size_t)std::numeric_limits<uint16_t>::max())
+			else if (term.origseg() >= (std::size_t)std::numeric_limits<uint32_t>::max())
 			{
 				throw strus::runtime_error(_TXT("term event orig segment number out of range"));
 			}
-			else if (term.origpos() >= (std::size_t)std::numeric_limits<uint16_t>::max())
+			else if (term.origpos() >= (std::size_t)std::numeric_limits<uint32_t>::max())
 			{
 				throw strus::runtime_error(_TXT("term event orig segment byte position out of range"));
 			}
 			uint32_t eventid = eventHandle( TermEvent, term.id());
-			EventData data( term.origseg(), term.origpos(), term.origseg(), term.origpos() + term.origsize(), term.ordpos(), 0/*subdataref*/);
-			m_statemachine.doTransition( eventid, data);
+			EventData data( term.origseg(), term.origpos(), term.origseg(), term.origpos() + term.origsize(), term.ordpos(), term.ordpos()+1, 0/*subdataref*/);
+			m_statemachine->doTransition( eventid, data);
 			++m_nofEvents;
 		}
 		CATCH_ERROR_MAP( _TXT("failed to feed input to pattern matcher: %s"), *m_errorhnd);
 	}
 
-	void gatherResultItems( std::vector<TokenPatternMatchResultItem>& resitemlist, uint32_t dataref) const
+	void gatherResultItems( std::vector<PatternMatcherResultItem>& resitemlist, uint32_t dataref) const
 	{
-		uint32_t itemList = m_statemachine.getEventDataItemListIdx( dataref);
+		uint32_t itemList = m_statemachine->getEventDataItemListIdx( dataref);
 		const EventItem* item;
-		while (0!=(item=m_statemachine.nextResultItem( itemList)))
+		while (0!=(item=m_statemachine->nextResultItem( itemList)))
 		{
 			const char* itemName = m_data->variableMap.key( item->variable);
-			TokenPatternMatchResultItem rtitem( itemName, item->data.ordpos, item->data.start_origseg, item->data.start_origpos, item->data.end_origseg, item->data.end_origpos, item->weight);
+			PatternMatcherResultItem rtitem( itemName, item->data.start_ordpos, item->data.end_ordpos, item->data.start_origseg, item->data.start_origpos, item->data.end_origseg, item->data.end_origpos, item->weight);
 			resitemlist.push_back( rtitem);
 			if (item->data.subdataref)
 			{
@@ -103,64 +110,154 @@ public:
 		}
 	}
 
-	virtual std::vector<stream::TokenPatternMatchResult> fetchResults() const
+	std::vector<bool> getCoveredFlags( const StateMachine::ResultList& results) const
+	{
+		std::vector<bool> rt( results.size(), false);
+		std::size_t ai = 0, ae = results.size();
+		for (; ai != ae; ++ai)
+		{
+			const Result& result = results[ ai];
+			std::size_t ni = ai;
+			for (; ni != ae; ++ni)
+			{
+				const Result& follow_result = results[ ni];
+				if (follow_result.start_origseg > result.end_origseg
+				||  follow_result.start_origpos >= result.end_origpos + m_data->maxResultSize)
+				{
+					// ... follow_result is not overlapping with end 
+					// of the result plus a maximum result length distance,
+					// so there are no more left to check for result.
+					break;
+				}
+				if (follow_result.start_origseg <= result.start_origseg
+				&&  follow_result.start_origpos <= result.start_origpos
+				&&  follow_result.end_origseg >= result.end_origseg
+				&&  follow_result.end_origpos >= result.end_origpos)
+				{
+					// ... result is covered by follow_result
+					if (follow_result.end_origseg != result.end_origseg
+					||  follow_result.end_origpos != result.end_origpos
+					||  follow_result.start_origseg != result.start_origseg
+					||  follow_result.start_origpos != result.start_origpos)
+					{
+						// ... and not equal, so result is 
+						// marked to be eliminated
+						rt[ ai] = true;
+					}
+				}
+				if (follow_result.start_origseg >= result.start_origseg
+				&&  follow_result.start_origpos >= result.start_origpos
+				&&  follow_result.end_origseg <= result.end_origseg
+				&&  follow_result.end_origpos <= result.end_origpos)
+				{
+					// ... follow_result is covered by result
+					if (follow_result.end_origseg != result.end_origseg
+					||  follow_result.end_origpos != result.end_origpos
+					||  follow_result.start_origseg != result.start_origseg
+					||  follow_result.start_origpos != result.start_origpos)
+					{
+						// ... and not equal, so follow_result is 
+						// marked to be eliminated
+						rt[ ni] = true;
+					}
+				}
+			}
+		}
+		return rt;
+	}
+
+	void pushResult( std::vector<analyzer::PatternMatcherResult>& res, const Result& result) const
+	{
+		const char* resultName = m_data->patternMap.key( result.resultHandle);
+		std::vector<PatternMatcherResultItem> rtitemlist;
+		if (result.eventDataReferenceIdx)
+		{
+			gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
+		}
+#ifdef STRUS_LOWLEVEL_DEBUG
+		std::cerr << "result " << resultName << " at " << result.ordpos << std::endl;
+#endif
+		res.push_back( PatternMatcherResult( resultName, result.start_ordpos, result.end_ordpos, result.start_origseg, result.start_origpos, result.end_origseg, result.end_origpos, rtitemlist));
+	}
+
+	virtual std::vector<analyzer::PatternMatcherResult> fetchResults() const
 	{
 		try
 		{
-			std::vector<stream::TokenPatternMatchResult> rt;
-			const StateMachine::ResultList& results = m_statemachine.results();
+			std::vector<analyzer::PatternMatcherResult> rt;
+			const StateMachine::ResultList& results = m_statemachine->results();
 			rt.reserve( results.size());
-			std::size_t ai = 0, ae = results.size();
-			for (; ai != ae; ++ai)
+			if (m_data->exclusive)
 			{
-				const Result& result = results[ ai];
-				const char* resultName = m_data->patternMap.key( result.resultHandle);
-				std::vector<TokenPatternMatchResultItem> rtitemlist;
-				if (result.eventDataReferenceIdx)
+				std::vector<bool> eliminate( getCoveredFlags( results));
+				std::size_t ai = 0, ae = results.size();
+				for (; ai != ae; ++ai)
 				{
-					gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
+					if (!eliminate[ai])
+					{
+						pushResult( rt, results[ ai]);
+					}
 				}
-				rt.push_back( TokenPatternMatchResult( resultName, result.ordpos, result.start_origseg, result.start_origpos, result.end_origseg, result.end_origpos, rtitemlist));
+			}
+			else
+			{
+				std::size_t ai = 0, ae = results.size();
+				for (; ai != ae; ++ai)
+				{
+					pushResult( rt, results[ ai]);
+				}
 			}
 			return rt;
 		}
-		CATCH_ERROR_MAP_RETURN( _TXT("failed to fetch pattern match result: %s"), *m_errorhnd, std::vector<stream::TokenPatternMatchResult>());
+		CATCH_ERROR_MAP_RETURN( _TXT("failed to fetch pattern match result: %s"), *m_errorhnd, std::vector<analyzer::PatternMatcherResult>());
 	}
 
-	virtual TokenPatternMatchStatistics getStatistics() const
+	virtual analyzer::PatternMatcherStatistics getStatistics() const
 	{
 		try
 		{
-			TokenPatternMatchStatistics stats;
-			stats.define( "nofProgramsInstalled", m_statemachine.nofProgramsInstalled());
-			stats.define( "nofAltKeyProgramsInstalled", m_statemachine.nofAltKeyProgramsInstalled());
-			stats.define( "nofSignalsFired", m_statemachine.nofSignalsFired());
+			PatternMatcherStatistics stats;
+			stats.define( "nofProgramsInstalled", m_statemachine->nofProgramsInstalled());
+			stats.define( "nofAltKeyProgramsInstalled", m_statemachine->nofAltKeyProgramsInstalled());
+			stats.define( "nofSignalsFired", m_statemachine->nofSignalsFired());
 			if (m_nofEvents)
 			{
-				stats.define( "nofTriggersAvgActive", m_statemachine.nofOpenPatterns() / m_nofEvents);
+				stats.define( "nofTriggersAvgActive", m_statemachine->nofOpenPatterns() / m_nofEvents);
 			}
 			return stats;
 		}
-		CATCH_ERROR_MAP_RETURN( _TXT("failed to get pattern match statistics: %s"), *m_errorhnd, TokenPatternMatchStatistics());
+		CATCH_ERROR_MAP_RETURN( _TXT("failed to get pattern match statistics: %s"), *m_errorhnd, PatternMatcherStatistics());
+	}
+
+	virtual void reset()
+	{
+		try
+		{
+			m_statemachine.reset( new StateMachine( &m_data->programTable));
+			if (!m_statemachine.get()) throw std::bad_alloc();
+			m_nofEvents = 0;
+			m_curPosition = 0;
+		}
+		CATCH_ERROR_MAP( _TXT("failed to get reset pattern matcher context: %s"), *m_errorhnd);
 	}
 
 private:
 	ErrorBufferInterface* m_errorhnd;
-	const TokenPatternMatchData* m_data;
-	StateMachine m_statemachine;
+	const PatternMatcherData* m_data;
+	Reference<StateMachine> m_statemachine;
 	unsigned int m_nofEvents;
 	unsigned int m_curPosition;
 };
 
 /// \brief Interface for building the automaton for detecting patterns in a document stream
-class TokenPatternMatchInstance
-	:public TokenPatternMatchInstanceInterface
+class PatternMatcherInstance
+	:public PatternMatcherInstanceInterface
 {
 public:
-	explicit TokenPatternMatchInstance( ErrorBufferInterface* errorhnd_)
-		:m_errorhnd(errorhnd_),m_expression_event_cnt(0){}
+	explicit PatternMatcherInstance( ErrorBufferInterface* errorhnd_)
+		:m_errorhnd(errorhnd_),m_data(errorhnd_),m_stack(),m_expression_event_cnt(0),m_popt(){}
 
-	virtual ~TokenPatternMatchInstance(){}
+	virtual ~PatternMatcherInstance(){}
 
 	virtual void defineTermFrequency( unsigned int termid, double df)
 	{
@@ -176,6 +273,9 @@ public:
 #endif
 			uint32_t eventid = eventHandle( TermEvent, termid);
 			m_stack.push_back( StackElement( eventid));
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cout << "ATM stack size " << m_stack.size() << std::endl;
+#endif
 		}
 		CATCH_ERROR_MAP( _TXT("failed to push term on the pattern match expression stack: %s"), *m_errorhnd);
 	}
@@ -312,6 +412,9 @@ public:
 			m_data.programTable.doneProgram( program);
 			m_stack.resize( m_stack.size() - argc);
 			m_stack.push_back( StackElement( slot_event, program));
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cout << "ATM stack size " << m_stack.size() << std::endl;
+#endif
 		}
 		CATCH_ERROR_MAP( _TXT("failed to push expression on the pattern match expression stack: %s"), *m_errorhnd);
 	}
@@ -324,7 +427,11 @@ public:
 			std::cout << "ATM push pattern '" << name << "'" << std::endl;
 #endif
 			uint32_t eventid = eventHandle( ReferenceEvent, m_data.patternMap.getOrCreate( name));
+			if (eventid == 0) throw strus::runtime_error(_TXT("failed to define pattern symbol"));
 			m_stack.push_back( StackElement( eventid));
+#ifdef STRUS_LOWLEVEL_DEBUG
+			std::cout << "ATM stack size " << m_stack.size() << std::endl;
+#endif
 		}
 		CATCH_ERROR_MAP( _TXT("failed to push pattern reference on the pattern match expression stack: %s"), *m_errorhnd);
 	}
@@ -346,6 +453,10 @@ public:
 				throw strus::runtime_error(_TXT( "more than one variable assignment to a node"));
 			}
 			elem.variable = m_data.variableMap.getOrCreate( name);
+			if (elem.variable == 0)
+			{
+				throw strus::runtime_error(_TXT("failed to define variable symbol"));
+			}
 			elem.weight = weight;
 		}
 		CATCH_ERROR_MAP( _TXT("failed to attach variable to top element of the pattern match expression stack: %s"), *m_errorhnd);
@@ -361,6 +472,10 @@ public:
 			}
 			StackElement& elem = m_stack.back();
 			uint32_t resultHandle = m_data.patternMap.getOrCreate( name);
+			if (resultHandle == 0)
+			{
+				throw strus::runtime_error(_TXT("failed to define result symbol"));
+			}
 			uint32_t resultEvent = eventHandle( ReferenceEvent, resultHandle);
 			uint32_t program = elem.program;
 			if (!program)
@@ -379,16 +494,17 @@ public:
 			m_data.programTable.defineProgramResult( program, resultEvent, visible?resultHandle:0);
 #ifdef STRUS_LOWLEVEL_DEBUG
 			std::cout << "ATM define token pattern '" << name << "'" << (visible?" (visible)":"") << " as program " << program << std::endl;
+			std::cout << "ATM stack size " << m_stack.size() << std::endl;
 #endif
 		}
 		CATCH_ERROR_MAP( _TXT("failed to close pattern definition on the pattern match expression stack: %s"), *m_errorhnd);
 	}
 
-	virtual TokenPatternMatchContextInterface* createContext() const
+	virtual PatternMatcherContextInterface* createContext() const
 	{
 		try
 		{
-			return new TokenPatternMatchContext( &m_data, m_errorhnd);
+			return new PatternMatcherContext( &m_data, m_errorhnd);
 		}
 		CATCH_ERROR_MAP_RETURN( _TXT("failed to create pattern match context: %s"), *m_errorhnd, 0);
 	}
@@ -414,7 +530,39 @@ public:
 	}
 #endif
 
-	virtual bool compile( const stream::TokenPatternMatchOptions& opt)
+	virtual void defineOption( const std::string& name, double value)
+	{
+		try
+		{
+			if (utils::caseInsensitiveEquals( name, "stopwordOccurrenceFactor"))
+			{
+				m_popt.stopwordOccurrenceFactor = value;
+			}
+			else if (utils::caseInsensitiveEquals( name, "weightFactor"))
+			{
+				m_popt.weightFactor = value;
+			}
+			else if (utils::caseInsensitiveEquals( name, "maxRange"))
+			{
+				m_popt.maxRange = (unsigned int)(value + std::numeric_limits<double>::epsilon());
+			}
+			else if (utils::caseInsensitiveEquals( name, "maxResultSize"))
+			{
+				m_data.maxResultSize = (unsigned int)(value + std::numeric_limits<double>::epsilon());
+			}
+			else if (utils::caseInsensitiveEquals( name, "exclusive"))
+			{
+				m_data.exclusive = true;
+			}
+			else
+			{
+				throw strus::runtime_error(_TXT("unknown token pattern match option: '%s'"), name.c_str());
+			}
+		}
+		CATCH_ERROR_MAP( _TXT("failed to define pattern matching automaton option: %s"), *m_errorhnd);
+	}
+
+	virtual bool compile()
 	{
 		try
 		{
@@ -422,28 +570,7 @@ public:
 			std::cout << "automaton statistics before otimization:" << std::endl;
 			printAutomatonStatistics();
 #endif
-			ProgramTable::OptimizeOptions popt;
-			stream::TokenPatternMatchOptions::const_iterator oi = opt.begin(), oe = opt.end();
-			for (; oi != oe; ++oi)
-			{
-				if (utils::caseInsensitiveEquals( oi->first, "stopwordOccurrenceFactor"))
-				{
-					popt.stopwordOccurrenceFactor = oi->second;
-				}
-				else if (utils::caseInsensitiveEquals( oi->first, "weightFactor"))
-				{
-					popt.weightFactor = oi->second;
-				}
-				else if (utils::caseInsensitiveEquals( oi->first, "maxRange"))
-				{
-					popt.maxRange = (unsigned int)(oi->second + std::numeric_limits<double>::epsilon());
-				}
-				else
-				{
-					throw strus::runtime_error(_TXT("unknown token pattern match option: '%s'"), oi->first.c_str());
-				}
-			}
-			m_data.programTable.optimize( popt);
+			m_data.programTable.optimize( m_popt);
 
 #ifdef STRUS_LOWLEVEL_DEBUG
 			std::cout << "automaton statistics after otimization:" << std::endl;
@@ -472,16 +599,17 @@ private:
 
 private:
 	ErrorBufferInterface* m_errorhnd;
-	TokenPatternMatchData m_data;
+	PatternMatcherData m_data;
 	std::vector<StackElement> m_stack;
 	uint32_t m_expression_event_cnt;
+	ProgramTable::OptimizeOptions m_popt;
 };
 
 
-std::vector<std::string> TokenPatternMatch::getCompileOptions() const
+std::vector<std::string> PatternMatcher::getCompileOptionNames() const
 {
 	std::vector<std::string> rt;
-	static const char* ar[] = {"stopwordOccurrenceFactor","weightFactor","maxRange",0};
+	static const char* ar[] = {"stopwordOccurrenceFactor","weightFactor","maxRange","exclusive","maxResultSize",0};
 	for (std::size_t ai=0; ar[ai]; ++ai)
 	{
 		rt.push_back( ar[ ai]);
@@ -489,12 +617,18 @@ std::vector<std::string> TokenPatternMatch::getCompileOptions() const
 	return rt;
 }
 
-TokenPatternMatchInstanceInterface* TokenPatternMatch::createInstance() const
+PatternMatcherInstanceInterface* PatternMatcher::createInstance() const
 {
 	try
 	{
-		return new TokenPatternMatchInstance( m_errorhnd);
+		return new PatternMatcherInstance( m_errorhnd);
 	}
 	CATCH_ERROR_MAP_RETURN( _TXT("failed to create pattern match instance: %s"), *m_errorhnd, 0);
 }
+
+const char* PatternMatcher::getDescription() const
+{
+	return _TXT( "pattern matcher based on an event driven automaton");
+}
+
 

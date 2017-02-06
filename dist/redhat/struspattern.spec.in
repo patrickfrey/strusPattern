@@ -1,18 +1,12 @@
-# Strusstream spec file
+# struspattern spec file
 
 # Set distribution based on some OpenSuse and distribution macros
 # this is only relevant when building on https://build.opensuse.org
 ###
 
 %define rhel 0
-%define rhel5 0
 %define rhel6 0
 %define rhel7 0
-%if 0%{?rhel_version} >= 500 && 0%{?rhel_version} <= 599
-%define dist rhel5
-%define rhel 1
-%define rhel5 1
-%endif
 %if 0%{?rhel_version} >= 600 && 0%{?rhel_version} <= 699
 %define dist rhel6
 %define rhel 1
@@ -25,14 +19,8 @@
 %endif
 
 %define centos 0
-%define centos5 0
 %define centos6 0
 %define centos7 0
-%if 0%{?centos_version} >= 500 && 0%{?centos_version} <= 599
-%define dist centos5
-%define centos 1
-%define centos5 1
-%endif
 %if 0%{?centos_version} >= 600 && 0%{?centos_version} <= 699
 %define dist centos6
 %define centos 1
@@ -45,14 +33,8 @@
 %endif
 
 %define scilin 0
-%define scilin5 0
 %define scilin6 0
 %define scilin7 0
-%if 0%{?scilin_version} >= 500 && 0%{?scilin_version} <= 599
-%define dist scilin5
-%define scilin 1
-%define scilin5 1
-%endif
 %if 0%{?scilin_version} >= 600 && 0%{?scilin_version} <= 699
 %define dist scilin6
 %define scilin 1
@@ -65,33 +47,21 @@
 %endif
 
 %define fedora 0
-%define fc22 0
-%define fc23 0
-%if 0%{?fedora_version} == 22
-%define dist fc22
-%define fc22 1
+%define fc24 0
+%define fc25 0
+%if 0%{?fedora_version} == 24
+%define dist fc24
+%define fc24 1
 %define fedora 1
 %endif
-%if 0%{?fedora_version} == 23
-%define dist fc23
-%define fc23 1
+%if 0%{?fedora_version} == 25
+%define dist fc25
+%define fc25 1
 %define fedora 1
 %endif
 
 %define suse 0
-%define osu131 0
-%define osu132 0
 %define osufactory 0
-%if 0%{?suse_version} == 1310
-%define dist osu131
-%define osu131 1
-%define suse 1
-%endif
-%if 0%{?suse_version} == 1320
-%define dist osu132
-%define osu132 1
-%define suse 1
-%endif
 %if 0%{?suse_version} > 1320
 %define dist osufactory
 %define osufactory 1
@@ -113,7 +83,7 @@
 %endif
 
 Summary: Library implementing the storage of a text search engine
-Name: strusstream
+Name: struspattern
 %define main_version @STRUS_VERSION@
 %define dep_version @STRUS_MAJOR_VERSION@.@STRUS_MINOR_VERSION@
 Version: %{main_version}
@@ -165,9 +135,9 @@ BuildRequires: sles-release
 %endif
 
 %if %{rhel} || %{centos} || %{scilin} || %{fedora}
-%if %{rhel5} || %{rhel6} || %{centos5} || %{centos6} || %{scilin5} || %{scilin6}
-Requires: boost153 >= 1.53.0
-BuildRequires: boost153-devel >= 1.53.0
+%if %{rhel6} || %{centos6} || %{scilin6}
+Requires: strusboost >= 1.53.0
+BuildRequires: strusboost-devel >= 1.53.0
 %else
 Requires: boost >= 1.53.0
 Requires: boost-thread >= 1.53.0
@@ -179,40 +149,42 @@ BuildRequires: boost-devel
 
 %if %{suse} || %{sles}
 %if %{sles11}
-Requires: boost153 >= 1.53.0
-BuildRequires: boost153-devel >= 1.53.0
+Requires: strusboost >= 1.53.0
+BuildRequires: strusboost-devel >= 1.53.0
 %endif
-%if %{osu131}
-Requires: libboost_thread1_53_0 >= 1.53.0
-Requires: libboost_atomic1_53_0 >= 1.53.0
-Requires: libboost_system1_53_0 >= 1.53.0
-Requires: libboost_date_time1_53_0 >= 1.53.0
-BuildRequires: boost-devel
-# for some reason OBS doesn't pull in libboost_atomic1_53_0 automatically!?
-BuildRequires: libboost_atomic1_53_0 >= 1.53.0
-%endif
-%if %{osu132} || %{sles12}
+%if %{sles12}
 Requires: libboost_thread1_54_0 >= 1.54.0
 Requires: libboost_atomic1_54_0 >= 1.54.0
 Requires: libboost_system1_54_0 >= 1.54.0
 Requires: libboost_date_time1_54_0 >= 1.54.0
+Requires: libboost_regex1_54_0 >= 1.54.0
 BuildRequires: boost-devel
 %endif
 %if %{osufactory}
-Requires: libboost_thread1_60_0 >= 1.60.0
-Requires: libboost_atomic1_60_0 >= 1.60.0
-Requires: libboost_system1_60_0 >= 1.60.0
-Requires: libboost_date_time1_60_0 >= 1.60.0
+Requires: libboost_thread1_62_0 >= 1.62.0
+Requires: libboost_atomic1_62_0 >= 1.62.0
+Requires: libboost_system1_62_0 >= 1.62.0
+Requires: libboost_date_time1_62_0 >= 1.62.0
+Requires: libboost_regex1_62_0 >= 1.62.0
 BuildRequires: boost-devel
 %endif
 %endif
 
 BuildRequires: strusbase-devel >= %{dep_version}
 BuildRequires: strusbase >= %{dep_version}
+BuildRequires: strus-devel >= %{dep_version}
+BuildRequires: strus >= %{dep_version}
 BuildRequires: strusanalyzer-devel >= %{dep_version}
 BuildRequires: strusanalyzer >= %{dep_version}
+BuildRequires: strustrace-devel >= %{dep_version}
+BuildRequires: strustrace >= %{dep_version}
+BuildRequires: strusmodule-devel >= %{dep_version}
+BuildRequires: strusmodule >= %{dep_version}
 Requires: strusbase >= %{dep_version}
+Requires: strus >= %{dep_version}
 Requires: strusanalyzer >= %{dep_version}
+Requires: strustrace >= %{dep_version}
+Requires: strusmodule >= %{dep_version}
 
 # Check if 'Distribution' is really set by OBS (as mentioned in bacula)
 %if ! 0%{?opensuse_bs}
@@ -225,11 +197,11 @@ Packager: Patrick Frey <patrickpfrey@yahoo.com>
 Library implementing the storage of a text search engine.
 
 %package devel
-Summary: strusstream development files
+Summary: struspattern development files
 Group: Development/Libraries/C++
 
 %description devel
-The libraries and header files used for development with strusstream.
+The libraries and header files used for development with struspattern.
 
 Requires: %{name} >= %{main_version}-%{release}
 
@@ -267,20 +239,37 @@ make test
 %files
 %defattr( -, root, root )
 %dir %{_libdir}/strus
-%{_libdir}/strus/libstrus_stream.so.@STRUS_MAJOR_VERSION@.@STRUS_MINOR_VERSION@
-%{_libdir}/strus/libstrus_stream.so.@STRUS_MAJOR_VERSION@.@STRUS_MINOR_VERSION@.@STRUS_PATCH_VERSION@
+%{_libdir}/strus/libstrus_pattern.so.@STRUS_MAJOR_VERSION@.@STRUS_MINOR_VERSION@
+%{_libdir}/strus/libstrus_pattern.so.@STRUS_MAJOR_VERSION@.@STRUS_MINOR_VERSION@.@STRUS_PATCH_VERSION@
+%{_libdir}/strus/modules/modstrus_analyzer_pattern.so
 
 %files devel
 %defattr( -, root, root )
-%{_libdir}/strus/libstrus_stream.so
+%{_libdir}/strus/libstrus_pattern.so
 %dir %{_includedir}/strus
 %{_includedir}/strus/*.hpp
 %dir %{_includedir}/strus/lib
 %{_includedir}/strus/lib/*.hpp
-%dir %{_includedir}/strus/base
-%{_includedir}/strus/base/*.hpp
 
 %changelog
+* Mon Feb 6 2017 Patrick Frey <patrickpfrey@yahoo.com> 0.13.0-0.1
+- rename project from strusStream to strusPattern
+- adapt interface changes in analyzer
+- elimination of covered results if specified by option
+- SymbolTable moved to strus base
+- rearrange code
+- many build fixes
+
+* Sat Oct 1 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.12.0-0.1
+- adapt interface changes in analyzer (some interface files reorganization)
+- moved interfaces to analyzer (only implementation in this project)
+
+* Fri Sep 30 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.11.1-0.1
+- moved pattern matching interfaces to strus analyzer project
+
+* Wed Sep 28 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.11.0-0.1
+- keep version number in sync with core
+
 * Sun Jul 10 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.10.1-0.1
 - adapt interface changes in analyzer (segmenter document markup interface)
 

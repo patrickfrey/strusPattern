@@ -6,8 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 ///\brief Definition of a basic POD type table structure for the rule matcher automaton
-#ifndef _STRUS_STREAM_POD_STRUCT_TABLE_BASE_HPP_INCLUDED
-#define _STRUS_STREAM_POD_STRUCT_TABLE_BASE_HPP_INCLUDED
+#ifndef _STRUS_PATTERN_POD_STRUCT_TABLE_BASE_HPP_INCLUDED
+#define _STRUS_PATTERN_POD_STRUCT_TABLE_BASE_HPP_INCLUDED
 #include "strus/base/stdint.h"
 #include "podStructArrayBase.hpp"
 #include "internationalization.hpp"
@@ -128,6 +128,7 @@ public:
 #endif
 	void checkTable() const
 	{
+#ifndef STRUS_CHECK_FREE_ITEMS
 		// Check freelist:
 		SIZETYPE fi = m_freelistidx;
 		while (fi)
@@ -140,9 +141,33 @@ public:
 			}
 #endif
 		}
+#endif
 	}
-private:
-	void reset(){}		//< forbid usage of inherited method
+
+	void clear()
+	{
+		Parent::clear();
+#ifdef STRUS_CHECK_FREE_ITEMS
+		m_free_elemtab.clear();
+#else
+		m_freelistidx = 0;
+#endif
+#ifdef STRUS_CHECK_USED_ITEMS
+		m_used_size = 0;
+#endif
+	}
+
+	bool exists( SIZETYPE idx) const
+	{
+#ifdef STRUS_USE_BASEADDR
+		idx -= BASEADDR;
+#endif
+#ifdef STRUS_CHECK_FREE_ITEMS
+		return (idx < Parent::size() && m_free_elemtab.find( idx) == m_free_elemtab.end());
+#else
+		return (idx < Parent::size());
+#endif
+	}
 
 private:
 #ifdef STRUS_CHECK_FREE_ITEMS

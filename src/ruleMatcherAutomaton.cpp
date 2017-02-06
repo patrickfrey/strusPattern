@@ -54,6 +54,25 @@ EventTriggerTable::EventTriggerTable( const EventTriggerTable& o)
 	}
 }
 
+EventTriggerTable::TriggerInd::~TriggerInd()
+{
+	if (m_eventAr)
+	{
+		std::free( m_eventAr);
+	}
+	if (m_ar)
+	{
+		std::free( m_ar);
+	}
+}
+
+void EventTriggerTable::TriggerInd::clear()
+{
+	if (m_eventAr) std::free( m_eventAr);
+	if (m_ar) std::free( m_ar);
+	std::memset( this, 0, sizeof(*this));
+}
+
 enum {EventArrayMemoryAlignment=64};
 void EventTriggerTable::TriggerInd::expand( uint32_t newallocsize)
 {
@@ -64,11 +83,20 @@ void EventTriggerTable::TriggerInd::expand( uint32_t newallocsize)
 	uint32_t* war = (uint32_t*)utils::aligned_malloc( newallocsize * sizeof(uint32_t), EventArrayMemoryAlignment);
 	if (!war) throw std::bad_alloc();
 	std::memcpy( war, m_eventAr, m_size * sizeof(uint32_t));
+	if (m_eventAr) std::free( m_eventAr);
 	m_eventAr = war;
 	uint32_t* far = (uint32_t*)std::realloc( m_ar, newallocsize * sizeof(uint32_t));
 	if (!far) throw std::bad_alloc();
 	m_ar = far;
 	m_allocsize = newallocsize;
+}
+
+void EventTriggerTable::clear()
+{
+	std::size_t hi = 0, he = EventHashTabSize;
+	for (;  hi != he; ++hi) m_triggerIndAr[hi].clear();
+	m_triggerTab.clear();
+	m_nofTriggers = 0;
 }
 
 static inline uint32_t linkid( uint32_t htidx, uint32_t elidx)
@@ -336,7 +364,7 @@ uint32_t ProgramTable::getAltEventId( uint32_t eventid, uint32_t triggerListIdx)
 				return 0;
 			case Trigger::SigAnd:
 			{
-				if (sigtype == trigger->sigtype)
+				if (sigtype == (Trigger::SigType)trigger->sigtype)
 				{
 					if (trigger->event != eventid)
 					{
@@ -358,7 +386,7 @@ uint32_t ProgramTable::getAltEventId( uint32_t eventid, uint32_t triggerListIdx)
 			case Trigger::SigSequenceImm:
 			case Trigger::SigWithin:
 			{
-				if (sigtype == trigger->sigtype)
+				if (sigtype == (Trigger::SigType)trigger->sigtype)
 				{
 					if (sigval_selected < trigger->sigval && trigger->event != eventid)
 					{
@@ -373,13 +401,23 @@ uint32_t ProgramTable::getAltEventId( uint32_t eventid, uint32_t triggerListIdx)
 					sigval_selected = trigger->sigval;
 					sigtype = (Trigger::SigType)trigger->sigtype;
 				}
+				else if (sigtype == Trigger::SigSequenceImm && trigger->sigtype == Trigger::SigSequence)
+				{
+					if (sigval_selected < trigger->sigval && trigger->event != eventid)
+					{
+						eventid_selected = trigger->event;
+						sigval_selected = trigger->sigval;
+						sigtype = (Trigger::SigType)trigger->sigtype;
+					}
+				}
 				else
 				{
 					return 0;
 				}
+				break;
 			}
 			case Trigger::SigDel:
-				continue;
+				break;
 		}
 	}
 	return eventid_selected;
@@ -507,18 +545,25 @@ void ProgramTable::optimize( OptimizeOptions& opt)
 		while (0!=(programTrigger=m_programTriggerList.nextptr( prglist)))
 		{
 			Program& program = m_programMap[ programTrigger->programidx-1];
-			uint32_t alt_eventid;
-			if (!programTrigger->past_eventid
-			&&  opt.maxRange >= program.positionRange
-			&&  0!=(alt_eventid = getAltEventId( eventid, program.triggerListIdx))
-			&&  weight > (calcEventWeight( alt_eventid) * opt.weightFactor))
+			uint32_t alt_eventid = getAltEventId( eventid, program.triggerListIdx);
+			if (!alt_eventid)
 			{
-				defineEventProgramAlt( alt_eventid, programTrigger->programidx, eventid);
-				getDelimTokenStopWordSet( program.triggerListIdx);
+				m_programTriggerList.push( new_prglist, *programTrigger);
 			}
 			else
 			{
-				m_programTriggerList.push( new_prglist, *programTrigger);
+				double alt_weight = calcEventWeight( alt_eventid) * opt.weightFactor;
+				if (!programTrigger->past_eventid
+				&&  opt.maxRange >= program.positionRange
+				&&  weight > alt_weight)
+				{
+					defineEventProgramAlt( alt_eventid, programTrigger->programidx, eventid);
+					getDelimTokenStopWordSet( program.triggerListIdx);
+				}
+				else
+				{
+					m_programTriggerList.push( new_prglist, *programTrigger);
+				}
 			}
 		}
 		// Set new program list
@@ -546,6 +591,7 @@ StateMachine::StateMachine( const ProgramTable* programTable_)
 {
 	std::memset( m_disposeWindow, 0, sizeof(m_disposeWindow));
 	std::make_heap( m_ruleDisposeQueue.begin(), m_ruleDisposeQueue.end());
+	std::memset( m_observeEvents, 0, sizeof(m_observeEvents));
 }
 
 StateMachine::StateMachine( const StateMachine& o)
@@ -568,6 +614,55 @@ StateMachine::StateMachine( const StateMachine& o)
 	,m_timestmp(o.m_timestmp)
 {
 	std::memcpy( m_disposeWindow, o.m_disposeWindow, sizeof(m_disposeWindow));
+	std::make_heap( m_ruleDisposeQueue.begin(), m_ruleDisposeQueue.end());
+	std::memcpy( m_observeEvents, o.m_observeEvents, sizeof(m_observeEvents));
+}
+
+void StateMachine::addObserveEvent( uint32_t event)
+{
+	std::size_t ei = 0, ee = MaxNofObserveEvents;
+	for (; ei < ee && m_observeEvents[ei] != 0; ++ei){}
+	if (ei == ee) throw strus::runtime_error( _TXT("too many observe events defined"));
+#ifndef STRUS_LOWLEVEL_DEBUG
+	throw strus::runtime_error( _TXT("observe events only eanabled in LOWLEVEL debug mode (compile switch)"));
+#endif
+}
+
+bool StateMachine::isObservedEvent( uint32_t event) const
+{
+	uint32_t const* ev = m_observeEvents;
+	if (*ev)
+	{
+		for (; *ev && *ev != event; ++ev){}
+		if (*ev) return true;
+	}
+	else
+	{
+		return true;
+	}
+	return false;
+}
+
+void StateMachine::clear()
+{
+	m_eventTriggerTable.clear();
+	m_actionSlotTable.clear();
+	m_eventTriggerList.clear();
+	m_eventItemList.clear();
+	m_eventDataReferenceTable.clear();
+	m_ruleTable.clear();
+	m_results.clear();
+	m_curpos = 0;
+	std::memset( m_disposeWindow, 0, sizeof(m_disposeWindow));
+	m_disposeRuleList.clear();
+	m_ruleDisposeQueue.clear();
+	std::make_heap( m_ruleDisposeQueue.begin(), m_ruleDisposeQueue.end());
+	m_stopWordsEventLogMap.clear();
+	m_nofProgramsInstalled = 0;
+	m_nofAltKeyProgramsInstalled = 0;
+	m_nofSignalsFired = 0;
+	m_nofOpenPatterns = 0;
+	m_timestmp = 0;
 }
 
 uint32_t StateMachine::createRule( uint32_t expiryOrdpos)
@@ -681,7 +776,11 @@ void StateMachine::fireSignal(
 	++m_nofSignalsFired;
 
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::cout << "rule " << slot.rule << " fire sig " << Trigger::sigTypeName( trigger.sigtype()) << "(" << std::hex << trigger.sigval() << ") at " << slot.value << "#" << std::dec << slot.count;
+	bool observed = isObservedEvent( slot.event);
+	if (observed)
+	{
+		std::cout << "rule " << slot.rule << " fire sig " << Trigger::sigTypeName( trigger.sigtype()) << "(" << std::hex << trigger.sigval() << ") at " << slot.value << "#" << std::dec << slot.count;
+	}
 #endif
 	switch (trigger.sigtype())
 	{
@@ -692,6 +791,10 @@ void StateMachine::fireSignal(
 				match = true;
 				--slot.count;
 				finished = (slot.count == 0);
+				if (slot.end_ordpos < data.end_ordpos)
+				{
+					slot.end_ordpos = data.end_ordpos;
+				}
 			}
 			break;
 		case Trigger::SigAnd:
@@ -699,11 +802,14 @@ void StateMachine::fireSignal(
 			{
 				if (!slot.value)
 				{
-					slot.value = data.ordpos;
+					slot.value = data.start_ordpos;
+					if (slot.end_ordpos > data.end_ordpos)
+					{
+						slot.end_ordpos = data.end_ordpos;
+					}
 				}
-				if (slot.value == data.ordpos)
+				if (slot.value == data.start_ordpos)
 				{
-					slot.end_ordpos = m_curpos;
 					match = true;
 					--slot.count;
 					finished = (slot.count == 0);
@@ -712,9 +818,9 @@ void StateMachine::fireSignal(
 			}
 			break;
 		case Trigger::SigSequence:
-			if (trigger.sigval() == slot.value && slot.end_ordpos < data.ordpos)
+			if (trigger.sigval() == slot.value && slot.end_ordpos <= data.start_ordpos)
 			{
-				slot.end_ordpos = m_curpos;
+				slot.end_ordpos = data.end_ordpos;
 				slot.value = trigger.sigval()-1;
 				if (slot.count > 0)
 				{
@@ -730,9 +836,9 @@ void StateMachine::fireSignal(
 			}
 			break;
 		case Trigger::SigSequenceImm:
-			if (trigger.sigval() == slot.value && slot.end_ordpos+1 == data.ordpos)
+			if (trigger.sigval() == slot.value && slot.end_ordpos == data.start_ordpos)
 			{
-				slot.end_ordpos = m_curpos;
+				slot.end_ordpos = data.end_ordpos;
 				slot.value = trigger.sigval()-1;
 				if (slot.count > 0)
 				{
@@ -749,9 +855,9 @@ void StateMachine::fireSignal(
 			break;
 		case Trigger::SigWithin:
 		{
-			if ((trigger.sigval() & slot.value) != 0 && slot.end_ordpos < data.ordpos)
+			if ((trigger.sigval() & slot.value) != 0 && slot.end_ordpos <= data.start_ordpos)
 			{
-				slot.end_ordpos = m_curpos;
+				slot.end_ordpos = data.end_ordpos;
 				slot.value &= ~trigger.sigval();
 				if (slot.count > 0)
 				{
@@ -773,15 +879,21 @@ void StateMachine::fireSignal(
 			slot.value = 0;
 			disposeRuleList.add( slot.rule);
 #ifdef STRUS_LOWLEVEL_DEBUG
-			std::cout << std::endl;
+			if (observed)
+			{
+				std::cout << std::endl;
+			}
 #endif
 			return;
 		}
 	}
 #ifdef STRUS_LOWLEVEL_DEBUG
-	if (match) std::cout << ", matches";
-	if (finished) std::cout << ", finishes";
-	if (takeEventData) std::cout << ", takes data";
+	if (observed)
+	{
+		if (match) std::cout << ", matches";
+		if (finished) std::cout << ", finishes";
+		if (takeEventData) std::cout << ", takes data";
+	}
 #endif
 	if (takeEventData)
 	{
@@ -805,9 +917,9 @@ void StateMachine::fireSignal(
 				joinEventData( rule.eventDataReferenceIdx, data.subdataref);
 			}
 		}
-		if (slot.start_ordpos == 0 || slot.start_ordpos > data.ordpos)
+		if (slot.start_ordpos == 0 || slot.start_ordpos > data.start_ordpos)
 		{
-			slot.start_ordpos = data.ordpos;
+			slot.start_ordpos = data.start_ordpos;
 			slot.start_origseg = data.start_origseg;
 			slot.start_origpos = data.start_origpos;
 		}
@@ -818,7 +930,7 @@ void StateMachine::fireSignal(
 		{
 			if (slot.event)
 			{
-				EventStruct followEventData( EventData( slot.start_origseg, slot.start_origpos, data.end_origseg, data.end_origpos, slot.start_ordpos, rule.eventDataReferenceIdx), slot.event);
+				EventStruct followEventData( EventData( slot.start_origseg, slot.start_origpos, data.end_origseg, data.end_origpos, slot.start_ordpos, slot.end_ordpos, rule.eventDataReferenceIdx), slot.event);
 				if (rule.eventDataReferenceIdx)
 				{
 					referenceEventData( rule.eventDataReferenceIdx);
@@ -827,18 +939,24 @@ void StateMachine::fireSignal(
 			}
 			if (slot.resultHandle)
 			{
-				m_results.add( Result( slot.resultHandle, rule.eventDataReferenceIdx, slot.start_ordpos, slot.start_origseg, slot.start_origpos, data.end_origseg, data.end_origpos));
+				m_results.add( Result( slot.resultHandle, rule.eventDataReferenceIdx, slot.start_ordpos, slot.end_ordpos, slot.start_origseg, slot.start_origpos, data.end_origseg, data.end_origpos));
 				if (rule.eventDataReferenceIdx)
 				{
 					referenceEventData( rule.eventDataReferenceIdx);
 				}
 #ifdef STRUS_LOWLEVEL_DEBUG
-				std::cout << ", produces result";
+				if (observed)
+				{
+					std::cout << ", produces result";
+				}
 #endif
 			}
 			rule.done = true;
 #ifdef STRUS_LOWLEVEL_DEBUG
-			std::cout << ", done";
+			if (observed)
+			{
+				std::cout << ", done";
+			}
 #endif
 		}
 		if (finished)
@@ -847,14 +965,21 @@ void StateMachine::fireSignal(
 		}
 	}
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::cout << std::endl;
+	if (observed)
+	{
+		std::cout << std::endl;
+	}
 #endif
 }
 
 void StateMachine::doTransition( uint32_t event, const EventData& data)
 {
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::cout << "call doTransition( event=" << event << ", ordpos=" << data.ordpos << ")" << std::endl;
+	bool observed = isObservedEvent( event);
+	if (observed)
+	{
+		std::cout << "call doTransition( event=" << event << ", start_ordpos=" << data.start_ordpos << ", end_ordpos=" << data.end_ordpos << ")" << std::endl;
+	}
 #endif
 	// Some logging:
 	m_nofOpenPatterns += m_eventTriggerTable.nofTriggers();
@@ -914,13 +1039,19 @@ void StateMachine::doTransition( uint32_t event, const EventData& data)
 		}
 	}
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::cout << "current state after transition [" << followList.size() << "]: nof rules used " << m_ruleTable.used_size() << ", nof active triggers " << m_eventTriggerTable.nofTriggers() << std::endl;
+	if (observed)
+	{
+		std::cout << "current state after transition [" << followList.size() << "]: nof rules used " << m_ruleTable.used_size() << ", nof active triggers " << m_eventTriggerTable.nofTriggers() << std::endl;
+	}
 #endif
 }
 
 void StateMachine::defineDisposeRule( uint32_t pos, uint32_t ruleidx)
 {
-	if (pos < m_curpos) throw strus::runtime_error(_TXT("illegal set of dispose rule"));
+	if (pos < m_curpos)
+	{
+		throw strus::runtime_error(_TXT("illegal definition of dispose rule at position %u (smaller than current %u)"), pos, m_curpos);
+	}
 	if (pos < m_curpos + DisposeWindowSize)
 	{
 		uint32_t widx = pos % DisposeWindowSize;
@@ -935,7 +1066,10 @@ void StateMachine::defineDisposeRule( uint32_t pos, uint32_t ruleidx)
 
 void StateMachine::setCurrentPos( uint32_t pos)
 {
-	if (pos < m_curpos) throw strus::runtime_error(_TXT("illegal set of current pos (positions not ascending)"));
+	if (pos < m_curpos)
+	{
+		throw strus::runtime_error(_TXT("illegal definition of current pos (positions not ascending: %u ... %u)"), m_curpos, pos);
+	}
 	if (m_curpos == pos) return;
 #ifdef STRUS_LOWLEVEL_DEBUG
 	int disposeCount = 0;
@@ -1001,7 +1135,10 @@ void StateMachine::installEventPrograms( uint32_t event, const EventData& data, 
 #endif
 	}
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::cout << "programs installed " << icnt << ", nof rules used " << m_ruleTable.used_size() << ", triggers active " << m_eventTriggerTable.nofTriggers() << std::endl;
+	if (isObservedEvent( event))
+	{
+		std::cout << "programs installed " << icnt << ", nof rules used " << m_ruleTable.used_size() << ", triggers active " << m_eventTriggerTable.nofTriggers() << std::endl;
+	}
 #endif
 }
 
@@ -1017,10 +1154,23 @@ static bool triggerDefNeedsInstall( const TriggerDef& triggerDef, const ActionSl
 void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& programTrigger, const EventData& data, EventStructList& followList, DisposeRuleList& disposeRuleList)
 {
 	const Program& program = (*m_programTable)[ programTrigger.programidx];
-	uint32_t ruleidx = createRule( data.ordpos + program.positionRange);
+	if (data.start_ordpos + program.positionRange < m_curpos)
+	{
+#ifdef STRUS_LOWLEVEL_DEBUG
+		if (isObservedEvent( keyevent))
+		{
+			std::cout << "failed to install program of rule that rule cannot match anymore because of expired maximum position " << (data.start_ordpos + program.positionRange) << std::endl;
+		}
+#endif
+		return; /*rule cannot match anymore because of expired maximum position*/
+	}
+	uint32_t ruleidx = createRule( data.start_ordpos + program.positionRange);
 	Rule& rule = m_ruleTable[ ruleidx];
 #ifdef STRUS_LOWLEVEL_DEBUG
-	std::cout << "key event " << keyevent << " install program " << programTrigger.programidx << " as rule " << ruleidx << " at " << data.ordpos << std::endl;
+	if (isObservedEvent( keyevent))
+	{
+		std::cout << "key event " << keyevent << " install program " << programTrigger.programidx << " as rule " << ruleidx << " at " << data.start_ordpos << std::endl;
+	}
 #endif
 	rule.actionSlotIdx =
 		1+m_actionSlotTable.add(
@@ -1039,6 +1189,14 @@ void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& prog
 		bool doInstall = false;
 		if (keyevent == triggerDef->event)
 		{
+			if (nofKeyTriggerDef < MaxNofKeyTriggerDefs)
+			{
+				keyTriggerDef[ nofKeyTriggerDef++] = triggerDef;
+			}
+			else
+			{
+				throw strus::runtime_error(_TXT("pattern with too many (%u) identical key events defined"), (unsigned int)nofKeyTriggerDef);
+			}
 			if (triggerDef->isKeyEvent && !hasKeyEvent)
 			{
 				hasKeyEvent = true;
@@ -1046,28 +1204,12 @@ void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& prog
 				{
 					doInstall = true;
 				}
-				if (nofKeyTriggerDef < MaxNofKeyTriggerDefs)
-				{
-					keyTriggerDef[ nofKeyTriggerDef++] = triggerDef;
-				}
-				else
-				{
-					throw strus::runtime_error(_TXT("pattern with too many (%u) identical key events defined"), (unsigned int)nofKeyTriggerDef);
-				}
 			}
 			else if ((Trigger::SigType)triggerDef->sigtype == Trigger::SigDel)
 			{
 				if (triggerDefNeedsInstall( *triggerDef, slot))
 				{
 					doInstall = true;
-				}
-				if (nofKeyTriggerDef < MaxNofKeyTriggerDefs)
-				{
-					keyTriggerDef[ nofKeyTriggerDef++] = triggerDef;
-				}
-				else
-				{
-					throw strus::runtime_error(_TXT("pattern with too many (%u) identical key events defined"), (unsigned int)nofKeyTriggerDef);
 				}
 			}
 			else
@@ -1116,7 +1258,7 @@ void StateMachine::replayPastEvent( uint32_t eventid, const Rule& rule, uint32_t
 	// to fire on the slot of the installed rule
 	std::map<uint32_t,EventLog>::const_iterator
 		ei = m_stopWordsEventLogMap.find( eventid);
-	if (ei != m_stopWordsEventLogMap.end() && ei->second.data.ordpos + positionRange >= m_curpos)
+	if (ei != m_stopWordsEventLogMap.end() && ei->second.data.start_ordpos + positionRange >= m_curpos)
 	{
 		ActionSlot& slot = m_actionSlotTable[ rule.actionSlotIdx-1];
 

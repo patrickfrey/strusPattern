@@ -13,5 +13,5 @@ link_directories(
 )
 
 add_executable( testCharRegexMatch testCharRegexMatch.cpp )
-target_link_libraries( testCharRegexMatch strus_error strus_base strus_stream ${Boost_LIBRARIES} "${Intl_LIBRARIES}"  )
+target_link_libraries( testCharRegexMatch strus_error strus_base strus_pattern ${Boost_LIBRARIES} "${Intl_LIBRARIES}"  )
 

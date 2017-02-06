@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 #include "testUtils.hpp"
-#include "strus/stream/tokenPatternMatchResultItem.hpp"
+#include "strus/analyzer/patternMatcherResultItem.hpp"
 #include <iostream>
 #include <sstream>
 #include <limits>
@@ -95,7 +95,7 @@ Document utils::createRandomDocument( unsigned int no, unsigned int size, unsign
 	return rt;
 }
 
-typedef strus::TokenPatternMatchInstanceInterface::JoinOperation JoinOperation;
+typedef strus::PatternMatcherInstanceInterface::JoinOperation JoinOperation;
 JoinOperation utils::joinOperation( const char* joinopstr)
 {
 	static const char* ar[] = {"sequence","sequence_struct","within","within_struct","any",0};
@@ -123,20 +123,20 @@ unsigned int utils::getUintValue( const char* arg)
 	return rt;
 }
 
-void utils::printResults( std::ostream& out, const std::vector<strus::SegmenterPosition>& segmentposmap, const std::vector<strus::stream::TokenPatternMatchResult>& results, const char* src)
+void utils::printResults( std::ostream& out, const std::vector<strus::SegmenterPosition>& segmentposmap, const std::vector<strus::analyzer::PatternMatcherResult>& results, const char* src)
 {
-	std::vector<strus::stream::TokenPatternMatchResult>::const_iterator
+	std::vector<strus::analyzer::PatternMatcherResult>::const_iterator
 		ri = results.begin(), re = results.end();
 	for (; ri != re; ++ri)
 	{
 		std::size_t start_origsegsrcpos = segmentposmap.empty()?ri->start_origseg():segmentposmap[ ri->start_origseg()];
 		std::size_t end_origsegsrcpos = segmentposmap.empty()?ri->end_origseg():segmentposmap[ ri->end_origseg()];
 
-		out << "match '" << ri->name() << "' at " << ri->ordpos() << " ["
+		out << "match '" << ri->name() << "' at " << ri->start_ordpos() << ".." << ri->end_ordpos() << " ["
 		    << start_origsegsrcpos << "|" << ri->start_origpos() << ".."
 		    << end_origsegsrcpos << "|" << ri->end_origpos()
 		    << "]:";
-		std::vector<strus::stream::TokenPatternMatchResultItem>::const_iterator
+		std::vector<strus::analyzer::PatternMatcherResultItem>::const_iterator
 			ei = ri->items().begin(), ee = ri->items().end();
 	
 		for (; ei != ee; ++ei)
@@ -144,7 +144,7 @@ void utils::printResults( std::ostream& out, const std::vector<strus::SegmenterP
 			start_origsegsrcpos = segmentposmap.empty()?ei->start_origseg():segmentposmap[ ei->start_origseg()];
 			end_origsegsrcpos = segmentposmap.empty()?ei->end_origseg():segmentposmap[ ei->end_origseg()];
 
-			out << " " << ei->name() << " [" << ei->ordpos()
+			out << " " << ei->name() << " [" << ei->start_ordpos()<< ".." << ei->end_ordpos()
 					<< ", " << start_origsegsrcpos << "|" << ei->start_origpos()
 					<< ".." << end_origsegsrcpos << "|" << ei->end_origpos()
 					<< "]";
@@ -159,10 +159,10 @@ void utils::printResults( std::ostream& out, const std::vector<strus::SegmenterP
 	}
 }
 
-void utils::printStatistics( std::ostream& out, const strus::stream::TokenPatternMatchStatistics& stats)
+void utils::printStatistics( std::ostream& out, const strus::analyzer::PatternMatcherStatistics& stats)
 {
 	out << "Statistics:" << std::endl;
-	std::vector<strus::stream::TokenPatternMatchStatistics::Item>::const_iterator
+	std::vector<strus::analyzer::PatternMatcherStatistics::Item>::const_iterator
 		gi = stats.items().begin(), ge = stats.items().end();
 	for (; gi != ge; ++gi)
 	{
