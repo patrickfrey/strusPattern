@@ -1,3 +1,7 @@
+strusPattern (0.14.0)
+  * increment version synchronously to strus core
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Wed, 15 Feb 2016 14:00:00 +0100
+
 strusPattern (0.13.0)
   * rename project from strusStream to strusPattern
   * adapt interface changes in analyzer
