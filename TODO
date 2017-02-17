@@ -1,2 +1,3 @@
+- Alignment of results: allow only results that start immediately after a certain term.
+- Build result strings with a template referencing subparts (BGE Regeln)
 
-Rules with NLP tags to determine PRP references
