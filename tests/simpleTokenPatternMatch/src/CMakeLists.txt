@@ -6,6 +6,7 @@ include_directories(
 	"${PROJECT_SOURCE_DIR}/include"
 	"${PROJECT_SOURCE_DIR}/tests/utils"
 	"${strusbase_INCLUDE_DIRS}"
+	"${strusanalyzer_INCLUDE_DIRS}"
 )
 link_directories(
 	"${PROJECT_SOURCE_DIR}/src"
