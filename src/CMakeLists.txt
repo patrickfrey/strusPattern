@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
+cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 # --------------------------------------
 # SOURCES AND INCLUDES
@@ -21,6 +21,8 @@ include_directories(
 	"${PROJECT_SOURCE_DIR}/3rdParty/hyperscan/src"
 	"${PROJECT_SOURCE_DIR}/3rdParty/hyperscan"
 	"${strusbase_INCLUDE_DIRS}"
+	"${strusanalyzer_INCLUDE_DIRS}"
+	"${strusmodule_INCLUDE_DIRS}"
 )
 
 link_directories(
