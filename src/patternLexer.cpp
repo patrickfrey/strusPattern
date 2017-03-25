@@ -564,10 +564,13 @@ public:
 				mi = m_matchEventAr.begin(), me = m_matchEventAr.end();
 			uint32_t ordpos = 0;
 			uint32_t origpos = 0;
+			uint8_t lastposbind = (uint8_t)analyzer::BindContent;
 			for (; mi != me; ++mi)
 			{
+				lastposbind = mi->posbind;
 				switch ((analyzer::PositionBind)mi->posbind)
 				{
+					case analyzer::BindUnique:
 					case analyzer::BindContent:
 						ordpos = 1;
 						origpos = mi->origpos;
@@ -590,6 +593,8 @@ public:
 			{
 				switch ((analyzer::PositionBind)mi->posbind)
 				{
+					case analyzer::BindUnique:
+						if (lastposbind == (uint8_t)analyzer::BindUnique) break;
 					case analyzer::BindContent:
 						if (mi->origpos > origpos)
 						{
@@ -605,6 +610,7 @@ public:
 						rt.push_back( analyzer::PatternLexem( mi->id, ordpos, 0/*origseg*/, mi->origpos, mi->origsize));
 						break;
 				}
+				lastposbind = mi->posbind;
 			}
 			m_matchEventAr.clear();
 			return rt;
