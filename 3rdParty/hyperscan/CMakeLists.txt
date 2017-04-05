@@ -973,6 +973,7 @@ endif()
 # create a lib without any src (I'm looking at you Xcode)
 
 add_library(hs_runtime STATIC src/hs_version.c $<TARGET_OBJECTS:hs_exec>)
+set_property( TARGET hs_runtime PROPERTY POSITION_INDEPENDENT_CODE TRUE )
 
 set_target_properties(hs_runtime PROPERTIES
     LINKER_LANGUAGE C)
@@ -996,6 +997,7 @@ endif()
 
 # we want the static lib for testing
 add_library(hs STATIC ${hs_SRCS} $<TARGET_OBJECTS:hs_exec>)
+set_property( TARGET hs PROPERTY POSITION_INDEPENDENT_CODE TRUE )
 
 IF (WITH_RAGEL STREQUAL "YES")
 add_dependencies(hs ragel_Parser)
