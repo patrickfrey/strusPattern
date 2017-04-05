@@ -16,6 +16,7 @@ include_directories(
 # SNOWBALL STEMMER LIBRARY
 # -------------------------------------------
 add_library( compactnodetrie_static STATIC ${source_files})
+set_property( TARGET compactnodetrie_static PROPERTY POSITION_INDEPENDENT_CODE TRUE )
 
 
 

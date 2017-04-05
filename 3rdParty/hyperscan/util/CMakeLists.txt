@@ -23,6 +23,7 @@ set(expressionutil_SRCS
     ExpressionParser.cpp
     )
 add_library(expressionutil STATIC ${expressionutil_SRCS})
+set_property( TARGET expressionutil PROPERTY POSITION_INDEPENDENT_CODE TRUE )
 IF (WITH_RAGEL STREQUAL "YES")
 add_dependencies(expressionutil ragel_ExpressionParser)
 ENDIF (WITH_RAGEL STREQUAL "YES")
@@ -38,4 +39,5 @@ SET(corpusomatic_SRCS
     ng_find_matches.cpp
 )
 add_library(corpusomatic STATIC ${corpusomatic_SRCS})
+set_property( TARGET corpusomatic PROPERTY POSITION_INDEPENDENT_CODE TRUE )
 

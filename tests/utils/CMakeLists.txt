@@ -26,4 +26,5 @@ link_directories(
 # -------------------------------------------
 add_library( local_test_utils STATIC ${source_files} )
 target_link_libraries( local_test_utils  strus_base strus_pattern ${Boost_LIBRARIES} "${Intl_LIBRARIES}" )
+set_property( TARGET local_test_utils PROPERTY POSITION_INDEPENDENT_CODE TRUE )
 
