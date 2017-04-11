@@ -50,19 +50,18 @@ public:
 		return ar[i];
 	}
 
-	Trigger( uint32_t slot_, SigType sigtype_, uint32_t sigval_, uint32_t variable_, float weight_)
-		:m_slot(slot_),m_sigtype(sigtype_),m_variable(variable_),m_sigval(sigval_),m_weight(weight_)
+	Trigger( uint32_t slot_, SigType sigtype_, uint32_t sigval_, uint32_t variable_)
+		:m_slot(slot_),m_sigtype(sigtype_),m_variable(variable_),m_sigval(sigval_)
 	{
 		if (variable_ > MaxVariableId) throw strus::runtime_error(_TXT("too many variables defined"));
 	}
 	Trigger( const Trigger& o)
-		:m_slot(o.m_slot),m_sigtype(o.m_sigtype),m_variable(o.m_variable),m_sigval(o.m_sigval),m_weight(o.m_weight){}
+		:m_slot(o.m_slot),m_sigtype(o.m_sigtype),m_variable(o.m_variable),m_sigval(o.m_sigval){}
 
 	uint32_t slot() const		{return m_slot;}
 	SigType sigtype() const		{return (SigType)m_sigtype;}
 	uint32_t sigval() const		{return (uint32_t)m_sigval;}
 	uint32_t variable() const	{return (uint32_t)m_variable;}
-	float weight() const		{return m_weight;}
 
 private:
 	enum {MaxVariableId=(1<<28)-1};
@@ -70,7 +69,6 @@ private:
 	unsigned int m_sigtype:4;
 	unsigned int m_variable:28;
 	uint32_t m_sigval;
-	float m_weight;
 };
 
 struct EventTrigger
@@ -259,13 +257,12 @@ typedef PodStructTableBase<EventDataReference,uint32_t,EventDataReferenceTableFr
 struct EventItem
 {
 	uint32_t variable;
-	float weight;
 	EventData data;
 
-	EventItem( uint32_t variable_, float weight_, const EventData& data_)
-		:variable(variable_),weight(weight_),data(data_){}
+	EventItem( uint32_t variable_, const EventData& data_)
+		:variable(variable_),data(data_){}
 	EventItem( const EventItem& o)
-		:variable(o.variable),weight(o.weight),data(o.data){}
+		:variable(o.variable),data(o.data){}
 };
 
 struct Result
@@ -305,12 +302,11 @@ struct TriggerDef
 	unsigned char sigtype;
 	uint32_t sigval;
 	uint32_t variable;
-	float weight;
 
-	TriggerDef( uint32_t event_, bool isKeyEvent_, Trigger::SigType sigtype_, uint32_t sigval_, uint32_t variable_, float weight_)
-		:event(event_),isKeyEvent((unsigned char)isKeyEvent_),sigtype((unsigned char)sigtype_),sigval(sigval_),variable(variable_),weight(weight_){}
+	TriggerDef( uint32_t event_, bool isKeyEvent_, Trigger::SigType sigtype_, uint32_t sigval_, uint32_t variable_)
+		:event(event_),isKeyEvent((unsigned char)isKeyEvent_),sigtype((unsigned char)sigtype_),sigval(sigval_),variable(variable_){}
 	TriggerDef( const TriggerDef& o)
-		:event(o.event),isKeyEvent(o.isKeyEvent),sigtype(o.sigtype),sigval(o.sigval),variable(o.variable),weight(o.weight){}
+		:event(o.event),isKeyEvent(o.isKeyEvent),sigtype(o.sigtype),sigval(o.sigval),variable(o.variable){}
 };
 
 struct Program
@@ -350,7 +346,7 @@ public:
 	void defineEventFrequency( uint32_t eventid, double df);
 
 	uint32_t createProgram( uint32_t positionRange_, const ActionSlotDef& actionSlotDef_);
-	void createTrigger( uint32_t program, uint32_t event, bool isKeyEvent, Trigger::SigType sigtype, uint32_t sigval, uint32_t variable, float weight);
+	void createTrigger( uint32_t program, uint32_t event, bool isKeyEvent, Trigger::SigType sigtype, uint32_t sigval, uint32_t variable);
 	void doneProgram( uint32_t program);
 
 	const Program& operator[]( uint32_t programidx) const	{return m_programMap[ programidx-1];}

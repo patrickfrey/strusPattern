@@ -440,7 +440,7 @@ static void createExpression( strus::PatternMatcherInstanceInterface* ptinst, co
 	}
 	if (tree->variable())
 	{
-		ptinst->attachVariable( tree->variable(), 1.0);
+		ptinst->attachVariable( tree->variable());
 	}
 }
 
@@ -523,14 +523,13 @@ struct TreeMatchResult
 	unsigned int ordpos;
 	unsigned int ordsize;
 	std::vector<strus::analyzer::PatternMatcherResultItem> itemar;
-	float weight;
 
 	TreeMatchResult()
-		:valid(false),startidx(0),endidx(0),ordpos(0),ordsize(0),weight(0.0f){}
+		:valid(false),startidx(0),endidx(0),ordpos(0),ordsize(0){}
 	TreeMatchResult( std::size_t startidx_, std::size_t endidx_, unsigned int ordpos_, unsigned int ordsize_)
-		:valid(true),startidx(startidx_),endidx(endidx_),ordpos(ordpos_),ordsize(ordsize_),weight(0.0f){}
+		:valid(true),startidx(startidx_),endidx(endidx_),ordpos(ordpos_),ordsize(ordsize_){}
 	TreeMatchResult( const TreeMatchResult& o)
-		:valid(o.valid),startidx(o.startidx),endidx(o.endidx),ordpos(o.ordpos),ordsize(o.ordsize),itemar(o.itemar),weight(o.weight){}
+		:valid(o.valid),startidx(o.startidx),endidx(o.endidx),ordpos(o.ordpos),ordsize(o.ordsize),itemar(o.itemar){}
 	TreeMatchResult& operator=( const TreeMatchResult& o)
 	{
 		valid = o.valid;
@@ -539,7 +538,6 @@ struct TreeMatchResult
 		ordpos = o.ordpos;
 		ordsize = o.ordsize;
 		itemar = o.itemar;
-		weight = o.weight;
 		return *this;
 	}
 
@@ -737,7 +735,7 @@ static TreeMatchResult matchTree( const TreeNode* tree, const strus::utils::Docu
 	}
 	if (rt.valid && tree->variable())
 	{
-		strus::analyzer::PatternMatcherResultItem item( tree->variable(), rt.ordpos, rt.ordpos + rt.ordsize, 0/*start_origseg*/, rt.startidx, 0/*end_origseg*/, rt.endidx, rt.weight);
+		strus::analyzer::PatternMatcherResultItem item( tree->variable(), rt.ordpos, rt.ordpos + rt.ordsize, 0/*start_origseg*/, rt.startidx, 0/*end_origseg*/, rt.endidx);
 		rt.itemar.push_back( item);
 	}
 	return rt;

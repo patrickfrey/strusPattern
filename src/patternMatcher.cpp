@@ -101,7 +101,7 @@ public:
 		while (0!=(item=m_statemachine->nextResultItem( itemList)))
 		{
 			const char* itemName = m_data->variableMap.key( item->variable);
-			PatternMatcherResultItem rtitem( itemName, item->data.start_ordpos, item->data.end_ordpos, item->data.start_origseg, item->data.start_origpos, item->data.end_origseg, item->data.end_origpos, item->weight);
+			PatternMatcherResultItem rtitem( itemName, item->data.start_ordpos, item->data.end_ordpos, item->data.start_origseg, item->data.start_origpos, item->data.end_origseg, item->data.end_origpos);
 			resitemlist.push_back( rtitem);
 			if (item->data.subdataref)
 			{
@@ -407,7 +407,7 @@ public:
 				StackElement& elem = m_stack[ m_stack.size() - argc + ai];
 				m_data.programTable.createTrigger(
 					program, elem.eventid, isKeyEvent, trigger_sigtype,
-					trigger_sigval, elem.variable, elem.weight);
+					trigger_sigval, elem.variable);
 			}
 			m_data.programTable.doneProgram( program);
 			m_stack.resize( m_stack.size() - argc);
@@ -436,12 +436,12 @@ public:
 		CATCH_ERROR_MAP( _TXT("failed to push pattern reference on the pattern match expression stack: %s"), *m_errorhnd);
 	}
 
-	virtual void attachVariable( const std::string& name, float weight)
+	virtual void attachVariable( const std::string& name)
 	{
 		try
 		{
 #ifdef STRUS_LOWLEVEL_DEBUG
-			std::cout << "ATM attach variable '" << name << "' [" << weight << "]" << std::endl;
+			std::cout << "ATM attach variable '" << name  << "'" << std::endl;
 #endif
 			if (m_stack.empty())
 			{
@@ -457,7 +457,6 @@ public:
 			{
 				throw strus::runtime_error(_TXT("failed to define variable symbol"));
 			}
-			elem.weight = weight;
 		}
 		CATCH_ERROR_MAP( _TXT("failed to attach variable to top element of the pattern match expression stack: %s"), *m_errorhnd);
 	}
@@ -484,7 +483,7 @@ public:
 				ActionSlotDef actionSlotDef( 0/*val*/, 1/*count*/, resultEvent, resultHandle);
 				program = m_data.programTable.createProgram( 0, actionSlotDef);
 				m_data.programTable.createTrigger(
-					program, elem.eventid, true/*isKeyEvent*/, Trigger::SigAny, 0, elem.variable, elem.weight);
+					program, elem.eventid, true/*isKeyEvent*/, Trigger::SigAny, 0, elem.variable);
 				m_data.programTable.doneProgram( program);
 			}
 			else if (elem.variable)
@@ -587,14 +586,13 @@ private:
 		uint32_t eventid;
 		uint32_t program;
 		uint32_t variable;
-		float weight;
 
 		StackElement()
-			:eventid(0),program(0),variable(0),weight(0.0f){}
+			:eventid(0),program(0),variable(0){}
 		explicit StackElement( uint32_t eventid_, uint32_t program_=0)
-			:eventid(eventid_),program(program_),variable(0),weight(0.0f){}
+			:eventid(eventid_),program(program_),variable(0){}
 		StackElement( const StackElement& o)
-			:eventid(o.eventid),program(o.program),variable(o.variable),weight(o.weight){}
+			:eventid(o.eventid),program(o.program),variable(o.variable){}
 	};
 
 private:

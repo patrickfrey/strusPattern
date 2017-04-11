@@ -70,7 +70,7 @@ static void createTermOpRule( strus::PatternMatcherInstanceInterface* ptinst, co
 		ptinst->pushTerm( termid);
 		char variablename[ 32];
 		snprintf( variablename, sizeof(variablename), "A%u", (unsigned int)pi);
-		ptinst->attachVariable( variablename, 1.0f);
+		ptinst->attachVariable( variablename);
 	}
 	strus::utils::JoinOperation joinop = strus::utils::joinOperation( joinopstr);
 	ptinst->pushExpression( joinop, paramsize, range, cardinality);

@@ -264,10 +264,10 @@ uint32_t ProgramTable::createProgram( uint32_t positionRange_, const ActionSlotD
 	return 1+m_programMap.add( Program( positionRange_, actionSlotDef_));
 }
 
-void ProgramTable::createTrigger( uint32_t programidx, uint32_t event, bool isKeyEvent, Trigger::SigType sigtype, uint32_t sigval, uint32_t variable, float weight)
+void ProgramTable::createTrigger( uint32_t programidx, uint32_t event, bool isKeyEvent, Trigger::SigType sigtype, uint32_t sigval, uint32_t variable)
 {
 	Program& program = m_programMap[ programidx-1];
-	m_triggerList.push( program.triggerListIdx, TriggerDef( event, isKeyEvent, sigtype, sigval, variable, weight));
+	m_triggerList.push( program.triggerListIdx, TriggerDef( event, isKeyEvent, sigtype, sigval, variable));
 	m_eventOccurrenceMap[ event] += 1;
 }
 
@@ -899,7 +899,7 @@ void StateMachine::fireSignal(
 	{
 		if (trigger.variable())
 		{
-			EventItem item( trigger.variable(), trigger.weight(), data);
+			EventItem item( trigger.variable(), data);
 			if (!rule.eventDataReferenceIdx)
 			{
 				rule.eventDataReferenceIdx = createEventData();
@@ -1227,7 +1227,7 @@ void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& prog
 				m_eventTriggerTable.add(
 					EventTrigger( triggerDef->event, 
 					Trigger( rule.actionSlotIdx-1, 
-						 (Trigger::SigType)triggerDef->sigtype, triggerDef->sigval, triggerDef->variable, triggerDef->weight)));
+						 (Trigger::SigType)triggerDef->sigtype, triggerDef->sigval, triggerDef->variable)));
 			m_eventTriggerList.push( rule.eventTriggerListIdx, eventTrigger);
 		}
 	}
@@ -1246,7 +1246,7 @@ void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& prog
 		{
 			Trigger keyTrigger( rule.actionSlotIdx-1, 
 					(Trigger::SigType)keyTriggerDef[ki]->sigtype, keyTriggerDef[ki]->sigval,
-					keyTriggerDef[ki]->variable, keyTriggerDef[ki]->weight);
+					keyTriggerDef[ki]->variable);
 			fireSignal( slot, keyTrigger, data, disposeRuleList, followList);
 		}
 	}
