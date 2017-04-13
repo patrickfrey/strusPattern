@@ -26,6 +26,7 @@ if(CXX_WUNUSED_VARIABLE)
 endif()
 
 add_library(gtest STATIC ${gtest_SOURCES})
+set_property( TARGET gtest PROPERTY POSITION_INDEPENDENT_CODE TRUE )
 
 add_definitions(-DGTEST_HAS_PTHREAD=0 -DSRCDIR=${PROJECT_SOURCE_DIR})
 
