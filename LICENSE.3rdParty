@@ -15,7 +15,7 @@ boost
 
 textwolf
 ----------
-   LGPL
+   MPL v2.0
    Copyright (c) 2010 Patrick P. Frey
 
 compactNodeTrie
