@@ -136,6 +136,7 @@ public:
 	const char** patternar;
 	unsigned int* idar;
 	unsigned int* flagar;
+	hs_expr_ext_t** extar;
 
 	HsPatternTable()
 		:arsize(0),patternar(0),idar(0),flagar(0)
@@ -145,10 +146,11 @@ public:
 	{
 		arsize = arsize_;
 		clear();
-		patternar = (const char**)std::malloc( (arsize+1)*sizeof(*patternar));
-		idar = (unsigned int*)std::malloc( (arsize+1)*sizeof(*idar));
-		flagar = (unsigned int*)std::malloc( (arsize+1)*sizeof(*flagar));
-		if (!patternar | !idar | !flagar)
+		patternar = (const char**)std::calloc( (arsize+1),sizeof(*patternar));
+		idar = (unsigned int*)std::calloc( (arsize+1),sizeof(*idar));
+		flagar = (unsigned int*)std::calloc( (arsize+1),sizeof(*flagar));
+		extar = (hs_expr_ext_t**)std::calloc( (arsize+1),sizeof(*extar));
+		if (!patternar | !idar | !flagar | !extar)
 		{
 			clear();
 			throw std::bad_alloc();
@@ -165,6 +167,16 @@ public:
 		if (patternar) {std::free(patternar); patternar = 0;}
 		if (idar) {std::free(idar); idar = 0;}
 		if (flagar) {std::free(flagar); flagar = 0;}
+		if (extar)
+		{
+			std::size_t ai = 0, ae = arsize;
+			for (; ai != ae; ++ai)
+			{
+				if (extar[ai]) std::free( extar[ai]);
+			}
+			std::free(extar);
+			extar = 0;
+		}
 	}
 };
 
@@ -726,8 +738,8 @@ public:
 			hs_compile_error_t* compile_err = 0;
 
 			hs_error_t err =
-				hs_compile_multi(
-					hspt.patternar, hspt.flagar, hspt.idar, hspt.arsize, HS_MODE_BLOCK, &platform,
+				hs_compile_ext_multi(
+					hspt.patternar, hspt.flagar, hspt.idar, hspt.extar, hspt.arsize, HS_MODE_BLOCK, &platform,
 					&m_data.patterndb, &compile_err);
 			if (err != HS_SUCCESS)
 			{
