@@ -9,6 +9,7 @@ set( STRUS_MAJOR_VERSION 0 )
 set( STRUS_MINOR_VERSION 14 )
 set( STRUS_PATCH_VERSION 0 )
 set( STRUS_VERSION ${STRUS_MAJOR_VERSION}.${STRUS_MINOR_VERSION}.${STRUS_PATCH_VERSION} )
+set( CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" )
 
 if(NOT STRUS_ALL)
 include( cmake/dist.cmake )
@@ -16,6 +17,7 @@ include( cmake/LinuxDistribution.cmake )
 include( cmake/build_rules.cmake )
 include( cmake/boost.cmake )
 include( cmake/intl.cmake )
+include( cmake/standard_targets.cmake )
 include( cmake/find_strus_package.cmake )
 endif()
 
@@ -24,7 +26,6 @@ find_strus_package( base )
 find_strus_package( analyzer )
 find_strus_package( module )
 
-set( CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" )
 configure_file( "${PROJECT_SOURCE_DIR}/include/strus/versionPattern.hpp.in"  "${PROJECT_SOURCE_DIR}/include/strus/versionPattern.hpp"  @ONLY )
 configure_file( "${PROJECT_SOURCE_DIR}/dist/obs/deploy_to_obs.sh.in"  "${PROJECT_SOURCE_DIR}/dist/obs/deploy_to_obs.sh"  @ONLY )
 configure_file( "${PROJECT_SOURCE_DIR}/dist/archlinux/PKGBUILD.in"  "${PROJECT_SOURCE_DIR}/dist/archlinux/PKGBUILD"  @ONLY )
@@ -54,6 +55,3 @@ install(DIRECTORY include/strus
           DESTINATION include
           FILES_MATCHING PATTERN "*.h")
 
-if(NOT STRUS_ALL)
-include( cmake/standard_targets.cmake )
-endif()
