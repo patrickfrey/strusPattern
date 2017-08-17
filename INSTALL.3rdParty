@@ -1,7 +1,9 @@
 Library dependencies of strusStream:
 	- boost (headers and -lboost_system)
+	- ragel statemachine compiler for hyperscan
 
 Ubuntu:
 	sudo apt-get install liboost-all-dev
+	sudo apt-get install ragel
 
 

@@ -153,7 +153,7 @@ public:
 	hs_expr_ext_t** extar;
 
 	HsPatternTable()
-		:arsize(0),patternar(0),idar(0),flagar(0)
+		:arsize(0),patternar(0),idar(0),flagar(0),extar(0)
 	{}
 
 	void init( std::size_t arsize_)
