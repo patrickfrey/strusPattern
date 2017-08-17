@@ -20,6 +20,7 @@
 #include "utils.hpp"
 #include "errorUtils.hpp"
 #include "internationalization.hpp"
+#include "hs_compile.h"
 #include "hs.h"
 #include <vector>
 #include <string>
@@ -47,6 +48,7 @@ public:
 		,m_id(0)
 		,m_posbind(analyzer::BindContent)
 		,m_level(0)
+		,m_editdist(0)
 		,m_symtabref(0){}
 	PatternDef(
 			const std::string& expression_,
@@ -54,12 +56,14 @@ public:
 			unsigned int id_,
 			analyzer::PositionBind posbind_,
 			unsigned int level_,
+			unsigned int editdist_,
 			unsigned int symtabref_=0)
 		:m_expression(expression_)
 		,m_subexpref(subexpref_)
 		,m_id(id_)
 		,m_posbind(posbind_)
 		,m_level(level_)
+		,m_editdist(editdist_)
 		,m_symtabref((uint8_t)symtabref_)
 	{
 		if (subexpref_ >= std::numeric_limits<uint32_t>::max())
@@ -74,6 +78,10 @@ public:
 		{
 			throw strus::runtime_error(_TXT("level out of range, The level must be a positive integer in the range 1..%u"), (unsigned int)std::numeric_limits<uint8_t>::max());
 		}
+		if (editdist_ > std::numeric_limits<uint8_t>::max())
+		{
+			throw strus::runtime_error(_TXT("edit distance out of range, The level must be a positive integer in the range 1..%u"), (unsigned int)std::numeric_limits<uint8_t>::max());
+		}
 		if (symtabref_ > std::numeric_limits<uint8_t>::max())
 		{
 			throw strus::runtime_error(_TXT("symbol table reference out of range, The level must be a positive integer in the range 1..%u"), (unsigned int)std::numeric_limits<uint8_t>::max());
@@ -85,6 +93,7 @@ public:
 		,m_id(o.m_id)
 		,m_posbind(o.m_posbind)
 		,m_level(o.m_level)
+		,m_editdist(o.m_editdist)
 		,m_symtabref(o.m_symtabref){}
 
 	unsigned int subexpref() const
@@ -102,6 +111,10 @@ public:
 	unsigned int level() const
 	{
 		return m_level;
+	}
+	unsigned int editdist() const
+	{
+		return m_editdist;
 	}
 	unsigned int symtabref() const
 	{
@@ -121,12 +134,13 @@ public:
 	}
 
 private:
-	std::string m_expression;
-	uint32_t m_subexpref;
-	uint32_t m_id;
-	uint8_t m_posbind;
-	uint8_t m_level;
-	uint8_t m_symtabref;
+	std::string m_expression;		///< regular expression string
+	uint32_t m_subexpref;			///< index of sub expression in sub expression table, for 2nd matching to get the sub expression match
+	uint32_t m_id;				///< id of the lexem as defined by definedLexem
+	uint8_t m_posbind;			///< analyzer position bind specificaction
+	uint8_t m_level;			///< priority level (bigger => higher priority)
+	uint8_t m_editdist;			///< edit distance (Levenstein) for matching patterns
+	uint8_t m_symtabref;			///< symbol table to use
 };
 
 class HsPatternTable
@@ -189,12 +203,14 @@ public:
 
 	void definePattern(
 			unsigned int id,
-			const std::string& expression,
+			const std::string& expression_,
 			unsigned int resultIndex,
 			unsigned int level,
 			analyzer::PositionBind posbind)
 	{
 		unsigned int subexpref = 0;
+		std::string expression( expression_);
+		unsigned int editdist = extractEditDistFromExpression( expression);
 		if (resultIndex)
 		{
 			m_subexprmap.push_back( SubExpressionReference( expression, resultIndex));
@@ -208,7 +224,7 @@ public:
 		std::cout << ", posbind " << ((int)(posbind+1) % 3 - 1);
 		std::cout << std::endl;
 #endif
-		m_defar.push_back( PatternDef( expression, subexpref, id, posbind, level));
+		m_defar.push_back( PatternDef( expression, subexpref, id, posbind, level, editdist));
 		if (m_defar.size() > std::numeric_limits<uint32_t>::max())
 		{
 			throw strus::runtime_error(_TXT("too many patterns defined, maximum %u allowed"), (unsigned int)std::numeric_limits<uint32_t>::max());
@@ -274,6 +290,14 @@ public:
 		return m_defar[ id-1];
 	}
 
+	hs_expr_ext_t* createPatternExprExtFlags( unsigned int edit_distance)
+	{
+		hs_expr_ext_t* rt = (hs_expr_ext_t*)std::calloc( 1, sizeof( hs_expr_ext_t));
+		if (rt == 0) throw std::bad_alloc();
+		rt->flags = HS_EXT_FLAG_EDIT_DISTANCE;
+		rt->edit_distance = edit_distance;
+		return rt;
+	}
 	///\param[in] options options to stear matching
 	void complete( HsPatternTable& hspt, unsigned int options)
 	{
@@ -289,10 +313,12 @@ public:
 			hspt.patternar[ didx] = di->expression().c_str();
 			hspt.idar[ didx] = didx+1;
 			hspt.flagar[ didx] = options | HS_FLAG_UTF8 | HS_FLAG_SOM_LEFTMOST;
+			hspt.extar[ didx] = di->editdist() ? createPatternExprExtFlags( di->editdist()) : 0;
 		}
 		hspt.patternar[ m_defar.size()] = 0;
 		hspt.idar[ m_defar.size()] = 0;
 		hspt.flagar[ m_defar.size()] = 0;
+		hspt.extar[ m_defar.size()] = 0;
 	}
 
 	bool matchSubExpression( uint32_t subexpref, const char* src, unsigned_long_long& from, unsigned_long_long& to) const
@@ -332,6 +358,30 @@ private:
 		SubExpressionReference( const SubExpressionReference& o)
 			:regex(o.regex),index(o.index){}
 	};
+
+	static bool isDigit( char ch)	{return ch >= '0' && ch <= '9';}
+
+	unsigned int extractEditDistFromExpression( std::string& expr)
+	{
+		const char* si = expr.c_str();
+		char const* se = si + expr.size();
+		if (si == se) return 0;
+		unsigned int dcnt = 0;
+		for (--se; se >= si && *se <= 32; --se){}
+		for (; se >= si && isDigit( *se); --se,++dcnt){}
+		if (dcnt > 0)
+		{
+			const char* ediststr = se;
+			for (; se >= si && *se <= 32; --se){}
+			if (se >= si && *se == '~')
+			{
+				unsigned int rt = atoi( ediststr);
+				expr.resize( se-si);
+				return rt;
+			}
+		}
+		return 0;
+	}
 
 private:
 	ErrorBufferInterface* m_errorhnd;
