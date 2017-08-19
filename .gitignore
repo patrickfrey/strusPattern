@@ -64,4 +64,6 @@ tests/randomExpressionTreeMatch/exp.txt
 3rdParty/hyperscan_build/src/parser/Parser.cpp
 3rdParty/hyperscan_build/src/parser/control_verbs.cpp
 3rdParty/hyperscan_build/util/ExpressionParser.cpp
+3rdParty/hyperscan_build/config.h
+3rdParty/hyperscan_build/hs_version.h
 
