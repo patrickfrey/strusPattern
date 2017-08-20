@@ -8,6 +8,7 @@ include_directories(
 	"${strusanalyzer_INCLUDE_DIRS}"
 )
 link_directories(
+	"${CMAKE_BINARY_DIR}/tests/charRegexMatch/src"
 	"${PROJECT_SOURCE_DIR}/src"
 	"${Boost_LIBRARY_DIRS}"
 	"${strusbase_LIBRARY_DIRS}"

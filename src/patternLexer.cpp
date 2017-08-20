@@ -220,7 +220,8 @@ public:
 		std::cout << "define pattern " << id << " index " << (m_defar.size()+1)
 				<< " '" << expression;
 		if (subexpref) std::cout << "', select part " << subexpref;
-		std::cout << ", level " << level;
+		std::cout << "', level " << level;
+		std::cout << ", editdist " << editdist;
 		std::cout << ", posbind " << ((int)(posbind+1) % 3 - 1);
 		std::cout << std::endl;
 #endif
@@ -312,8 +313,16 @@ public:
 			}
 			hspt.patternar[ didx] = di->expression().c_str();
 			hspt.idar[ didx] = didx+1;
-			hspt.flagar[ didx] = options | HS_FLAG_UTF8 | HS_FLAG_SOM_LEFTMOST;
-			hspt.extar[ didx] = di->editdist() ? createPatternExprExtFlags( di->editdist()) : 0;
+			if (di->editdist())
+			{
+				hspt.flagar[ didx] = options | HS_FLAG_SOM_LEFTMOST;
+				hspt.extar[ didx] = createPatternExprExtFlags( di->editdist());
+			}
+			else
+			{
+				hspt.flagar[ didx] = options | HS_FLAG_UTF8 | HS_FLAG_SOM_LEFTMOST;
+				hspt.extar[ didx] = 0;
+			}
 		}
 		hspt.patternar[ m_defar.size()] = 0;
 		hspt.idar[ m_defar.size()] = 0;
@@ -371,11 +380,12 @@ private:
 		for (; se >= si && isDigit( *se); --se,++dcnt){}
 		if (dcnt > 0)
 		{
-			const char* ediststr = se;
+			const char* ediststr = se+1;
 			for (; se >= si && *se <= 32; --se){}
 			if (se >= si && *se == '~')
 			{
 				unsigned int rt = atoi( ediststr);
+				for (; se > si && *(se-1) <= 32; --se){}
 				expr.resize( se-si);
 				return rt;
 			}
@@ -693,10 +703,29 @@ class PatternLexerInstance
 {
 public:
 	explicit PatternLexerInstance( ErrorBufferInterface* errorhnd_)
-		:m_errorhnd(errorhnd_),m_data(errorhnd_),m_state(DefinitionPhase),m_flags(0)
+		:m_errorhnd(errorhnd_),m_data(errorhnd_),m_state(DefinitionPhase),m_flags(0),m_idnamemap(),m_idnamestrings()
 	{}
 
 	virtual ~PatternLexerInstance(){}
+
+	virtual void defineLexemName( unsigned int id, const std::string& name)
+	{
+		try
+		{
+			if (m_idnamemap.find( id) != m_idnamemap.end()) throw strus::runtime_error(_TXT("duplicate definition"));
+			m_idnamemap[ id] = m_idnamestrings.size()+1;
+			m_idnamestrings.push_back( '\0');
+			m_idnamestrings.append( name);
+		}
+		CATCH_ERROR_MAP( _TXT("failed to assign lexem name to lexem or symbol identifier: %s"), *m_errorhnd);
+	}
+
+	virtual const char* getLexemName( unsigned int id) const
+	{
+		std::map<unsigned int,std::size_t>::const_iterator li = m_idnamemap.find( id);
+		if (li == m_idnamemap.end()) return 0;
+		return m_idnamestrings.c_str() + li->second;
+	}
 
 	virtual void defineLexem(
 			unsigned int id,
@@ -839,6 +868,8 @@ private:
 	enum State {DefinitionPhase,MatchPhase};
 	State m_state;
 	unsigned int m_flags;
+	std::map<unsigned int,std::size_t> m_idnamemap;
+	std::string m_idnamestrings;
 };
 
 
