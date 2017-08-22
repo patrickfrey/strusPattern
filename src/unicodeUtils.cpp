@@ -55,9 +55,9 @@ static void printString( const CharSet& charset, textwolf::StaticBuffer& outbuf,
 	std::size_t chidx = 0;
 	while ((ch = *itr) != 0)
 	{
+		++itr;
 		charset.print( ch, outbuf);
 		posar[ chidx] = itr.getPosition();
-		++itr;
 		++chidx;
 	}
 }
@@ -65,10 +65,10 @@ static void printString( const CharSet& charset, textwolf::StaticBuffer& outbuf,
 WCharString::WCharString( const char* src, std::size_t srcsize)
 {
 	static const short be_le = 1;
-	if (srcsize > (sizeof( m_charbuf) / sizeof( m_charbuf[0])))
+	if (srcsize >= (sizeof( m_charbuf) / sizeof( m_charbuf[0])))
 	{
-		m_ptr = (wchar_t*)malloc( srcsize * sizeof(wchar_t));
-		m_pos = (std::size_t*)malloc( srcsize * sizeof(std::size_t));
+		m_ptr = (wchar_t*)malloc( (1+srcsize) * sizeof(wchar_t));
+		m_pos = (std::size_t*)malloc( (1+srcsize) * sizeof(std::size_t));
 		if (!m_ptr || !m_pos)
 		{
 			if (m_ptr) std::free( m_ptr);
@@ -83,7 +83,7 @@ WCharString::WCharString( const char* src, std::size_t srcsize)
 	}
 	textwolf::StaticBuffer outbuf( (char*)m_ptr, srcsize * sizeof(wchar_t));
 
-	if ((const char*)&be_le)
+	if (((const char*)&be_le)[0])
 	{
 		/// ... Little endian
 		if (sizeof(wchar_t) == 4)
@@ -111,7 +111,8 @@ WCharString::WCharString( const char* src, std::size_t srcsize)
 			printString( outcharset, outbuf, m_pos, src, srcsize);
 		}
 	}
-	m_size = outbuf.size();
+	m_size = outbuf.size() / sizeof(wchar_t);
+	m_ptr[ m_size] = 0;
 }
 
 WCharString::~WCharString()

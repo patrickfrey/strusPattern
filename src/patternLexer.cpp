@@ -59,6 +59,7 @@ public:
 			unsigned int id_,
 			analyzer::PositionBind posbind_,
 			unsigned int level_,
+			unsigned int resultidx_,
 			unsigned int editdist_,
 			unsigned int symtabref_=0)
 		:m_expression(expression_)
@@ -67,6 +68,7 @@ public:
 		,m_id(id_)
 		,m_posbind(posbind_)
 		,m_level(level_)
+		,m_resultidx(resultidx_)
 		,m_editdist(editdist_)
 		,m_symtabref((uint8_t)symtabref_)
 	{
@@ -76,19 +78,23 @@ public:
 		}
 		if (id_ > MaxPatternId)
 		{
-			throw strus::runtime_error(_TXT("pattern id out of range, The id must be a positive integer in the range 1..%u"), MaxPatternId);
+			throw strus::runtime_error(_TXT("%s out of range, It must be a positive integer in the range 1..%u"), "pattern id", MaxPatternId);
 		}
 		if (level_ > std::numeric_limits<uint8_t>::max())
 		{
-			throw strus::runtime_error(_TXT("level out of range, The level must be a positive integer in the range 1..%u"), (unsigned int)std::numeric_limits<uint8_t>::max());
+			throw strus::runtime_error(_TXT("%s out of range, It must be a positive integer in the range 1..%u"), "level", (unsigned int)std::numeric_limits<uint8_t>::max());
+		}
+		if (resultidx_ > std::numeric_limits<uint8_t>::max())
+		{
+			throw strus::runtime_error(_TXT("%s out of range, It must be a positive integer in the range 1..%u"), "result index", (unsigned int)std::numeric_limits<uint8_t>::max());
 		}
 		if (editdist_ > std::numeric_limits<uint8_t>::max())
 		{
-			throw strus::runtime_error(_TXT("edit distance out of range, The level must be a positive integer in the range 1..%u"), (unsigned int)std::numeric_limits<uint8_t>::max());
+			throw strus::runtime_error(_TXT("%s out of range, It must be a positive integer in the range 1..%u"), "edit distance", (unsigned int)std::numeric_limits<uint8_t>::max());
 		}
 		if (symtabref_ > std::numeric_limits<uint8_t>::max())
 		{
-			throw strus::runtime_error(_TXT("symbol table reference out of range, The level must be a positive integer in the range 1..%u"), (unsigned int)std::numeric_limits<uint8_t>::max());
+			throw strus::runtime_error(_TXT("%s out of range, It must be a positive integer in the range 1..%u"), "symbol table reference", (unsigned int)std::numeric_limits<uint8_t>::max());
 		}
 	}
 	PatternDef( const PatternDef& o)
@@ -98,6 +104,7 @@ public:
 		,m_id(o.m_id)
 		,m_posbind(o.m_posbind)
 		,m_level(o.m_level)
+		,m_resultidx(o.m_resultidx)
 		,m_editdist(o.m_editdist)
 		,m_symtabref(o.m_symtabref){}
 
@@ -116,6 +123,10 @@ public:
 	unsigned int level() const
 	{
 		return m_level;
+	}
+	unsigned int resultidx() const
+	{
+		return m_resultidx;
 	}
 	unsigned int editdist() const
 	{
@@ -159,6 +170,7 @@ private:
 	uint32_t m_id;				///< id of the lexem as defined by definedLexem
 	uint8_t m_posbind;			///< analyzer position bind specificaction
 	uint8_t m_level;			///< priority level (bigger => higher priority)
+	uint8_t m_resultidx;			///< index of subexpression result selected, 0 for the whole match
 	uint8_t m_editdist;			///< edit distance (Levenstein) for matching patterns
 	uint8_t m_symtabref;			///< symbol table to use
 };
@@ -228,25 +240,19 @@ public:
 			unsigned int level,
 			analyzer::PositionBind posbind)
 	{
-		unsigned int subexpref = 0;
 		std::string expression( expression_);
 		unsigned int editdist = extractEditDistFromExpression( expression);
-		if (resultIndex != 0)
-		{
-			SubExpressionReference ref( new SubExpressionDef( expression, resultIndex, editdist));
-			m_subexprmap.push_back( ref);
-			subexpref = m_subexprmap.size();
-		}
 #ifdef STRUS_LOWLEVEL_DEBUG
 		std::cout << "define pattern " << id << " index " << (m_defar.size()+1)
 				<< " '" << expression;
 		if (subexpref) std::cout << "', select part " << subexpref;
 		std::cout << "', level " << level;
+		std::cout << ", resultidx " << resultIndex;
 		std::cout << ", editdist " << editdist;
 		std::cout << ", posbind " << ((int)(posbind+1) % 3 - 1);
 		std::cout << std::endl;
 #endif
-		m_defar.push_back( PatternDef( expression, subexpref, id, posbind, level, editdist));
+		m_defar.push_back( PatternDef( expression, 0/*subexpref*/, id, posbind, level, resultIndex, editdist));
 		if (m_defar.size() > std::numeric_limits<uint32_t>::max())
 		{
 			throw strus::runtime_error(_TXT("too many patterns defined, maximum %u allowed"), (unsigned int)std::numeric_limits<uint32_t>::max());
@@ -331,13 +337,24 @@ public:
 		m_hasEditDist = (di != de);
 		if (m_hasEditDist)
 		{
-			//... always do rematch expression:
+			//... always do rematch expression in case of using edit dist because a match is only a hint:
 			std::vector<PatternDef>::iterator di = m_defar.begin(), de = m_defar.end();
 			for (; di != de; ++di)
 			{
-				if (!di->subexpref())
+				SubExpressionReference ref( new SubExpressionDef( di->expression(), di->resultidx(), di->editdist(), true/*wchar matching*/));
+				m_subexprmap.push_back( ref);
+				di->setSubExpressionRef( m_subexprmap.size());
+			}
+		}
+		else
+		{
+			//... do rematch expression that select a subexpression:
+			std::vector<PatternDef>::iterator di = m_defar.begin(), de = m_defar.end();
+			for (; di != de; ++di)
+			{
+				if (di->resultidx() != 0)
 				{
-					SubExpressionReference ref( new SubExpressionDef( di->expression(), 0/*result index*/, di->editdist()));
+					SubExpressionReference ref( new SubExpressionDef( di->expression(), di->resultidx(), di->editdist(), false/*byte matching*/));
 					m_subexprmap.push_back( ref);
 					di->setSubExpressionRef( m_subexprmap.size());
 				}
@@ -423,16 +440,27 @@ private:
 
 		std::size_t index;
 		unsigned int editdist;
+		bool usewchar;
 		enum {MaxSubexpressionIndex=99};
 
-		SubExpressionDef( const std::string& expression, std::size_t index_, unsigned int editdist_)
-			:index(index_),editdist(editdist_)
+		SubExpressionDef( const std::string& expression, std::size_t index_, unsigned int editdist_, bool usewchar_)
+			:index(index_),editdist(editdist_),usewchar(usewchar_)
 		{
 			if (index > MaxSubexpressionIndex+1)
 			{
 				throw strus::runtime_error(_TXT("error in sub expression selection index out of range"));
 			}
-			int errcode = tre_regcomp( &regex, expression.c_str(), REG_EXTENDED | REG_APPROX_MATCHER);
+			int errcode;
+			if (usewchar)
+			{
+				WCharString wsrc( expression.c_str(), expression.size());
+				const wchar_t* wexpr = wsrc.str();
+				errcode = tre_regwcomp( &regex, wexpr, REG_EXTENDED | REG_APPROX_MATCHER);
+			}
+			else
+			{
+				errcode = tre_regcomp( &regex, expression.c_str(), REG_EXTENDED | REG_APPROX_MATCHER);
+			}
 			if (errcode)
 			{
 				char errbuf[ 1024];
@@ -468,6 +496,19 @@ private:
 
 		bool approx_match( const char* src, unsigned_long_long& from, unsigned_long_long& to, int& cost) const
 		{
+			if (usewchar)
+			{
+				return approx_match_wchar( src, from, to, cost);
+			}
+			else
+			{
+				return approx_match_utf8( src, from, to, cost);
+			}
+		}
+		
+private:
+		bool approx_match_utf8( const char* src, unsigned_long_long& from, unsigned_long_long& to, int& cost) const
+		{
 			const char* start = src + from;
 			regaparams_t params;
 			params.cost_ins = 1;
@@ -498,6 +539,47 @@ private:
 			if (mt0.rm_so < 0 || mt.rm_so < 0) return false;
 			from += mt.rm_so;
 			to = from + mt.rm_eo - mt.rm_so;
+			cost = amatch.cost;
+			return true;
+		}
+
+		bool approx_match_wchar( const char* src, unsigned_long_long& from, unsigned_long_long& to, int& cost) const
+		{
+			WCharString wsrc( src + from, to - from + editdist * sizeof(wchar_t));
+			const wchar_t* wstart = wsrc.str();
+
+			regaparams_t params;
+			params.cost_ins = 1;
+			params.cost_del = 1;
+			params.cost_subst = 1;
+			params.max_cost = editdist + 3;
+			params.max_del = editdist + 3;
+			params.max_ins = editdist + 3;
+			params.max_subst = editdist + 3;
+			params.max_err = editdist + 3;
+
+			regmatch_t pmatch[ MaxSubexpressionIndex+1];
+			regamatch_t amatch;
+			std::memset( &amatch, 0, sizeof(amatch));
+			amatch.nmatch = index+1;
+			amatch.pmatch = pmatch;
+			
+			int errcode = tre_regawexec( &regex, wstart, &amatch, params, REG_NOTBOL | REG_NOTEOL);
+			if (errcode)
+			{
+				if (errcode == REG_NOMATCH) return false;
+
+				char errbuf[ 1024];
+				(void)tre_regerror( errcode, &regex, errbuf, sizeof(errbuf));
+				throw strus::runtime_error(_TXT("error matching (approximative) of a regular expression: %s"), errbuf);
+			}
+			const regmatch_t& mt0 = pmatch[ 0];
+			const regmatch_t& mt = pmatch[ index];
+			if (mt0.rm_so < 0 || mt.rm_so < 0) return false;
+			std::size_t orig_match_start = wsrc.origpos( mt.rm_so);
+			std::size_t orig_match_end = wsrc.origpos( mt.rm_eo);
+			from += orig_match_start;
+			to = from + orig_match_end - orig_match_start;
 			cost = amatch.cost;
 			return true;
 		}
