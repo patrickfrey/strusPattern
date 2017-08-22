@@ -16,11 +16,13 @@ set( source_files
 include_directories(
 	"${Boost_INCLUDE_DIRS}"
 	"${Intl_INCLUDE_DIRS}"
+	"${CMAKE_BINARY_DIR}/include"
 	"${PROJECT_SOURCE_DIR}/include"
 	"${PROJECT_SOURCE_DIR}/3rdParty/compactNodeTrie/include"
 	"${PROJECT_SOURCE_DIR}/3rdParty/textwolf/include"
 	"${PROJECT_SOURCE_DIR}/3rdParty/hyperscan/src"
 	"${PROJECT_SOURCE_DIR}/3rdParty/hyperscan"
+	"${PROJECT_SOURCE_DIR}/3rdParty/tre/include"
 	"${strusbase_INCLUDE_DIRS}"
 	"${strusanalyzer_INCLUDE_DIRS}"
 	"${strusmodule_INCLUDE_DIRS}"
@@ -38,7 +40,7 @@ link_directories(
 # STRUS TRACE LIBRARIES
 # -------------------------------------------
 add_library( local_rulematch STATIC ${source_files} )
-target_link_libraries( local_rulematch strus_base compactnodetrie_static hs ${Boost_LIBRARIES} ${Intl_LIBRARIES} )
+target_link_libraries( local_rulematch local_tre strus_base compactnodetrie_static hs ${Boost_LIBRARIES} ${Intl_LIBRARIES} )
 set_property( TARGET local_rulematch PROPERTY POSITION_INDEPENDENT_CODE TRUE )
 
 add_library( strus_pattern SHARED libstrus_pattern.cpp )
