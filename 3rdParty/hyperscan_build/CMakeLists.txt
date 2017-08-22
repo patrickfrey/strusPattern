@@ -17,8 +17,8 @@ INCLUDE (CheckLibraryExists)
 INCLUDE (CheckSymbolExists)
 include (CMakeDependentOption)
 include (GNUInstallDirs)
-include (${CMAKE_MODULE_PATH}/platform.cmake)
-include (${CMAKE_MODULE_PATH}/ragel.cmake)
+include( cmake/platform.cmake)
+include( cmake/ragel.cmake)
 
 find_package(PkgConfig QUIET)
 

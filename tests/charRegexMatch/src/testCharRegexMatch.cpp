@@ -180,6 +180,26 @@ static const TestDef g_tests[32] =
 	},
 	{
 		{
+			{1,"a\xC3\xB6\xC3\xBC ~1",0,1,true}, //... "aöü"
+			{0,0,0,0,false}
+		},
+		{
+			{0,0,0}
+		},
+		"aa\xC3\xB6\xC3\xBC a\xC3\xB6\xC3\xBC a\xC3\xB6\xC3\xB6\xC3\xBC \xC3\xB6\xC3\xB6\xC3\xB6 a\xC3\xBC aaa a\xC3\xB6",
+		{
+			{1,1,0,4},
+			{1,2,1,4},
+			{1,3,4,4},
+			{1,4,5,4},
+			{1,5,9,4},
+			{1,6,18,2},
+			{1,7,25,2},
+			{0,0,0,0}
+		}
+	},
+	{
+		{
 			{0,0,0,0,false}
 		},
 		{

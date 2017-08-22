@@ -8,6 +8,7 @@
 /// \brief Implementation of detecting tokens defined as regular expressions on text
 /// \file "patternLexer.hpp"
 #include "patternLexer.hpp"
+#include "oneByteCharMap.hpp"
 #include "strus/analyzer/patternLexem.hpp"
 #include "strus/analyzer/positionBind.hpp"
 #include "strus/patternLexerInstanceInterface.hpp"
@@ -44,6 +45,7 @@ struct PatternDef
 public:
 	PatternDef()
 		:m_expression()
+		,m_expression_onebyte()
 		,m_subexpref(0)
 		,m_id(0)
 		,m_posbind(analyzer::BindContent)
@@ -59,6 +61,7 @@ public:
 			unsigned int editdist_,
 			unsigned int symtabref_=0)
 		:m_expression(expression_)
+		,m_expression_onebyte()
 		,m_subexpref(subexpref_)
 		,m_id(id_)
 		,m_posbind(posbind_)
@@ -89,6 +92,7 @@ public:
 	}
 	PatternDef( const PatternDef& o)
 		:m_expression(o.m_expression)
+		,m_expression_onebyte(o.m_expression_onebyte)
 		,m_subexpref(o.m_subexpref)
 		,m_id(o.m_id)
 		,m_posbind(o.m_posbind)
@@ -124,6 +128,10 @@ public:
 	{
 		return m_expression;
 	}
+	const std::string& expression_onebyte() const
+	{
+		return m_expression_onebyte;
+	}
 	void setSymtabref( unsigned int symtabref_)
 	{
 		if (symtabref_ > std::numeric_limits<uint8_t>::max())
@@ -132,9 +140,20 @@ public:
 		}
 		m_symtabref = symtabref_;
 	}
+	void setExpressionOneByteCharMap()
+	{
+		OneByteCharMap obcmap;
+		obcmap.init( m_expression.c_str(), m_expression.size());
+		m_expression_onebyte = obcmap.value;
+	}
+	void setSubExpressionRef( unsigned int subexpref_)
+	{
+		m_subexpref = subexpref_;
+	}
 
 private:
 	std::string m_expression;		///< regular expression string
+	std::string m_expression_onebyte;	///< regular expression string mapped down to one byte character set for prematching
 	uint32_t m_subexpref;			///< index of sub expression in sub expression table, for 2nd matching to get the sub expression match
 	uint32_t m_id;				///< id of the lexem as defined by definedLexem
 	uint8_t m_posbind;			///< analyzer position bind specificaction
@@ -199,7 +218,7 @@ class PatternTable
 {
 public:
 	explicit PatternTable( ErrorBufferInterface* errorhnd_)
-		:m_errorhnd(errorhnd_){}
+		:m_errorhnd(errorhnd_),m_hasEditDist(false){}
 
 	void definePattern(
 			unsigned int id,
@@ -211,7 +230,7 @@ public:
 		unsigned int subexpref = 0;
 		std::string expression( expression_);
 		unsigned int editdist = extractEditDistFromExpression( expression);
-		if (resultIndex)
+		if (resultIndex != 0)
 		{
 			m_subexprmap.push_back( SubExpressionReference( expression, resultIndex));
 			subexpref = m_subexprmap.size();
@@ -302,21 +321,46 @@ public:
 	///\param[in] options options to stear matching
 	void complete( HsPatternTable& hspt, unsigned int options)
 	{
-		hspt.init( m_defar.size());
 		std::vector<PatternDef>::iterator di = m_defar.begin(), de = m_defar.end();
+		for (; di != de; ++di)
+		{
+			if (di->editdist()) break;
+		}
+		m_hasEditDist = (di != de);
+		if (m_hasEditDist)
+		{
+			alwaysDoReMatchExpression();
+		}
+		hspt.init( m_defar.size());
+		di = m_defar.begin();
 		for (std::size_t didx=0; di != de; ++di,++didx)
 		{
+			const char* expr;
+			if (m_hasEditDist)
+			{
+				di->setExpressionOneByteCharMap();
+				expr = di->expression_onebyte().c_str();
+			}
+			else
+			{
+				expr = di->expression().c_str();
+			}
 			IdSymTabMap::const_iterator ti = m_idsymtabmap.find( di->id());
 			if (ti != m_idsymtabmap.end())
 			{
 				di->setSymtabref( ti->second);
 			}
-			hspt.patternar[ didx] = di->expression().c_str();
+			hspt.patternar[ didx] = expr;
 			hspt.idar[ didx] = didx+1;
 			if (di->editdist())
 			{
 				hspt.flagar[ didx] = options | HS_FLAG_SOM_LEFTMOST;
 				hspt.extar[ didx] = createPatternExprExtFlags( di->editdist());
+			}
+			else if (m_hasEditDist)
+			{
+				hspt.flagar[ didx] = options | HS_FLAG_SOM_LEFTMOST;
+				hspt.extar[ didx] = 0;
 			}
 			else
 			{
@@ -346,7 +390,26 @@ public:
 		return false;
 	}
 
+	///< Check, if there exists a pattern with edit distance match
+	bool hasEditDist() const
+	{
+		return m_hasEditDist;
+	}
+
 private:
+	void alwaysDoReMatchExpression()
+	{
+		std::vector<PatternDef>::iterator di = m_defar.begin(), de = m_defar.end();
+		for (; di != de; ++di)
+		{
+			if (!di->subexpref())
+			{
+				m_subexprmap.push_back( SubExpressionReference( di->expression(), 0));
+				di->setSubExpressionRef( m_subexprmap.size());
+			}
+		}
+	}
+
 	uint8_t createSymbolTable()
 	{
 		if (m_symtabmap.size() >= std::numeric_limits<uint8_t>::max())
@@ -376,16 +439,16 @@ private:
 		char const* se = si + expr.size();
 		if (si == se) return 0;
 		unsigned int dcnt = 0;
-		for (--se; se >= si && *se <= 32; --se){}
+		for (--se; se >= si && (unsigned char)*se <= 32; --se){}
 		for (; se >= si && isDigit( *se); --se,++dcnt){}
 		if (dcnt > 0)
 		{
 			const char* ediststr = se+1;
-			for (; se >= si && *se <= 32; --se){}
+			for (; se >= si && (unsigned char)*se <= 32; --se){}
 			if (se >= si && *se == '~')
 			{
 				unsigned int rt = atoi( ediststr);
-				for (; se > si && *(se-1) <= 32; --se){}
+				for (; se > si && (unsigned char)*(se-1) <= 32; --se){}
 				expr.resize( se-si);
 				return rt;
 			}
@@ -401,6 +464,7 @@ private:
 	typedef std::map<uint32_t,uint8_t> IdSymTabMap;
 	IdSymTabMap m_idsymtabmap;				///< map pattern id -> index in m_symtabmap == PatternDef::symtabref
 	std::vector<SubExpressionReference> m_subexprmap;	///< single regular expression patterns for extracting subexpressions if they are referenced.
+	bool m_hasEditDist;					///< true if the automaton has edit dist and had to be mapped down to a one byte character set serving as hash
 };
 
 
@@ -438,7 +502,7 @@ class PatternLexerContext
 {
 public:
 	PatternLexerContext( const TermMatchData* data_, ErrorBufferInterface* errorhnd_)
-		:m_errorhnd(errorhnd_),m_data(data_),m_hs_scratch(0),m_src(0)
+		:m_errorhnd(errorhnd_),m_data(data_),m_hs_scratch(0),m_src(0),m_matchEventAr(),m_charmap()
 	{
 		hs_error_t err = hs_alloc_scratch( m_data->patterndb, &m_hs_scratch);
 		if (err != HS_SUCCESS)
@@ -474,6 +538,11 @@ public:
 		PatternLexerContext* THIS = (PatternLexerContext*)context;
 		try
 		{
+			if (THIS->m_data->patternTable.hasEditDist())
+			{
+				from = THIS->m_charmap.posar[ from];
+				to = THIS->m_charmap.posar[ to];
+			}
 			if (to - from >= std::numeric_limits<uint16_t>::max())
 			{
 				throw strus::runtime_error( "size of matched term out of range");
@@ -618,7 +687,16 @@ public:
 				throw strus::runtime_error( "size of string to scan out of range");
 			}
 			// Collect all matches calling the Hyperscan engine:
-			hs_error_t err = hs_scan( m_data->patterndb, src, srclen, 0/*reserved*/, m_hs_scratch, match_event_handler, this);
+			hs_error_t err;
+			if (m_data->patternTable.hasEditDist())
+			{
+				m_charmap.init( src, srclen);
+				err = hs_scan( m_data->patterndb, m_charmap.value.c_str(), m_charmap.value.size(), 0/*reserved*/, m_hs_scratch, match_event_handler, this);
+			}
+			else
+			{
+				err = hs_scan( m_data->patterndb, src, srclen, 0/*reserved*/, m_hs_scratch, match_event_handler, this);
+			}
 			m_src = 0;
 			if (err != HS_SUCCESS)
 			{
@@ -696,6 +774,7 @@ private:
 	hs_scratch_t* m_hs_scratch;
 	const char* m_src;
 	std::vector<MatchEvent> m_matchEventAr;
+	OneByteCharMap m_charmap;
 };
 
 class PatternLexerInstance
