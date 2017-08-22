@@ -8,7 +8,7 @@
 /// \brief Implementation of detecting tokens defined as regular expressions on text
 /// \file "patternLexer.hpp"
 #include "patternLexer.hpp"
-#include "oneByteCharMap.hpp"
+#include "unicodeUtils.hpp"
 #include "strus/analyzer/patternLexem.hpp"
 #include "strus/analyzer/positionBind.hpp"
 #include "strus/patternLexerInstanceInterface.hpp"
@@ -29,7 +29,8 @@
 #include <stdexcept>
 #include <limits>
 #include <iostream>
-#include <boost/regex.hpp>
+#undef TRE_USE_SYSTEM_REGEX_H
+#include <tre/tre.h>
 
 #undef STRUS_LOWLEVEL_DEBUG
 
@@ -232,7 +233,8 @@ public:
 		unsigned int editdist = extractEditDistFromExpression( expression);
 		if (resultIndex != 0)
 		{
-			m_subexprmap.push_back( SubExpressionReference( expression, resultIndex));
+			SubExpressionReference ref( new SubExpressionDef( expression, resultIndex, editdist));
+			m_subexprmap.push_back( ref);
 			subexpref = m_subexprmap.size();
 		}
 #ifdef STRUS_LOWLEVEL_DEBUG
@@ -329,7 +331,17 @@ public:
 		m_hasEditDist = (di != de);
 		if (m_hasEditDist)
 		{
-			alwaysDoReMatchExpression();
+			//... always do rematch expression:
+			std::vector<PatternDef>::iterator di = m_defar.begin(), de = m_defar.end();
+			for (; di != de; ++di)
+			{
+				if (!di->subexpref())
+				{
+					SubExpressionReference ref( new SubExpressionDef( di->expression(), 0/*result index*/, di->editdist()));
+					m_subexprmap.push_back( ref);
+					di->setSubExpressionRef( m_subexprmap.size());
+				}
+			}
 		}
 		hspt.init( m_defar.size());
 		di = m_defar.begin();
@@ -376,18 +388,16 @@ public:
 
 	bool matchSubExpression( uint32_t subexpref, const char* src, unsigned_long_long& from, unsigned_long_long& to) const
 	{
-		const SubExpressionReference& se = m_subexprmap[ subexpref-1];
-		const char* start = src + from;
-		boost::match_results<const char*> what;
-		if (boost::regex_search( start, what, se.regex)) 
+		const SubExpressionDef& subedef = *m_subexprmap[ subexpref-1];
+		if (subedef.editdist)
 		{
-			int rel_pos = what.position( se.index);
-			int rel_len = what.length( se.index);
-			to = from + rel_pos + rel_len;
-			from += rel_pos;
-			return true;
+			int cost = 0;
+			return subedef.approx_match( src, from, to, cost);
 		}
-		return false;
+		else
+		{
+			return subedef.match( src, from, to);
+		}
 	}
 
 	///< Check, if there exists a pattern with edit distance match
@@ -397,19 +407,6 @@ public:
 	}
 
 private:
-	void alwaysDoReMatchExpression()
-	{
-		std::vector<PatternDef>::iterator di = m_defar.begin(), de = m_defar.end();
-		for (; di != de; ++di)
-		{
-			if (!di->subexpref())
-			{
-				m_subexprmap.push_back( SubExpressionReference( di->expression(), 0));
-				di->setSubExpressionRef( m_subexprmap.size());
-			}
-		}
-	}
-
 	uint8_t createSymbolTable()
 	{
 		if (m_symtabmap.size() >= std::numeric_limits<uint8_t>::max())
@@ -420,15 +417,93 @@ private:
 		return m_symtabmap.size();
 	}
 
-	struct SubExpressionReference
+	struct SubExpressionDef
 	{
-		boost::regex regex;
-		std::size_t index;
+		regex_t regex;
 
-		SubExpressionReference( const std::string& expression, std::size_t index_)
-			:regex(expression),index(index_){}
-		SubExpressionReference( const SubExpressionReference& o)
-			:regex(o.regex),index(o.index){}
+		std::size_t index;
+		unsigned int editdist;
+		enum {MaxSubexpressionIndex=99};
+
+		SubExpressionDef( const std::string& expression, std::size_t index_, unsigned int editdist_)
+			:index(index_),editdist(editdist_)
+		{
+			if (index > MaxSubexpressionIndex+1)
+			{
+				throw strus::runtime_error(_TXT("error in sub expression selection index out of range"));
+			}
+			int errcode = tre_regcomp( &regex, expression.c_str(), REG_EXTENDED | REG_APPROX_MATCHER);
+			if (errcode)
+			{
+				char errbuf[ 1024];
+				(void)tre_regerror( errcode, &regex, errbuf, sizeof(errbuf));
+				throw strus::runtime_error(_TXT("error compiling regular expression: %s"), errbuf);
+			}
+		}
+		~SubExpressionDef()
+		{
+			tre_regfree( &regex);
+		}
+
+		bool match( const char* src, unsigned_long_long& from, unsigned_long_long& to) const
+		{
+			const char* start = src + from;
+			regmatch_t pmatch[ MaxSubexpressionIndex+1];
+			int errcode = tre_regexec( &regex, start, index+1, pmatch, REG_NOTBOL | REG_NOTEOL);
+			if (errcode)
+			{
+				if (errcode == REG_NOMATCH) return false;
+
+				char errbuf[ 1024];
+				(void)tre_regerror( errcode, &regex, errbuf, sizeof(errbuf));
+				throw strus::runtime_error(_TXT("error matching of a regular expression: %s"), errbuf);
+			}
+			const regmatch_t& mt0 = pmatch[ 0];
+			const regmatch_t& mt = pmatch[ index];
+			if (mt0.rm_so < 0 || mt.rm_so < 0 || mt.rm_eo > (regoff_t)(to - from)) return false;
+			from += mt.rm_so;
+			to = from + mt.rm_eo - mt.rm_so;
+			return true;
+		}
+
+		bool approx_match( const char* src, unsigned_long_long& from, unsigned_long_long& to, int& cost) const
+		{
+			const char* start = src + from;
+			regaparams_t params;
+			params.cost_ins = 1;
+			params.cost_del = 1;
+			params.cost_subst = 1;
+			params.max_cost = editdist + 3;
+			params.max_del = editdist + 3;
+			params.max_ins = editdist + 3;
+			params.max_subst = editdist + 3;
+			params.max_err = editdist + 3;
+
+			regmatch_t pmatch[ MaxSubexpressionIndex+1];
+			regamatch_t amatch;
+			std::memset( &amatch, 0, sizeof(amatch));
+			amatch.nmatch = index+1;
+			amatch.pmatch = pmatch;
+			int errcode = tre_regaexec( &regex, start, &amatch, params, REG_NOTBOL | REG_NOTEOL);
+			if (errcode)
+			{
+				if (errcode == REG_NOMATCH) return false;
+
+				char errbuf[ 1024];
+				(void)tre_regerror( errcode, &regex, errbuf, sizeof(errbuf));
+				throw strus::runtime_error(_TXT("error matching (approximative) of a regular expression: %s"), errbuf);
+			}
+			const regmatch_t& mt0 = pmatch[ 0];
+			const regmatch_t& mt = pmatch[ index];
+			if (mt0.rm_so < 0 || mt.rm_so < 0) return false;
+			from += mt.rm_so;
+			to = from + mt.rm_eo - mt.rm_so;
+			cost = amatch.cost;
+			return true;
+		}
+private:
+		SubExpressionDef( const SubExpressionDef&){}	//... non copyable
+		void operator=( const SubExpressionDef&){}	//... non copyable
 	};
 
 	static bool isDigit( char ch)	{return ch >= '0' && ch <= '9';}
@@ -463,6 +538,7 @@ private:
 	std::vector<uint32_t> m_symidmap;			///< map symbol table id -> symbol identifier id given by defineSymbol
 	typedef std::map<uint32_t,uint8_t> IdSymTabMap;
 	IdSymTabMap m_idsymtabmap;				///< map pattern id -> index in m_symtabmap == PatternDef::symtabref
+	typedef Reference<SubExpressionDef> SubExpressionReference;
 	std::vector<SubExpressionReference> m_subexprmap;	///< single regular expression patterns for extracting subexpressions if they are referenced.
 	bool m_hasEditDist;					///< true if the automaton has edit dist and had to be mapped down to a one byte character set serving as hash
 };

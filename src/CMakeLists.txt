@@ -7,7 +7,7 @@ set( source_files
 	utils.cpp
 	internationalization.cpp
 	ruleMatcherAutomaton.cpp
-	oneByteCharMap.cpp
+	unicodeUtils.cpp
 	patternLexer.cpp
 	patternMatcher.cpp
 	lexems.cpp
@@ -22,7 +22,7 @@ include_directories(
 	"${PROJECT_SOURCE_DIR}/3rdParty/textwolf/include"
 	"${PROJECT_SOURCE_DIR}/3rdParty/hyperscan/src"
 	"${PROJECT_SOURCE_DIR}/3rdParty/hyperscan"
-	"${PROJECT_SOURCE_DIR}/3rdParty/tre/include"
+	"${TRE_INCLUDE_DIRS}"
 	"${strusbase_INCLUDE_DIRS}"
 	"${strusanalyzer_INCLUDE_DIRS}"
 	"${strusmodule_INCLUDE_DIRS}"
@@ -40,7 +40,7 @@ link_directories(
 # STRUS TRACE LIBRARIES
 # -------------------------------------------
 add_library( local_rulematch STATIC ${source_files} )
-target_link_libraries( local_rulematch local_tre strus_base compactnodetrie_static hs ${Boost_LIBRARIES} ${Intl_LIBRARIES} )
+target_link_libraries( local_rulematch strus_base compactnodetrie_static hs ${Boost_LIBRARIES} ${TRE_LIBRARIES} ${Intl_LIBRARIES} )
 set_property( TARGET local_rulematch PROPERTY POSITION_INDEPENDENT_CODE TRUE )
 
 add_library( strus_pattern SHARED libstrus_pattern.cpp )
