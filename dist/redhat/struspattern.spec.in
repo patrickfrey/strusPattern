@@ -104,6 +104,7 @@ BuildRoot: %{_tmppath}/%{name}-root
 BuildRequires: gcc
 BuildRequires: gcc-c++
 BuildRequires: cmake
+BuildRequires: ragel
 
 # LinuxDistribution.cmake depends depends on the Linux release files in '/etc' or
 # LSB files

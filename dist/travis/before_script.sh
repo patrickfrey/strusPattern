@@ -21,6 +21,7 @@ case $OS in
 		fi
 		brew install \
 			cmake \
+			ragel \
 			boost \
 			gettext \
 			snappy \

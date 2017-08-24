@@ -11,7 +11,7 @@ license=('MPL2')
 arch=('i686' 'x86_64')
 url="http://project-strus.net"
 depends=('boost>=1.53' 'boost-libs>=1.53' "strusbase>=${_deppkgver}" "strus>=${_deppkgver}" "strusanalyzer>=${_deppkgver}" "strustrace>=${_deppkgver}" "strusmodule>=${_deppkgver}")
-makedepends=('cmake')
+makedepends=('cmake' 'ragel')
 source=("${pkgname}-${_mainpkgver}.tar.gz")
 
 build() {
