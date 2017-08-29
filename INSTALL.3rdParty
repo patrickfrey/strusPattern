@@ -1,4 +1,4 @@
-Library dependencies of strusStream:
+Library dependencies of strusPattern:
 	- boost (headers and -lboost_system)
 	- ragel statemachine compiler for hyperscan
 	- tre library for post matching of regular expressions

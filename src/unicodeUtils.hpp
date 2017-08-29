@@ -35,7 +35,7 @@ public:
 
 	wchar_t* str() const					{return m_ptr;}
 	std::size_t size() const				{return m_size;}
-	std::size_t origpos( std::size_t wcharpos) const	{return wcharpos ? m_posbuf[ wcharpos-1]:0;}
+	std::size_t origpos( std::size_t wcharpos) const	{return wcharpos ? ((wcharpos > m_size) ? m_posbuf[ m_size-1]:m_posbuf[ wcharpos-1]):0;}
 
 private:
 	wchar_t* m_ptr;

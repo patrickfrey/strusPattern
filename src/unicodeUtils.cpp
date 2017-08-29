@@ -44,7 +44,7 @@ void OneByteCharMap::init( const char* src, std::size_t srcsize)
 }
 
 template <class CharSet>
-static void printString( const CharSet& charset, textwolf::StaticBuffer& outbuf, std::size_t* posar, const char* src, std::size_t srcsize)
+static void printString( const CharSet& charset, textwolf::StaticBuffer& outbuf, std::size_t* posar, const char* src, std::size_t srcsize, int sizeofwchar)
 {
 	typedef textwolf::TextScanner<textwolf::SrcIterator,textwolf::charset::UTF8> TextScanner;
 	textwolf::charset::UTF8 utf8;
@@ -56,9 +56,13 @@ static void printString( const CharSet& charset, textwolf::StaticBuffer& outbuf,
 	while ((ch = *itr) != 0)
 	{
 		++itr;
+		std::size_t pi = outbuf.size();
 		charset.print( ch, outbuf);
-		posar[ chidx] = itr.getPosition();
-		++chidx;
+		std::size_t pe = outbuf.size();
+		for (; pi < pe; pi += sizeofwchar)
+		{
+			posar[ chidx++] = itr.getPosition();
+		}
 	}
 }
 
@@ -89,12 +93,12 @@ WCharString::WCharString( const char* src, std::size_t srcsize)
 		if (sizeof(wchar_t) == 4)
 		{
 			textwolf::charset::UCS4<textwolf::charset::ByteOrder::LE> outcharset;
-			printString( outcharset, outbuf, m_pos, src, srcsize);
+			printString( outcharset, outbuf, m_pos, src, srcsize, sizeof(wchar_t));
 		}
 		else
 		{
 			textwolf::charset::UTF16<textwolf::charset::ByteOrder::LE> outcharset;
-			printString( outcharset, outbuf, m_pos, src, srcsize);
+			printString( outcharset, outbuf, m_pos, src, srcsize, sizeof(wchar_t));
 		}
 	}
 	else
@@ -103,12 +107,12 @@ WCharString::WCharString( const char* src, std::size_t srcsize)
 		if (sizeof(wchar_t) == 4)
 		{
 			textwolf::charset::UCS4<textwolf::charset::ByteOrder::BE> outcharset;
-			printString( outcharset, outbuf, m_pos, src, srcsize);
+			printString( outcharset, outbuf, m_pos, src, srcsize, sizeof(wchar_t));
 		}
 		else
 		{
 			textwolf::charset::UTF16<textwolf::charset::ByteOrder::BE> outcharset;
-			printString( outcharset, outbuf, m_pos, src, srcsize);
+			printString( outcharset, outbuf, m_pos, src, srcsize, sizeof(wchar_t));
 		}
 	}
 	m_size = outbuf.size() / sizeof(wchar_t);

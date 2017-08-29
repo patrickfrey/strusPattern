@@ -240,6 +240,10 @@ int main( int argc, const char** argv)
 				throw std::runtime_error( "error building automaton for test");
 			}
 			std::vector<strus::analyzer::PatternLexem> result = match( ptinst.get(), g_tests[ti].src);
+			if (result.empty() && g_errorBuffer->hasError())
+			{
+				throw std::runtime_error( "error matching");
+			}
 			std::vector<strus::analyzer::PatternLexem>::const_iterator ri = result.begin(), re = result.end();
 			std::size_t ridx=0;
 			const ResultDef* expected = g_tests[ti].result;

@@ -8,7 +8,7 @@ Build 'gettext' and 'gettext-tools' from ports.
 
 Build 'boost' 1.55 from ports.
 
-Build strusStream with:
+Build strusPattern with:
 
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release -DLIB_INSTALL_DIR=lib \
         -DCMAKE_CXX_FLAGS=-g -DBOOST_INCLUDEDIR=/usr/local/include \
