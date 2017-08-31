@@ -3,7 +3,7 @@ OpenBSD 6.0
 
 Use 'lang/gcc/4.9' from ports (package 'gcc' and 'g++', the base gcc is too old).
 
-Install 'gcc' 'g++' 'cmake', 'gmake', 'boost', 'gettext', 'gettext-tools' and 'leveldb' as
+Install 'gcc' 'g++' 'cmake', 'gmake', 'boost', 'gettext', 'gettext-tools', 'ragel' and 'leveldb' as
 packages or from the ports collection.
 
 Build strusPattern with:
