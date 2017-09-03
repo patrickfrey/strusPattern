@@ -253,6 +253,17 @@ make test
 %{_includedir}/strus/lib/*.hpp
 
 %changelog
+* Sun Sep 3 2017 Patrick Frey <patrickpfrey@yahoo.com> 0.15.0-0.1
+- make code safer in case of ABRs
+- make approximate matching run with unicode
+- remove hardcoded setting of C++98 in CMake files
+- strenghten rules for printf style functions in the interface: issue warnings on wrong format string parameter lists for gcc
+- adapt interface changes in strus core,analyzer and base
+- many CMake build fixes
+- added dependency to tre library for post matching of regular expressions (replacing boost regex, because of approximative matching capabilities)
+- added method to define and retrieve pattern lexer lexem or symbol name
+- hyperscan library as submodule
+
 * Wed Feb 15 2017 Patrick Frey <patrickpfrey@yahoo.com> 0.14.0-0.1
 - increment version synchronously to strus core
 

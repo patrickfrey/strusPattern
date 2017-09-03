@@ -1,3 +1,15 @@
+strusPattern (0.15.0)
+  * make code safer in case of ABRs
+  * make approximate matching run with unicode
+  * remove hardcoded setting of C++98 in CMake files
+  * strenghten rules for printf style functions in the interface: issue warnings on wrong format string parameter lists for gcc
+  * adapt interface changes in strus core,analyzer and base
+  * many CMake build fixes
+  * added dependency to tre library for post matching of regular expressions (replacing boost regex, because of approximative matching capabilities)
+  * added method to define and retrieve pattern lexer lexem or symbol name
+  * hyperscan library as submodule
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Sun, 3 Sep 2017 15:00:00 +0100
+
 strusPattern (0.14.0)
   * increment version synchronously to strus core
  -- Patrick Frey <patrickpfrey@yahoo.com>  Wed, 15 Feb 2016 14:00:00 +0100
