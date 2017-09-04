@@ -1,3 +1,7 @@
+strusPattern (0.15.1)
+  * release to cleanup mess with missing CHANGELOG in 0.15.0
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Mon, 4 Sep 2017 15:30:00 +0100
+
 strusPattern (0.15.0)
   * make code safer in case of ABRs
   * make approximate matching run with unicode
