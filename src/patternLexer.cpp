@@ -282,7 +282,7 @@ public:
 		uint32_t symidx = m_symtabmap[ symtabref-1]->getOrCreate( name);
 		if (symidx != m_symidmap.size()+1)
 		{
-			if (symidx == 0) throw strus::runtime_error( m_errorhnd->fetchError());
+			if (symidx == 0) throw strus::runtime_error( "%s", m_errorhnd->fetchError());
 			throw strus::runtime_error(_TXT("symbol defined twice: '%s'"), name.c_str());
 		}
 #ifdef STRUS_LOWLEVEL_DEBUG
@@ -428,7 +428,7 @@ private:
 	{
 		if (m_symtabmap.size() >= std::numeric_limits<uint8_t>::max())
 		{
-			throw strus::runtime_error(_TXT("too many patter symbol tables defined, %u allowed"), m_defar.size());
+			throw strus::runtime_error(_TXT("too many patter symbol tables defined, %u allowed"), (unsigned int)m_defar.size());
 		}
 		m_symtabmap.push_back( new SymbolTable());
 		return m_symtabmap.size();
