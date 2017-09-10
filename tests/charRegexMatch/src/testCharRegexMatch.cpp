@@ -13,6 +13,7 @@
 #include "strus/patternLexerInstanceInterface.hpp"
 #include "strus/patternLexerContextInterface.hpp"
 #include "strus/analyzer/patternLexem.hpp"
+#include "strus/base/local_ptr.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
@@ -87,7 +88,7 @@ static void compile( strus::PatternLexerInstanceInterface* ptinst, const Pattern
 static std::vector<strus::analyzer::PatternLexem>
 	match( strus::PatternLexerInstanceInterface* ptinst, const std::string& src)
 {
-	std::auto_ptr<strus::PatternLexerContextInterface> mt( ptinst->createContext());
+	strus::local_ptr<strus::PatternLexerContextInterface> mt( ptinst->createContext());
 	std::vector<strus::analyzer::PatternLexem> rt = mt->match( src.c_str(), src.size());
 
 #ifdef STRUS_LOWLEVEL_DEBUG
@@ -224,13 +225,13 @@ int main( int argc, const char** argv)
 			std::cerr << "too many arguments" << std::endl;
 			return 1;
 		}
-		std::auto_ptr<strus::PatternLexerInterface> pt( strus::createPatternLexer_stream( g_errorBuffer));
+		strus::local_ptr<strus::PatternLexerInterface> pt( strus::createPatternLexer_stream( g_errorBuffer));
 		if (!pt.get()) throw std::runtime_error("failed to create regular expression term matcher");
 		std::size_t ti = 0;
 		for (; g_tests[ti].src; ++ti)
 		{
 			std::cerr << "executing test " << (ti+1) << std::endl;
-			std::auto_ptr<strus::PatternLexerInstanceInterface> ptinst( pt->createInstance());
+			strus::local_ptr<strus::PatternLexerInstanceInterface> ptinst( pt->createInstance());
 			if (!ptinst.get()) throw std::runtime_error("failed to create regular expression term matcher instance");
 
 			ptinst->defineOption( "DOTALL", 0);

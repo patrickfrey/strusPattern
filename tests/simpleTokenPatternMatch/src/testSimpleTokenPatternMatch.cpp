@@ -13,6 +13,7 @@
 #include "strus/patternMatcherInstanceInterface.hpp"
 #include "strus/patternMatcherContextInterface.hpp"
 #include "strus/analyzer/patternLexem.hpp"
+#include "strus/base/local_ptr.hpp"
 #include "testUtils.hpp"
 #include <stdexcept>
 #include <iostream>
@@ -156,7 +157,7 @@ static std::vector<strus::analyzer::PatternMatcherResult>
 	processDocument( strus::PatternMatcherInstanceInterface* ptinst, const Document& doc)
 {
 	std::vector<strus::analyzer::PatternMatcherResult> results;
-	std::auto_ptr<strus::PatternMatcherContextInterface> mt( ptinst->createContext());
+	strus::local_ptr<strus::PatternMatcherContextInterface> mt( ptinst->createContext());
 	std::vector<DocumentItem>::const_iterator di = doc.itemar.begin(), de = doc.itemar.end();
 	unsigned int didx = 0;
 	for (; di != de; ++di,++didx)
@@ -236,9 +237,9 @@ int main( int argc, const char** argv)
 		}
 		unsigned int documentSize = 100;
 
-		std::auto_ptr<strus::PatternMatcherInterface> pt( strus::createPatternMatcher_stream( g_errorBuffer));
+		strus::local_ptr<strus::PatternMatcherInterface> pt( strus::createPatternMatcher_stream( g_errorBuffer));
 		if (!pt.get()) throw std::runtime_error("failed to create pattern matcher");
-		std::auto_ptr<strus::PatternMatcherInstanceInterface> ptinst( pt->createInstance());
+		strus::local_ptr<strus::PatternMatcherInstanceInterface> ptinst( pt->createInstance());
 		if (!ptinst.get()) throw std::runtime_error("failed to create pattern matcher instance");
 		createPatterns( ptinst.get(), testPatterns);
 		ptinst->compile();

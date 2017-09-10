@@ -14,6 +14,7 @@
 #include "strus/patternMatcherInterface.hpp"
 #include "strus/patternMatcherInstanceInterface.hpp"
 #include "strus/patternMatcherContextInterface.hpp"
+#include "strus/base/local_ptr.hpp"
 #include "testUtils.hpp"
 #include <stdexcept>
 #include <iostream>
@@ -469,7 +470,7 @@ static std::vector<strus::utils::Document> createRandomDocuments( unsigned int c
 
 static std::vector<strus::analyzer::PatternMatcherResult> processDocument( const strus::PatternMatcherInstanceInterface* ptinst, const strus::utils::Document& doc, std::map<std::string,double>& globalstats)
 {
-	std::auto_ptr<strus::PatternMatcherContextInterface> mt( ptinst->createContext());
+	strus::local_ptr<strus::PatternMatcherContextInterface> mt( ptinst->createContext());
 	std::vector<strus::utils::DocumentItem>::const_iterator di = doc.itemar.begin(), de = doc.itemar.end();
 	unsigned int didx = 0;
 	for (; di != de; ++di,++didx)
@@ -997,9 +998,9 @@ int main( int argc, const char** argv)
 		unsigned int nofPatterns = strus::utils::getUintValue( argv[ argidx+3]);
 		const char* outputpath = (argc - argidx > 4)? argv[ argidx+4] : 0;
 
-		std::auto_ptr<strus::PatternMatcherInterface> pt( strus::createPatternMatcher_stream( g_errorBuffer));
+		strus::local_ptr<strus::PatternMatcherInterface> pt( strus::createPatternMatcher_stream( g_errorBuffer));
 		if (!pt.get()) throw std::runtime_error("failed to create pattern matcher");
-		std::auto_ptr<strus::PatternMatcherInstanceInterface> ptinst( pt->createInstance());
+		strus::local_ptr<strus::PatternMatcherInstanceInterface> ptinst( pt->createInstance());
 		if (!ptinst.get()) throw std::runtime_error("failed to create pattern matcher instance");
 
 		GlobalContext ctx( nofFeatures, nofPatterns);
