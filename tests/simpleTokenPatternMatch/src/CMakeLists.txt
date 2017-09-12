@@ -9,7 +9,7 @@ include_directories(
 	"${strusanalyzer_INCLUDE_DIRS}"
 )
 link_directories(
-	"${PROJECT_SOURCE_DIR}/src"
+	"${CMAKE_CURRENT_BINARY_DIR}/../../../src"
 	"${Boost_LIBRARY_DIRS}"
 	"${strusbase_LIBRARY_DIRS}"
 )

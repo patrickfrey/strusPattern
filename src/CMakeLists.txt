@@ -30,8 +30,8 @@ include_directories(
 
 link_directories(
 	"${Boost_LIBRARY_DIRS}"
-	"${PROJECT_SOURCE_DIR}/3rdParty/compactNodeTrie/src"
-	"${PROJECT_SOURCE_DIR}/3rdParty/hyperscan/lib"
+	"${CMAKE_CURRENT_BINARY_DIR}/../3rdParty/compactNodeTrie/src"
+	"${CMAKE_CURRENT_BINARY_DIR}/../3rdParty/hyperscan/lib"
 	"${strusbase_LIBRARY_DIRS}"
 )
 

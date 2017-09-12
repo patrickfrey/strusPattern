@@ -9,9 +9,8 @@ include_directories(
 	"${strusanalyzer_INCLUDE_DIRS}"
 )
 link_directories(
-	"${CMAKE_BINARY_DIR}/tests/randomExpressionTreeMatch/src"
-	"${PROJECT_SOURCE_DIR}/src"
-	"${PROJECT_SOURCE_DIR}/tests/utils"
+	"${CMAKE_CURRENT_BINARY_DIR}/../../../src"
+	"${CMAKE_CURRENT_BINARY_DIR}/../../utils"
 	"${Boost_LIBRARY_DIRS}"
 	"${strusbase_LIBRARY_DIRS}"
 )
