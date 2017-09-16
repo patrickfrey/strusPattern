@@ -49,7 +49,6 @@ target_link_libraries( strus_pattern local_rulematch strus_base  )
 add_library( modstrus_analyzer_pattern  MODULE  modstrus_analyzer_pattern.cpp )
 set_target_properties( modstrus_analyzer_pattern PROPERTIES PREFIX "")
 target_link_libraries( modstrus_analyzer_pattern strus_module_analyzer strus_pattern )
-set( STRUS_MODULE_PATH "${STRUS_MODULE_PATH}:${CMAKE_CURRENT_BINARY_DIR}" )
 
 set_target_properties(
     strus_pattern
