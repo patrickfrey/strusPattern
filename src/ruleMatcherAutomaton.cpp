@@ -306,7 +306,6 @@ void ProgramTable::defineEventProgramAlt( uint32_t eventid, uint32_t programidx,
 	{
 		m_programTriggerList.push( ei->second, ProgramTrigger( programidx, past_eventid));
 	}
-	EventOccurrenceMap::iterator ci = m_keyOccurrenceMap.find( eventid);
 	m_keyOccurrenceMap[ eventid] += 1;
 	if (past_eventid)
 	{
