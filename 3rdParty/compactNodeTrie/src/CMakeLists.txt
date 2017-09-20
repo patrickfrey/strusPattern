@@ -4,12 +4,12 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 # SOURCES AND INCLUDES
 # --------------------------------------
 set( source_files
-  compactNodeTrie.cpp
+	compactNodeTrie.cpp
 )
 
 include_directories(
-	"${PROJECT_SOURCE_DIR}/include"
-	"${PROJECT_SOURCE_DIR}/3rdParty/compactNodeTrie/include"
+	"${PATTERN_INCLUDE_DIRS}"
+	"${CNODETRIE_INCLUDE_DIRS}"
 )
 
 # -------------------------------------------

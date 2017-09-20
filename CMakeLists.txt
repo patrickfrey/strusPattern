@@ -39,6 +39,17 @@ configure_file( "${PROJECT_SOURCE_DIR}/src/internationalization.cpp.in"  "${PROJ
 
 enable_testing()
 
+# Path declarations:
+set( HYPERSCAN_INCLUDE_DIRS      "${CMAKE_CURRENT_BINARY_DIR}/3rdParty/hyperscan/src"  "${PROJECT_SOURCE_DIR}/3rdParty/hyperscan/src" )
+set( HYPERSCAN_LIBRARY_DIRS      "${CMAKE_CURRENT_BINARY_DIR}/3rdParty/hyperscan/lib" )
+set( TEXTWOLF_INCLUDE_DIRS         "${CMAKE_CURRENT_BINARY_DIR}/3rdParty/textwolf/include"  "${PROJECT_SOURCE_DIR}/3rdParty/textwolf/include" )
+set( CNODETRIE_INCLUDE_DIRS       "${CMAKE_CURRENT_BINARY_DIR}/3rdParty/compactNodeTrie/include"  "${PROJECT_SOURCE_DIR}/3rdParty/compactNodeTrie/include" )
+set( CNODETRIE_LIBRARY_DIRS        "${CMAKE_CURRENT_BINARY_DIR}/3rdParty/compactNodeTrie/src" )
+set( PATTERN_INCLUDE_DIRS           "${CMAKE_CURRENT_BINARY_DIR}/include"  "${PROJECT_SOURCE_DIR}/include" )
+set( PATTERN_LIBRARY_DIRS           "${CMAKE_CURRENT_BINARY_DIR}/src" )
+set( MAIN_SOURCE_DIR                    "${PROJECT_SOURCE_DIR}/src" )
+set( MAIN_TESTS_DIR                        "${PROJECT_SOURCE_DIR}/tests" )
+
 # Subdirectories:
 add_subdirectory( 3rdParty )
 add_subdirectory( src )
