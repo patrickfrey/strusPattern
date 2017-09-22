@@ -9,6 +9,7 @@ case $OS in
 		sudo apt-get update -qq
 		sudo apt-get install -y \
 			cmake \
+			libleveldb-dev \
 			libtre-dev \
 			ragel
 		sudo add-apt-repository -y ppa:kojoley/boost
