@@ -13,7 +13,7 @@ case $OS in
 			ragel
 		sudo add-apt-repository -y ppa:kojoley/boost
 		sudo apt-get -q update
-		sudo apt-get -y install libboost-all-dev
+		sudo apt-get install libboost-{date-time,thread,system,filesystem,regex}1.58-dev
 		;;
 
 	Darwin)
