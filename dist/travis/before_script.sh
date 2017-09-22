@@ -12,7 +12,7 @@ case $OS in
 		export BOOST_ROOT=$(pwd)/boost
 		sudo apt-get update -qq
 		sudo apt-get install -y \
-			cmake
+			cmake \
 			libtre-dev \
 			ragel \
 		;;
