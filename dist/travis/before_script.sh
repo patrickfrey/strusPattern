@@ -6,16 +6,25 @@ OS=$(uname -s)
 
 case $OS in
 	Linux)
-		wget https://github.com/Viq111/travis-container-packets/releases/download/boost-1.57.0/boost.tar.bz2
-		tar -xjf boost.tar.bz2
-		rm boost.tar.bz2
-		export BOOST_ROOT=$(pwd)/boost
+		# boost
+		# cd ~
+		# mkdir Downloads
+		# cd Downloads
+		# curl http://heanet.dl.sourceforge.net/project/boost/boost/1.57.0/boost_1_57_0.tar.bz2 -O
+		# tar xvfj boost_1_57_0.tar.bz2
+		# cd boost_1_57_0
+		# ./bootstrap.sh
+		# sudo ./b2 install -j 2 --prefix=/opt
+		# cd ..
+		# export BOOST_ROOT=/opt/boost_1_57_0
 		sudo apt-get update -qq
 		sudo apt-get install -y \
 			cmake \
 			libtre-dev \
 			ragel \
 		;;
+		sudo add-apt-repository -y ppa:kojoley/boost
+		sudo apt-get -y install libboost-{date-time,thread,system,filesystem,regex}1.58{-dev,.0}
 
 	Darwin)
 		brew update
