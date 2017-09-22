@@ -6,13 +6,17 @@ OS=$(uname -s)
 
 case $OS in
 	Linux)
+		wget https://github.com/Viq111/travis-container-packets/releases/download/boost-1.57.0/boost.tar.bz2
+		tar -xjf boost.tar.bz2
+		rm boost.tar.bz2
+		export BOOST_ROOT=$(pwd)/boost
 		sudo apt-get update -qq
 		sudo apt-get install -y \
-			cmake \
-			libboost-all-dev \
-			libleveldb-dev
+			cmake
+			libtre-dev \
+			ragel \
 		;;
-		
+
 	Darwin)
 		brew update
 		if test "X$CC" = "Xgcc"; then
@@ -21,11 +25,10 @@ case $OS in
 		fi
 		brew install \
 			cmake \
-			ragel \
 			boost \
 			gettext \
-			snappy \
-			leveldb \
+			tre \
+			ragel \
 			|| true
 		# make sure cmake finds the brew version of gettext
 		brew link --force gettext || true
