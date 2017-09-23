@@ -53,7 +53,7 @@ public:
 	Trigger( uint32_t slot_, SigType sigtype_, uint32_t sigval_, uint32_t variable_)
 		:m_slot(slot_),m_sigtype(sigtype_),m_variable(variable_),m_sigval(sigval_)
 	{
-		if (variable_ > MaxVariableId) throw strus::runtime_error(_TXT("too many variables defined"));
+		if (variable_ > MaxVariableId) throw strus::runtime_error( "%s", _TXT("too many variables defined"));
 	}
 	Trigger( const Trigger& o)
 		:m_slot(o.m_slot),m_sigtype(o.m_sigtype),m_variable(o.m_variable),m_sigval(o.m_sigval){}

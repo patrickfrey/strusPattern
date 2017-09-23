@@ -117,7 +117,7 @@ unsigned int parser::parse_UNSIGNED( char const*& src)
 	while (isDigit( *src))
 	{
 		unsigned int vv = (rt * 10) + (*src - '0');
-		if (vv <= rt) throw strus::runtime_error(_TXT("index out of range"));
+		if (vv <= rt) throw strus::runtime_error( "%s", _TXT("index out of range"));
 		rt = vv;
 		++src;
 	}
@@ -128,7 +128,7 @@ unsigned int parser::parse_UNSIGNED( char const*& src)
 unsigned int parser::parse_UNSIGNED1( char const*& src)
 {
 	unsigned int rt = parse_UNSIGNED( src);
-	if (rt == 0) throw strus::runtime_error(_TXT("positive unsigned integer expected"));
+	if (rt == 0) throw strus::runtime_error( "%s", _TXT("positive unsigned integer expected"));
 	return rt;
 }
 
@@ -160,7 +160,7 @@ double parser::parse_FLOAT( char const*& src)
 	}
 	if (!digitsAllowed)
 	{
-		throw strus::runtime_error(_TXT("floating point number out of range"));
+		throw strus::runtime_error( "%s", _TXT("floating point number out of range"));
 	}
 	skipSpaces( src);
 	return rt;
@@ -177,22 +177,22 @@ int parser::parse_INTEGER( char const*& src)
 {
 	int rt = 0;
 	int prev = 0;
-	if (!*src) throw strus::runtime_error(_TXT("integer expected"));
+	if (!*src) throw strus::runtime_error( "%s", _TXT("integer expected"));
 	bool neg = false;
 	if (*src == '-')
 	{
 		++src;
 		neg = true;
 	}
-	if (!(*src >= '0' && *src <= '9')) throw strus::runtime_error(_TXT("integer expected"));
+	if (!(*src >= '0' && *src <= '9')) throw strus::runtime_error( "%s", _TXT("integer expected"));
 
 	for (; *src >= '0' && *src <= '9'; ++src)
 	{
 		rt = (rt * 10) + (*src - '0');
-		if (prev > rt) throw strus::runtime_error(_TXT("integer number out of range"));
+		if (prev > rt) throw strus::runtime_error( "%s", _TXT("integer number out of range"));
 		prev = rt;
 	}
-	if (isAlpha(*src)) throw strus::runtime_error(_TXT("integer expected"));
+	if (isAlpha(*src)) throw strus::runtime_error( "%s", _TXT("integer expected"));
 
 	skipSpaces( src);
 	if (neg)

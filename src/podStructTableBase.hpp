@@ -58,7 +58,7 @@ public:
 		typename std::set<SIZETYPE>::const_iterator fi = m_free_elemtab.find( idx);
 		if (fi != m_free_elemtab.end())
 		{
-			throw strus::runtime_error( _TXT("write of element disposed (PodStructTableBase)"));
+			throw strus::runtime_error( _TXT("write of element disposed (%s)"), "PodStructTableBase");
 		}
 #endif
 		return Parent::operator []( idx);
@@ -70,7 +70,7 @@ public:
 		typename std::set<SIZETYPE>::const_iterator fi = m_free_elemtab.find( idx);
 		if (fi != m_free_elemtab.end())
 		{
-			throw strus::runtime_error( _TXT("read of element disposed (PodStructTableBase)"));
+			throw strus::runtime_error( _TXT("read of element disposed (%s)"), "PodStructTableBase");
 		}
 #endif
 		return Parent::operator []( idx);
@@ -101,7 +101,7 @@ public:
 #ifdef STRUS_USE_BASEADDR
 		if (idx < BASEADDR)
 		{
-			throw strus::runtime_error(_TXT("removing illegal element from table"));
+			throw strus::runtime_error( "%s", _TXT("removing illegal element from table"));
 		}
 #endif
 #ifdef STRUS_CHECK_FREE_ITEMS
@@ -137,7 +137,7 @@ public:
 #ifdef STRUS_USE_BASEADDR
 			if (fi && fi < BASEADDR)
 			{
-				throw strus::runtime_error(_TXT("check table freelist failed"));
+				throw strus::runtime_error( "%s", _TXT("check table freelist failed"));
 			}
 #endif
 		}

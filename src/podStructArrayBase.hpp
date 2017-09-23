@@ -72,7 +72,7 @@ public:
 #endif
 		if (idx >= m_size)
 		{
-			throw strus::runtime_error( _TXT("array bound read (PodStructArrayBase)"));
+			throw strus::runtime_error( _TXT("array bound read (%s)"), "PodStructArrayBase");
 		}
 		return m_ar[idx];
 	}
@@ -83,7 +83,7 @@ public:
 #endif
 		if (idx >= m_size)
 		{
-			throw strus::runtime_error( _TXT("array bound write (PodStructArrayBase)"));
+			throw strus::runtime_error( _TXT("array bound write (%s)"), "PodStructArrayBase");
 		}
 		return m_ar[idx];
 	}
@@ -99,7 +99,7 @@ public:
 	{
 		if (m_allocsize < m_size + addsize)
 		{
-			throw strus::runtime_error( _TXT("array bound write on reserved area (PodStructArrayBase)"));
+			throw strus::runtime_error( _TXT("array bound write on reserved area (%s)"), "PodStructArrayBase");
 		}
 		m_size += addsize;
 	}
