@@ -27,6 +27,8 @@ case $OS in
 			cmake \
 			boost \
 			gettext \
+			snappy \
+			leveldb \
 			tre \
 			ragel \
 			|| true
