@@ -14,7 +14,7 @@ case $OS in
 			ragel
 		sudo add-apt-repository -y ppa:kojoley/boost
 		sudo apt-get -q update
-		sudo apt-get install libboost-thread1.58-dev libboost-system1.58-dev libboost-filesystem1.58-dev libboost-regex1.58-dev
+		sudo apt-get install libboost-atomic1.58-dev libboost-thread1.58-dev libboost-system1.58-dev libboost-filesystem1.58-dev libboost-regex1.58-dev
 		;;
 
 	Darwin)
