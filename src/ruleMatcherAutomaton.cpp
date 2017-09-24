@@ -15,7 +15,7 @@
 #include <new>
 #include <stdint.h>
 
-#if !defined (__APPLE__) && !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(_WIN32) && UINTPTR_MAX != 0xffffffff
+#if !defined (__APPLE__) && !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(_WIN32) && UINTPTR_MAX != 0xffffffff && !defined(__clang__) 
 #ifdef __SSE__
 #include <emmintrin.h>
 #define STRUS_USE_SSE_SCAN_TRIGGERS
