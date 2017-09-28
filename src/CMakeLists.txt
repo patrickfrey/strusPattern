@@ -51,7 +51,7 @@ target_link_libraries( modstrus_analyzer_pattern strus_module_analyzer strus_pat
 set_target_properties(
     strus_pattern
     PROPERTIES
-    DEBUG_POSTFIX "_d"
+    DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}"
     SOVERSION "${STRUS_MAJOR_VERSION}.${STRUS_MINOR_VERSION}"
     VERSION ${STRUS_VERSION} )
 
