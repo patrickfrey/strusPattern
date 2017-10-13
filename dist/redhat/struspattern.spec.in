@@ -253,6 +253,9 @@ make test
 %{_includedir}/strus/lib/*.hpp
 
 %changelog
+* Fri Oct 13 2017 Patrick Frey <patrickpfrey@yahoo.com> 0.15.3-0.1
+- RPath fixes and some CMake file reorganization
+
 * Wed Sep 27 2017 Patrick Frey <patrickpfrey@yahoo.com> 0.15.2-0.1
 - bring up travis build, some minor fixes
 
