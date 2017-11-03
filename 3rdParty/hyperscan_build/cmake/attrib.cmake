@@ -1,7 +1,7 @@
 # tests for compiler properties
 
 # set -Werror so we can't ignore unused attribute warnings
-set (CMAKE_REQUIRED_FLAGS "-Werror")
+# set (CMAKE_REQUIRED_FLAGS "-Werror")
 
 CHECK_C_SOURCE_COMPILES("
     int foo(int) __attribute__ ((ifunc(\"foo_i\")));

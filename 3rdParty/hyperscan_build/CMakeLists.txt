@@ -234,8 +234,9 @@ else()
     if (NOT RELEASE_BUILD)
         # -Werror is most useful during development, don't potentially break
         # release builds
-        set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Werror")
-        set(EXTRA_CXX_FLAGS "${EXTRA_CXX_FLAGS} -Werror")
+        # set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Werror")
+        # set(EXTRA_CXX_FLAGS "${EXTRA_CXX_FLAGS} -Werror")
+	# ... -Werror disabled also in debug because hyperscan does not build with a C99 compiler
     endif()
 
     if (DISABLE_ASSERTS)
