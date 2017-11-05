@@ -1,1 +1,2 @@
 Removed -Werror Flags in hyperscan/CMakeLists.txt, since it does not build!
+Removed -std flags in hyperscan/CMakeLists.txt
