@@ -462,7 +462,7 @@ if (NOT WIN32)
     endforeach()
 
     configure_file(libhs.pc.in libhs.pc @ONLY) # only replace @ quoted vars
-    install(FILES ${CMAKE_BINARY_DIR}/libhs.pc
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libhs.pc
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 endif()
 

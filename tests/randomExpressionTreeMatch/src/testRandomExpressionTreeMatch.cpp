@@ -90,9 +90,9 @@ public:
 	}
 	void attachVariable( unsigned int variable_)
 	{
-		char name[ 64];
-		::snprintf( name, sizeof(name), "V%u", variable_);
-		m_variable.append( name);
+		char namestr[ 64];
+		::snprintf( namestr, sizeof(namestr), "V%u", variable_);
+		m_variable.append( namestr);
 	}
 	void removeVariable()
 	{
@@ -100,9 +100,9 @@ public:
 	}
 	void setName( unsigned int idx_)
 	{
-		char name[ 64];
-		::snprintf( name, sizeof(name), "pattern_%u", idx_);
-		m_rulename.append( name);
+		char namestr[ 64];
+		::snprintf( namestr, sizeof(namestr), "pattern_%u", idx_);
+		m_rulename.append( namestr);
 	}
 	const char* name() const
 	{

@@ -329,12 +329,14 @@ public:
 	///\param[in] options options to stear matching
 	void complete( HsPatternTable& hspt, unsigned int options)
 	{
-		std::vector<PatternDef>::iterator di = m_defar.begin(), de = m_defar.end();
-		for (; di != de; ++di)
 		{
-			if (di->editdist()) break;
+			std::vector<PatternDef>::iterator di = m_defar.begin(), de = m_defar.end();
+			for (; di != de; ++di)
+			{
+				if (di->editdist()) break;
+			}
+			m_hasEditDist = (di != de);
 		}
-		m_hasEditDist = (di != de);
 		if (m_hasEditDist)
 		{
 			//... always do rematch expression in case of using edit dist because a match is only a hint:
@@ -360,41 +362,44 @@ public:
 				}
 			}
 		}
-		hspt.init( m_defar.size());
-		di = m_defar.begin();
-		for (std::size_t didx=0; di != de; ++di,++didx)
 		{
-			const char* expr;
-			if (m_hasEditDist)
+			std::vector<PatternDef>::iterator di = m_defar.begin(), de = m_defar.end();
+			hspt.init( m_defar.size());
+			di = m_defar.begin();
+			for (std::size_t didx=0; di != de; ++di,++didx)
 			{
-				di->setExpressionOneByteCharMap();
-				expr = di->expression_onebyte().c_str();
-			}
-			else
-			{
-				expr = di->expression().c_str();
-			}
-			IdSymTabMap::const_iterator ti = m_idsymtabmap.find( di->id());
-			if (ti != m_idsymtabmap.end())
-			{
-				di->setSymtabref( ti->second);
-			}
-			hspt.patternar[ didx] = expr;
-			hspt.idar[ didx] = didx+1;
-			if (di->editdist())
-			{
-				hspt.flagar[ didx] = options | HS_FLAG_SOM_LEFTMOST;
-				hspt.extar[ didx] = createPatternExprExtFlags( di->editdist());
-			}
-			else if (m_hasEditDist)
-			{
-				hspt.flagar[ didx] = options | HS_FLAG_SOM_LEFTMOST;
-				hspt.extar[ didx] = 0;
-			}
-			else
-			{
-				hspt.flagar[ didx] = options | HS_FLAG_UTF8 | HS_FLAG_SOM_LEFTMOST;
-				hspt.extar[ didx] = 0;
+				const char* expr;
+				if (m_hasEditDist)
+				{
+					di->setExpressionOneByteCharMap();
+					expr = di->expression_onebyte().c_str();
+				}
+				else
+				{
+					expr = di->expression().c_str();
+				}
+				IdSymTabMap::const_iterator ti = m_idsymtabmap.find( di->id());
+				if (ti != m_idsymtabmap.end())
+				{
+					di->setSymtabref( ti->second);
+				}
+				hspt.patternar[ didx] = expr;
+				hspt.idar[ didx] = didx+1;
+				if (di->editdist())
+				{
+					hspt.flagar[ didx] = options | HS_FLAG_SOM_LEFTMOST;
+					hspt.extar[ didx] = createPatternExprExtFlags( di->editdist());
+				}
+				else if (m_hasEditDist)
+				{
+					hspt.flagar[ didx] = options | HS_FLAG_SOM_LEFTMOST;
+					hspt.extar[ didx] = 0;
+				}
+				else
+				{
+					hspt.flagar[ didx] = options | HS_FLAG_UTF8 | HS_FLAG_SOM_LEFTMOST;
+					hspt.extar[ didx] = 0;
+				}
 			}
 		}
 		hspt.patternar[ m_defar.size()] = 0;
