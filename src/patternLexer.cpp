@@ -279,8 +279,9 @@ public:
 		{
 			symtabref = yi->second;
 		}
-		uint32_t symidx = m_symtabmap[ symtabref-1]->getOrCreate( name);
-		if (symidx != m_symidmap.size()+1)
+		PatternSymbolTable& pst = m_symtabmap[ symtabref-1];
+		uint32_t symidx = pst.symtab->getOrCreate( name);
+		if (symidx != pst.idmap.size()+1)
 		{
 			if (symidx == 0) throw strus::runtime_error( "%s", m_errorhnd->fetchError());
 			throw strus::runtime_error(_TXT("symbol defined twice: '%s'"), name.c_str());
@@ -288,7 +289,7 @@ public:
 #ifdef STRUS_LOWLEVEL_DEBUG
 		std::cout << "define symbol " << patternid << " as " << symbolid << " name '" << name << "'" << std::endl;
 #endif
-		m_symidmap.push_back( symbolid);
+		pst.idmap.push_back( symbolid);
 	}
 
 	unsigned int getSymbol( unsigned int patternid, const std::string& name) const
@@ -302,15 +303,17 @@ public:
 		else
 		{
 			symtabref = yi->second;
-			uint32_t symidx = m_symtabmap[ symtabref-1]->get( name);
-			return symidx==0?0:m_symidmap[ symidx-1];
+			const PatternSymbolTable& pst = m_symtabmap[ symtabref-1];
+			uint32_t symidx = pst.symtab->get( name);
+			return symidx?pst.idmap[ symidx-1]:0;
 		}
 	}
 
 	unsigned int symbolId( uint8_t symtabref, const char* keystr, std::size_t keylen) const
 	{
-		uint32_t symidx = m_symtabmap[ symtabref-1]->get( keystr, keylen);
-		return (symidx)?m_symidmap[ symidx-1]:0;
+		const PatternSymbolTable& pst = m_symtabmap[ symtabref-1];
+		uint32_t symidx = pst.symtab->get( keystr, keylen);
+		return symidx?pst.idmap[ symidx-1]:0;
 	}
 
 	const PatternDef& patternDef( unsigned int id) const
@@ -435,14 +438,13 @@ private:
 		{
 			throw strus::runtime_error(_TXT("too many patter symbol tables defined, %u allowed"), (unsigned int)m_defar.size());
 		}
-		m_symtabmap.push_back( new SymbolTable());
+		m_symtabmap.push_back( PatternSymbolTable());
 		return m_symtabmap.size();
 	}
 
 	struct SubExpressionDef
 	{
 		regex_t regex;
-
 		std::size_t index;
 		unsigned int editdist;
 		bool usewchar;
@@ -619,10 +621,20 @@ private:
 	}
 
 private:
+	struct PatternSymbolTable
+	{
+		Reference<SymbolTable> symtab;
+		std::vector<unsigned int> idmap;
+
+		PatternSymbolTable()
+			:symtab( new SymbolTable()),idmap(){}
+		PatternSymbolTable( const PatternSymbolTable& o)
+			:symtab(o.symtab),idmap(o.idmap){}
+	};
+
 	ErrorBufferInterface* m_errorhnd;
 	std::vector<PatternDef> m_defar;			///< list of expressions and their attributes defined for the automaton to recognize
-	std::vector<Reference<SymbolTable> > m_symtabmap;	///< map PatternDef::symtabref -> symbol table
-	std::vector<uint32_t> m_symidmap;			///< map symbol table id -> symbol identifier id given by defineSymbol
+	std::vector<PatternSymbolTable> m_symtabmap;		///< map PatternDef::symtabref -> symbol table
 	typedef std::map<uint32_t,uint8_t> IdSymTabMap;
 	IdSymTabMap m_idsymtabmap;				///< map pattern id -> index in m_symtabmap == PatternDef::symtabref
 	typedef Reference<SubExpressionDef> SubExpressionReference;
