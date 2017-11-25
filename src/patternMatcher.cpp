@@ -24,6 +24,7 @@
 #include <vector>
 #include <cstring>
 #include <iostream>
+#include <algorithm>
 
 #undef STRUS_LOWLEVEL_DEBUG
 
