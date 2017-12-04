@@ -253,6 +253,10 @@ make test
 %{_includedir}/strus/lib/*.hpp
 
 %changelog
+* Mon Dec 4 2017 Patrick Frey <patrickpfrey@yahoo.com> 0.15.4-0.1
+- fixed handling of symbols: Did not work with more than one lexem type with symbols assigned
+- added -Wshadow for C++ build
+
 * Fri Oct 13 2017 Patrick Frey <patrickpfrey@yahoo.com> 0.15.3-0.1
 - RPath fixes and some CMake file reorganization
 
