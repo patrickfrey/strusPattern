@@ -327,7 +327,7 @@ public:
 					slot_sigtype = Trigger::SigWithin;
 					if (argc > 32)
 					{
-						throw strus::runtime_error( _TXT("operator '%s': number of arguments %d out of range (%d)"), "within", argc, 32);
+						throw strus::runtime_error( _TXT("operator '%s': number of arguments %d out of range (%d)"), "within", (int)argc, 32);
 					}
 					slot_initsigval = 0xffFFffFF;
 					break;
@@ -335,7 +335,7 @@ public:
 					slot_sigtype = Trigger::SigWithin;
 					if (argc > 32)
 					{
-						throw strus::runtime_error( _TXT("operator '%s': number of arguments %d out of range (%d)"), "within_struct", argc, 32);
+						throw strus::runtime_error( _TXT("operator '%s': number of arguments %d out of range (%d)"), "within_struct", (int)argc, 32);
 					}
 					slot_initsigval = 0xffFFffFF;
 					--slot_initcount;
