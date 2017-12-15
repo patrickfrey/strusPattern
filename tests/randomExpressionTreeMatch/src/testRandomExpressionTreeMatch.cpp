@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 #include <memory>
@@ -864,7 +865,8 @@ static bool compareResults( const std::vector<strus::analyzer::PatternMatcherRes
 {
 	std::vector<strus::analyzer::PatternMatcherResult>::const_iterator ri = results.begin(), re = results.end();
 	std::vector<strus::analyzer::PatternMatcherResult>::const_iterator xi = expectedResults.begin(), xe = expectedResults.end();
-	std::set<std::string> set_res, set_exp;
+	std::set<std::string> set_res;
+	std::set<std::string> set_exp;
 	for (; xi != xe; ++xi)
 	{
 		std::ostringstream item;
