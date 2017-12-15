@@ -14,7 +14,6 @@
 #include "strus/patternMatcherInstanceInterface.hpp"
 #include "strus/patternMatcherContextInterface.hpp"
 #include "strus/base/local_ptr.hpp"
-#include "strus/base/unique_ptr.hpp"
 #include "strus/base/thread.hpp"
 #include "testUtils.hpp"
 #include <stdexcept>
