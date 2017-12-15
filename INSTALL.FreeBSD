@@ -26,7 +26,7 @@ FreeBSD 10.2 on x86_64, i686
 ----------------------------
 
 Install packages with 'pkg install':
-- cmake, boost-libs
+- cmake, boost-libs, gettext, ragel, tre
 
 Build using the clang/clang++ toolchain:
 
