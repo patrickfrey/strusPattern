@@ -9,7 +9,7 @@
 #ifndef _STRUS_RULE_MATCHER_AUTOMATON_HPP_INCLUDED
 #define _STRUS_RULE_MATCHER_AUTOMATON_HPP_INCLUDED
 #include "strus/base/stdint.h"
-#include "utils.hpp"
+#include "strus/base/unordered_map.hpp"
 #include "podStructArrayBase.hpp"
 #include "podStructTableBase.hpp"
 #include "podStackPoolBase.hpp"
@@ -17,6 +17,7 @@
 #include "internationalization.hpp"
 #include <vector>
 #include <map>
+#include <set>
 #include <string>
 #include <stdexcept>
 
@@ -394,7 +395,7 @@ private:
 	typedef PodStructTableBase<Program,uint32_t,ProgramTableFreeListElem,BaseAddrProgramTable> ProgramMap;
 	ProgramMap m_programMap;
 	PodStackPoolBase<ProgramTrigger,uint32_t,BaseAddrProgramList> m_programTriggerList;
-	typedef utils::UnorderedMap<uint32_t,uint32_t> EventProgamTriggerMap;
+	typedef strus::unordered_map<uint32_t,uint32_t> EventProgamTriggerMap;
 	EventProgamTriggerMap m_eventProgamTriggerMap;
 	std::set<uint32_t> m_stopWordSet;
 	typedef std::map<uint32_t,uint32_t> EventOccurrenceMap;

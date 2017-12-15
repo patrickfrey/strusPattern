@@ -17,8 +17,8 @@
 #include "strus/reference.hpp"
 #include "strus/base/stdint.h"
 #include "strus/base/symbolTable.hpp"
+#include "strus/base/string_conv.hpp"
 #include "compactNodeTrie.hpp"
-#include "utils.hpp"
 #include "errorUtils.hpp"
 #include "internationalization.hpp"
 #include "hs_compile.h"
@@ -1026,23 +1026,23 @@ public:
 	{
 		try
 		{
-			if (utils::caseInsensitiveEquals( name, "CASELESS"))
+			if (strus::caseInsensitiveEquals( name, "CASELESS"))
 			{
 				m_flags |= HS_FLAG_CASELESS;
 			}
-			else if (utils::caseInsensitiveEquals( name, "DOTALL"))
+			else if (strus::caseInsensitiveEquals( name, "DOTALL"))
 			{
 				m_flags |= HS_FLAG_DOTALL;
 			}
-			else if (utils::caseInsensitiveEquals( name, "MULTILINE"))
+			else if (strus::caseInsensitiveEquals( name, "MULTILINE"))
 			{
 				m_flags |= HS_FLAG_MULTILINE;
 			}
-			else if (utils::caseInsensitiveEquals( name, "ALLOWEMPTY"))
+			else if (strus::caseInsensitiveEquals( name, "ALLOWEMPTY"))
 			{
 				m_flags |= HS_FLAG_ALLOWEMPTY;
 			}
-			else if (utils::caseInsensitiveEquals( name, "UCP"))
+			else if (strus::caseInsensitiveEquals( name, "UCP"))
 			{
 				m_flags |= HS_FLAG_UCP;
 			}

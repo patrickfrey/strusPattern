@@ -7,6 +7,7 @@
  */
 
 #include "ruleMatcherAutomaton.hpp"
+#include "strus/base/malloc.hpp"
 #include <limits>
 #include <cstdlib>
 #include <stdexcept>
@@ -69,7 +70,7 @@ EventTriggerTable::TriggerInd::~TriggerInd()
 
 void EventTriggerTable::TriggerInd::clear()
 {
-	if (m_eventAr) std::free( m_eventAr);
+	if (m_eventAr) strus::aligned_free( m_eventAr);
 	if (m_ar) std::free( m_ar);
 	std::memset( this, 0, sizeof(*this));
 }
@@ -81,10 +82,10 @@ void EventTriggerTable::TriggerInd::expand( uint32_t newallocsize)
 	{
 		throw std::logic_error( "illegal call of EventTriggerTable::TriggerInd::expand");
 	}
-	uint32_t* war = (uint32_t*)utils::aligned_malloc( newallocsize * sizeof(uint32_t), EventArrayMemoryAlignment);
+	uint32_t* war = (uint32_t*)strus::aligned_malloc( newallocsize * sizeof(uint32_t), EventArrayMemoryAlignment);
 	if (!war) throw std::bad_alloc();
 	std::memcpy( war, m_eventAr, m_size * sizeof(uint32_t));
-	if (m_eventAr) std::free( m_eventAr);
+	if (m_eventAr) strus::aligned_free( m_eventAr);
 	m_eventAr = war;
 	uint32_t* far = (uint32_t*)std::realloc( m_ar, newallocsize * sizeof(uint32_t));
 	if (!far) throw std::bad_alloc();

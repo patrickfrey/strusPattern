@@ -14,6 +14,8 @@
 #include "strus/patternMatcherInstanceInterface.hpp"
 #include "strus/patternMatcherContextInterface.hpp"
 #include "strus/base/local_ptr.hpp"
+#include "strus/base/unique_ptr.hpp"
+#include "strus/base/thread.hpp"
 #include "testUtils.hpp"
 #include <stdexcept>
 #include <iostream>
@@ -29,10 +31,6 @@
 #include <cmath>
 #include <cstring>
 #include <iomanip>
-#include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/date_time.hpp>
-#include "boost/date_time/posix_time/posix_time.hpp"
 
 #undef STRUS_LOWLEVEL_DEBUG
 
@@ -218,7 +216,7 @@ public:
 public:
 	void accumulateStats( std::map<std::string,double> addstats, unsigned int nofMatches, unsigned int nofDocs)
 	{
-		boost::mutex::scoped_lock lock( mutex);
+		strus::scoped_lock lock( mutex);
 		std::map<std::string,double>::const_iterator
 			li = addstats.begin(), le = addstats.end();
 		for (; li != le; ++li)
@@ -232,7 +230,7 @@ public:
 	}
 
 private:
-	boost::mutex mutex;
+	strus::mutex mutex;
 };
 
 class Task
@@ -327,27 +325,26 @@ int main( int argc, const char** argv)
 			throw std::runtime_error( "error creating automaton for evaluating rules");
 		}
 		Globals globals( ptinst.get());
-		boost::posix_time::time_duration duration;
 		if (nofThreads)
 		{
 			std::cerr << "starting " << nofThreads << " threads for rule evaluation ..." << std::endl;
-			boost::posix_time::ptime start_time = boost::posix_time::microsec_clock::local_time();
 
 			std::vector<Task> taskar;
 			for (unsigned int ti=0; ti<nofThreads; ++ti)
 			{
 				taskar.push_back( Task( &globals, createRandomDocuments( nofDocuments, documentSize, nofFeatures)));
 			}
+			std::vector<strus::Reference<strus::thread> > threadGroup;
 			{
-				boost::thread_group tgroup;
 				for (unsigned int ti=0; ti<nofThreads; ++ti)
 				{
-					tgroup.create_thread( boost::bind( &Task::run, &taskar[ti]));
+					Task* task = &taskar.at( ti);
+					strus::Reference<strus::thread> th( new strus::thread( &Task::run, task));
+					threadGroup.push_back( th);
 				}
-				tgroup.join_all();
+				std::vector<strus::Reference<strus::thread> >::iterator gi = threadGroup.begin(), ge = threadGroup.end();
+				for (; gi != ge; ++gi) (*gi)->join();
 			}
-			boost::posix_time::ptime end_time = boost::posix_time::microsec_clock::local_time();
-			duration = end_time - start_time;
 			if (!globals.errors.empty())
 			{
 				std::vector<std::string>::const_iterator ei = globals.errors.begin(), ee = globals.errors.end();
@@ -361,21 +358,17 @@ int main( int argc, const char** argv)
 		{
 			std::vector<strus::utils::Document> docs = createRandomDocuments( nofDocuments, documentSize, nofFeatures);
 			std::cerr << "starting rule evaluation ..." << std::endl;
-			boost::posix_time::ptime start_time = boost::posix_time::microsec_clock::local_time();
-	
+
 			std::map<std::string,double> stats;
 			globals.totalNofMatches = processDocuments( ptinst.get(), docs, globals.stats);
 			globals.totalNofDocs = docs.size();
-
-			boost::posix_time::ptime end_time = boost::posix_time::microsec_clock::local_time();
-			duration = end_time - start_time;
 		}
 		if (g_errorBuffer->hasError())
 		{
 			throw std::runtime_error("uncaugth exception");
 		}
 		std::cerr << "OK" << std::endl;
-		std::cerr << "processed " << nofPatterns << " patterns on " << globals.totalNofDocs << " documents with total " << globals.totalNofMatches << " matches in " << duration.total_milliseconds() << " milliseconds" << std::endl;
+		std::cerr << "processed " << nofPatterns << " patterns on " << globals.totalNofDocs << " documents with total " << globals.totalNofMatches << " matches" << std::endl;
 		std::cerr << "statistiscs:" << std::endl;
 		std::map<std::string,double>::const_iterator gi = globals.stats.begin(), ge = globals.stats.end();
 		for (; gi != ge; ++gi)

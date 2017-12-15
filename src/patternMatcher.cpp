@@ -8,7 +8,6 @@
 /// \brief Implementation of an automaton for detecting patterns of tokens in a document stream
 /// \file "patternMatcher.cpp"
 #include "patternMatcher.hpp"
-#include "utils.hpp"
 #include "errorUtils.hpp"
 #include "internationalization.hpp"
 #include "strus/analyzer/patternMatcherResultItem.hpp"
@@ -17,6 +16,7 @@
 #include "strus/patternMatcherContextInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/base/symbolTable.hpp"
+#include "strus/base/string_conv.hpp"
 #include "strus/reference.hpp"
 #include "ruleMatcherAutomaton.hpp"
 #include <map>
@@ -534,23 +534,23 @@ public:
 	{
 		try
 		{
-			if (utils::caseInsensitiveEquals( name, "stopwordOccurrenceFactor"))
+			if (strus::caseInsensitiveEquals( name, "stopwordOccurrenceFactor"))
 			{
 				m_popt.stopwordOccurrenceFactor = value;
 			}
-			else if (utils::caseInsensitiveEquals( name, "weightFactor"))
+			else if (strus::caseInsensitiveEquals( name, "weightFactor"))
 			{
 				m_popt.weightFactor = value;
 			}
-			else if (utils::caseInsensitiveEquals( name, "maxRange"))
+			else if (strus::caseInsensitiveEquals( name, "maxRange"))
 			{
 				m_popt.maxRange = (unsigned int)(value + std::numeric_limits<double>::epsilon());
 			}
-			else if (utils::caseInsensitiveEquals( name, "maxResultSize"))
+			else if (strus::caseInsensitiveEquals( name, "maxResultSize"))
 			{
 				m_data.maxResultSize = (unsigned int)(value + std::numeric_limits<double>::epsilon());
 			}
-			else if (utils::caseInsensitiveEquals( name, "exclusive"))
+			else if (strus::caseInsensitiveEquals( name, "exclusive"))
 			{
 				m_data.exclusive = true;
 			}

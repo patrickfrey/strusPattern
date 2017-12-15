@@ -4,7 +4,6 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 # SOURCES AND INCLUDES
 # --------------------------------------
 set( source_files
-	utils.cpp
 	internationalization.cpp
 	ruleMatcherAutomaton.cpp
 	unicodeUtils.cpp

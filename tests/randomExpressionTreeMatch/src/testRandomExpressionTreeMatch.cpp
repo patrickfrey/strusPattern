@@ -15,6 +15,7 @@
 #include "strus/patternMatcherInstanceInterface.hpp"
 #include "strus/patternMatcherContextInterface.hpp"
 #include "strus/base/local_ptr.hpp"
+#include "strus/base/thread.hpp"
 #include "testUtils.hpp"
 #include <stdexcept>
 #include <iostream>
@@ -31,10 +32,6 @@
 #include <cstring>
 #include <iomanip>
 #include <algorithm>
-#include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/date_time.hpp>
-#include "boost/date_time/posix_time/posix_time.hpp"
 
 #undef STRUS_LOWLEVEL_DEBUG
 
@@ -1017,7 +1014,6 @@ int main( int argc, const char** argv)
 		{
 			throw std::runtime_error( "error creating automaton for evaluating rules");
 		}
-		boost::posix_time::time_duration duration;
 #ifdef STRUS_LOWLEVEL_DEBUG
 		std::cout << "patterns processed" << std::endl;
 		std::vector<TreeNode*>::const_iterator ti = treear.begin(), te = treear.end();
@@ -1027,7 +1023,7 @@ int main( int argc, const char** argv)
 		}
 #endif
 		std::cerr << "starting rule evaluation ..." << std::endl;
-	
+
 		std::map<std::string,double> stats;
 		unsigned int totalNofMatches = processDocuments( ptinst.get(), keyTokenMap, treear, docs, stats, outputpath);
 		unsigned int totalNofDocs = docs.size();
