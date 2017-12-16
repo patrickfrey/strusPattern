@@ -29,6 +29,7 @@
 #include <stdexcept>
 #include <limits>
 #include <iostream>
+#include <map>
 #undef TRE_USE_SYSTEM_REGEX_H
 #include <tre/tre.h>
 
