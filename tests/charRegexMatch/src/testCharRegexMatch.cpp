@@ -59,8 +59,8 @@ struct ResultDef
 
 struct TestDef
 {
-	const PatternDef patterns[64];
-	const SymbolDef symbols[64];
+	PatternDef patterns[64];
+	SymbolDef symbols[64];
 	const char* src;
 	ResultDef result[128];
 };
