@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 # SOURCES AND INCLUDES
 # --------------------------------------
 set( source_files
-	internationalization.cpp
+	${CMAKE_CURRENT_BINARY_DIR}/internationalization.cpp
 	ruleMatcherAutomaton.cpp
 	unicodeUtils.cpp
 	patternLexer.cpp
