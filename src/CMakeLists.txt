@@ -23,6 +23,7 @@ include_directories(
 	"${strusbase_INCLUDE_DIRS}"
 	"${strusanalyzer_INCLUDE_DIRS}"
 	"${strusmodule_INCLUDE_DIRS}"
+	"${MAIN_SOURCE_DIR}"
 )
 
 link_directories(
