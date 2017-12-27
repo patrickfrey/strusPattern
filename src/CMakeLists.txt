@@ -31,6 +31,7 @@ link_directories(
 	"${CMAKE_CURRENT_BINARY_DIR}/../3rdParty/compactNodeTrie/src"
 	"${CMAKE_CURRENT_BINARY_DIR}/../3rdParty/hyperscan/lib"
 	"${strusbase_LIBRARY_DIRS}"
+	${Intl_LIBRARIES}
 )
 
 
