@@ -31,7 +31,6 @@ link_directories(
 	"${CMAKE_CURRENT_BINARY_DIR}/../3rdParty/compactNodeTrie/src"
 	"${CMAKE_CURRENT_BINARY_DIR}/../3rdParty/hyperscan/lib"
 	"${strusbase_LIBRARY_DIRS}"
-	${Intl_LIBRARIES}
 )
 
 
@@ -43,11 +42,11 @@ target_link_libraries( local_rulematch strus_base compactnodetrie_static hs ${Bo
 set_property( TARGET local_rulematch PROPERTY POSITION_INDEPENDENT_CODE TRUE )
 
 add_library( strus_pattern SHARED libstrus_pattern.cpp )
-target_link_libraries( strus_pattern local_rulematch strus_base  )
+target_link_libraries( strus_pattern local_rulematch strus_base  ${Intl_LIBRARIES} )
 
 add_library( modstrus_analyzer_pattern  MODULE  modstrus_analyzer_pattern.cpp )
 set_target_properties( modstrus_analyzer_pattern PROPERTIES PREFIX "")
-target_link_libraries( modstrus_analyzer_pattern strus_module_analyzer strus_pattern )
+target_link_libraries( modstrus_analyzer_pattern strus_module_analyzer strus_pattern ${Intl_LIBRARIES} )
 
 set_target_properties(
     strus_pattern
