@@ -44,16 +44,24 @@ set_property( TARGET local_rulematch PROPERTY POSITION_INDEPENDENT_CODE TRUE )
 add_library( strus_pattern SHARED libstrus_pattern.cpp )
 target_link_libraries( strus_pattern local_rulematch strus_base  ${Intl_LIBRARIES} )
 
-add_library( modstrus_analyzer_pattern  MODULE  modstrus_analyzer_pattern.cpp )
-set_target_properties( modstrus_analyzer_pattern PROPERTIES PREFIX "")
-target_link_libraries( modstrus_analyzer_pattern strus_module_analyzer strus_pattern ${Intl_LIBRARIES} )
-
 set_target_properties(
     strus_pattern
     PROPERTIES
     DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}"
     SOVERSION "${STRUS_MAJOR_VERSION}.${STRUS_MINOR_VERSION}"
     VERSION ${STRUS_VERSION} )
+
+add_library( modstrus_analyzer_pattern  MODULE  modstrus_analyzer_pattern.cpp )
+set_target_properties( modstrus_analyzer_pattern PROPERTIES PREFIX "")
+target_link_libraries( modstrus_analyzer_pattern strus_module_analyzer strus_pattern ${Intl_LIBRARIES} )
+
+# Copy pattern module into a created directory easy relocatable by tests:
+add_custom_command( TARGET modstrus_analyzer_pattern POST_BUILD
+					  COMMAND ${CMAKE_COMMAND} -E make_directory  ${CMAKE_BINARY_DIR}/modules/strus
+					  COMMENT "Create local module directory '${CMAKE_BINARY_DIR}/modules/strus/' " )
+add_custom_command( TARGET modstrus_analyzer_pattern POST_BUILD
+					  COMMAND ${CMAKE_COMMAND} -E copy_if_different  $<TARGET_FILE:modstrus_analyzer_pattern>  ${CMAKE_BINARY_DIR}/modules/strus/
+					  COMMENT "Copy strus pattern module built to module directory" )
 
 # ------------------------------
 # INSTALLATION
