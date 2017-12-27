@@ -61,7 +61,7 @@ add_custom_command( TARGET modstrus_analyzer_pattern POST_BUILD
 					  COMMENT "Create local module directory '${CMAKE_BINARY_DIR}/modules/strus/' " )
 add_custom_command( TARGET modstrus_analyzer_pattern POST_BUILD
 					  COMMAND ${CMAKE_COMMAND} -E copy_if_different  $<TARGET_FILE:modstrus_analyzer_pattern>  ${CMAKE_BINARY_DIR}/modules/strus/
-					  COMMENT "Copy strus pattern module built to module directory" )
+					  COMMENT "Copy strus pattern module built to local module directory" )
 
 # ------------------------------
 # INSTALLATION
