@@ -57,11 +57,10 @@ target_link_libraries( modstrus_analyzer_pattern strus_module_analyzer strus_pat
 
 # Copy pattern module into a created directory easy relocatable by tests:
 add_custom_command( TARGET modstrus_analyzer_pattern POST_BUILD
-					  COMMAND ${CMAKE_COMMAND} -E make_directory  ${CMAKE_BINARY_DIR}/modules/strus
-					  COMMENT "Create local module directory '${CMAKE_BINARY_DIR}/modules/strus/' " )
+					  COMMAND ${CMAKE_COMMAND} -E make_directory  ${CMAKE_BINARY_DIR}/modules/strus )
 add_custom_command( TARGET modstrus_analyzer_pattern POST_BUILD
 					  COMMAND ${CMAKE_COMMAND} -E copy_if_different  $<TARGET_FILE:modstrus_analyzer_pattern>  ${CMAKE_BINARY_DIR}/modules/strus/
-					  COMMENT "Copy strus pattern module built to local module directory" )
+					  COMMENT "Copy strus pattern module built to ${CMAKE_BINARY_DIR}/modules/strus/" )
 
 # ------------------------------
 # INSTALLATION
