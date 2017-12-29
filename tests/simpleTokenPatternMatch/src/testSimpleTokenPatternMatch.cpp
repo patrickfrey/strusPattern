@@ -215,7 +215,7 @@ static const Pattern testPatterns[32] =
 		 {Operation::Expression,0,0,PT::OpSequence,1,0,2}},
 		{101,0}
 	},
-	{0,{Operation::None}}
+	{0,{{Operation::None}},{0}}
 };
 
 int main( int argc, const char** argv)
