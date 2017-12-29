@@ -122,7 +122,6 @@ BuildRoot: %{_tmppath}/%{name}-root
 BuildRequires: gcc
 BuildRequires: gcc-c++
 BuildRequires: cmake
-BuildRequires: ragel
 
 # LinuxDistribution.cmake depends depends on the Linux release files in '/etc' or
 # LSB files
@@ -195,6 +194,32 @@ BuildRequires: boost-devel
 %endif
 %endif
 
+BuildRequires: python
+
+%if %{rhel} || %{centos} || %{scilin} || %{fedora}
+%if %{rhel} || %{centos} || %{scilin}
+BuildRequires: strusragel
+%endif
+%if %{fedora}
+%if %{fc24} || %{fc25} || %{fc26} || %{fc27} || %{frawhide}
+BuildRequires: ragel
+%endif
+%endif
+%endif
+
+%if %{rhel} || %{centos} || %{scilin} || %{fedora}
+%if %{rhel} || %{centos} || %{scilin}
+BuildRequires: strustre-devel
+Requires: strustre
+%endif
+%if %{fedora}
+%if %{fc24} || %{fc25} || %{fc26} || %{fc27} || %{frawhide}
+BuildRequires: tre-devel
+Requires: tre
+%endif
+%endif
+%endif
+
 BuildRequires: strusbase-devel >= %{dep_version}
 BuildRequires: strusbase >= %{dep_version}
 BuildRequires: strus-devel >= %{dep_version}
@@ -249,6 +274,12 @@ make DESTDIR=$RPM_BUILD_ROOT install
 # or better, create debug packages (see debuginfo-install)
 rm -rf $RPM_BUILD_ROOT%{_libdir}/debug
 rm -rf $RPM_BUILD_ROOT%{_prefix}/src/debug
+
+# remove things we don't need from hyperscan
+rm -rf $RPM_BUILD_ROOT%{_includedir}/hs
+rm -rf $RPM_BUILD_ROOT%{_libdir}/pkgconfig/libhs.pc
+rm -rf $RPM_BUILD_ROOT%{_libdir}/libhs*.a
+rm -rf $RPM_BUILD_ROOT%{_prefix}/share/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
