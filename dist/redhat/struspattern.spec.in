@@ -122,7 +122,6 @@ BuildRoot: %{_tmppath}/%{name}-root
 BuildRequires: gcc
 BuildRequires: gcc-c++
 BuildRequires: cmake
-BuildRequires: ragel
 
 # LinuxDistribution.cmake depends depends on the Linux release files in '/etc' or
 # LSB files
@@ -192,6 +191,32 @@ Requires: libboost_system1_63_0 >= 1.63.0
 Requires: libboost_date_time1_63_0 >= 1.63.0
 Requires: libboost_regex1_63_0 >= 1.63.0
 BuildRequires: boost-devel
+%endif
+%endif
+
+BuildRequires: python
+
+%if %{rhel} || %{centos} || %{scilin} || %{fedora}
+%if %{rhel} || %{centos} || %{scilin}
+BuildRequires: strusragel
+%endif
+%if %{fedora}
+%if %{fc24} || %{fc25} || %{fc26} || %{fc27} || %{frawhide}
+BuildRequires: ragel
+%endif
+%endif
+%endif
+
+%if %{rhel} || %{centos} || %{scilin} || %{fedora}
+%if %{rhel} || %{centos} || %{scilin}
+BuildRequires: strustre-devel
+Requires: strustre
+%endif
+%if %{fedora}
+%if %{fc24} || %{fc25} || %{fc26} || %{fc27} || %{frawhide}
+BuildRequires: tre-devel
+Requires: tre
+%endif
 %endif
 %endif
 
