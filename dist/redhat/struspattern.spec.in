@@ -275,6 +275,12 @@ make DESTDIR=$RPM_BUILD_ROOT install
 rm -rf $RPM_BUILD_ROOT%{_libdir}/debug
 rm -rf $RPM_BUILD_ROOT%{_prefix}/src/debug
 
+# remove things we don't need from hyperscan
+rm -rf $RPM_BUILD_ROOT%{_includedir}/hs
+rm -rf $RPM_BUILD_ROOT%{_libdir}/pkgconfig/libhs.pc
+rm -rf $RPM_BUILD_ROOT%{_libdir}/libhs*.a
+rm -rf $RPM_BUILD_ROOT%{_prefix}/share/
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
