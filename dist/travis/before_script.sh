@@ -29,6 +29,7 @@ case $OS in
 			gettext \
 			snappy \
 			leveldb \
+			python3 \
 			tre \
 			ragel \
 			|| true
