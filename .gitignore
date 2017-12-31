@@ -66,10 +66,6 @@ build_clang
 tests/randomExpressionTreeMatch/res.txt
 tests/randomExpressionTreeMatch/exp.txt
 
-# Generated sources:
-src/internationalization.cpp
-struspattern-*.tar.gz
-
 # Hyperscan generated files:
 3rdParty/hyperscan_build/src/parser/Parser.cpp
 3rdParty/hyperscan_build/src/parser/control_verbs.cpp
@@ -77,3 +73,5 @@ struspattern-*.tar.gz
 3rdParty/hyperscan_build/config.h
 3rdParty/hyperscan_build/hs_version.h
 
+# deploy to obs tar:
+struspattern-*.tar.gz
