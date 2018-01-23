@@ -21,6 +21,7 @@
 #include "compactNodeTrie.hpp"
 #include "errorUtils.hpp"
 #include "internationalization.hpp"
+#include "hyperscanErrorCode.hpp"
 #include "hs_compile.h"
 #include "hs.h"
 #include <vector>
@@ -1082,19 +1083,23 @@ public:
 					const char* error_pattern = compile_err->expression < 0 ?0:hspt.patternar[ compile_err->expression];
 					if (error_pattern)
 					{
-						m_errorhnd->report( _TXT( "failed to compile pattern \"%s\": %s\n"),
-									  error_pattern, compile_err->message);
+						m_errorhnd->report(
+							hyperscanErrorCode( ErrorOperationBuildData, err),
+							_TXT( "failed to compile pattern \"%s\": %s\n"), error_pattern, compile_err->message);
 					}
 					else
 					{
-						m_errorhnd->report( _TXT( "failed to build automaton from expressions: %s\n"),
-									  compile_err->message);
+						m_errorhnd->report(
+							hyperscanErrorCode( ErrorOperationBuildData, err),
+							_TXT( "failed to build automaton from expressions: %s\n"), compile_err->message);
 					}
 					hs_free_compile_error( compile_err);
 				}
 				else
 				{
-					m_errorhnd->report( _TXT( "unknown errpr building automaton from expressions\n"));
+					m_errorhnd->report(
+						hyperscanErrorCode( ErrorOperationBuildData, err),
+						_TXT( "unknown errpr building automaton from expressions\n"));
 				}
 				return false;
 			}
