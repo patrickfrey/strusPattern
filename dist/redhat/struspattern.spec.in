@@ -321,7 +321,12 @@ Requires: %{name} >= %{main_version}-%{release}
 
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DLIB_INSTALL_DIR=%{_lib} ..
+cmake \
+%if %{rhel6} || %{centos6} || %{scilin6} || %{rhel7} || %{centos7} || %{scilin7} || %{sles11} || %{sles12} || %{osuleap423}
+-DBOOST_ROOT=/usr/include/strus \
+%endif
+	-DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DLIB_INSTALL_DIR=%{_lib} \
+	..
 make %{?_smp_mflags}
 
 %install
