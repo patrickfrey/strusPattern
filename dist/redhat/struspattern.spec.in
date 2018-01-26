@@ -319,6 +319,9 @@ Requires: %{name} >= %{main_version}-%{release}
 
 %build
 
+%if %{rhel6} || %{centos6} || %{scilin6} || %{rhel7} || %{centos7} || %{scilin7} || %{sles11} || %{sles12} || %{osuleap423}
+ln -s . /usr/include/strus/include
+%endif
 mkdir build
 cd build
 cmake \
