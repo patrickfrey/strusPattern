@@ -265,6 +265,18 @@ BuildRequires: ragel
 %endif
 %endif
 %endif
+%if %{suse}
+%if %{sles11} || %{sles12} || %{osuleap423}
+Requires: strusragel
+BuildRequires: strusragel-devel
+%endif
+%if %{osutumbleweed}
+# we need both, the compiler is in 'ragel', the header files in 'ragel-devel'
+BuildRequires: ragel-devel
+BuildRequires: ragel
+Requires: ragel
+%endif
+%endif
 
 %if %{rhel} || %{centos} || %{scilin} || %{fedora}
 %if %{rhel} || %{centos} || %{scilin}
@@ -276,6 +288,16 @@ Requires: strustre
 BuildRequires: tre-devel
 Requires: tre
 %endif
+%endif
+%endif
+%if %{suse}
+%if %{sles11}
+Requires: strustre
+BuildRequires: strustre-devel
+%endif
+%if %{osutumbleweed} || %{sles12} || %{osuleap423}
+BuildRequires: tre-devel
+Requires: tre
 %endif
 %endif
 
