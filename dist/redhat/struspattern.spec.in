@@ -319,9 +319,6 @@ Requires: %{name} >= %{main_version}-%{release}
 
 %build
 
-%if %{rhel6} || %{centos6} || %{scilin6} || %{rhel7} || %{centos7} || %{scilin7} || %{sles11} || %{sles12} || %{osuleap423}
-ln -fs . /usr/include/strus/include
-%endif
 mkdir build
 cd build
 cmake \
@@ -330,6 +327,10 @@ cmake \
 %endif
 	-DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DLIB_INSTALL_DIR=%{_lib} \
 	..
+# Hyperscan detects the wrong include path /usr/include/strus/include?! patching away freely here..
+%if %{rhel6} || %{centos6} || %{scilin6} || %{rhel7} || %{centos7} || %{scilin7} || %{sles11} || %{sles12} || %{osuleap423}
+find . -name flags.make -exec sed -i 's#-I/usr/include/strus/include#-I/usr/include/strus#g' {} \;
+%endif
 make %{?_smp_mflags}
 
 %install
