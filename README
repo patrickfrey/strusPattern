@@ -1,17 +1,17 @@
-StrusPattern provides efficient pattern matching on text.
+StrusPattern provides efficient pattern matching on text. It uses the Intel hyperscan library for matching regular expressions.
+With strusPattern you define patterns on 2 levels, the first levels defines lexems by regular expressions and the second level
+allows you to define patterns in a regular language with the lexems created in the first step as alphabet.
 
 Licenced as MPLv2 (Mozilla Public License, Version 2 - https://www.mozilla.org/en-US/MPL/2.0)
+For 3rdParty licenses see LICENSE.3rdParty
 
-StrusPattern uses the high-performance multiple regex matching library "Hyperscan" by Intel (https://01.org/hyperscan) for extracting the basic tokens, the "terminals" of the pattern matching grammar.
-Hyperscan is licensed under the BSD License (Copyright (c) 2015, Intel Corporation).
-
-StrusPattern allows you to define arbitrary complex patterns represented as tree with nodes of the form "find '[Hh][Ee][Ll][Ll][Oo]' and '[Ww][Oo][Rr][Ll][Dd]' within a range of 10 (tokens) in the same sentence".
-It is able to process millions of such nodes on input documents at a time.
-
+The project Strus implements a set of libraries, tools for building a competitive, 
+scalable search engine for text retrieval.
+It is a solution for small projects as well as larger scale applications.
 Strus project homepage at http://project-strus.net with articles, links, documentation.
-Binary packages available.
 
-* Contributors welcome
-* Open for sharing ideas
-* Open for interesting projects
+For installation see description files INSTALL.<platform> in the top level directory of the project.
+
+The project is built regularly with Travis (https://travis-ci.org/patrickfrey/strusPattern) 
+and with OpenSuse (https://build.opensuse.org/package/show/home:PatrickFrey/struspattern):
 
