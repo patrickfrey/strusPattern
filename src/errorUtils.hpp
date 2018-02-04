@@ -10,6 +10,7 @@
 #ifndef _STRUS_PATTERN_ERROR_UTILITIES_HPP_INCLUDED
 #define _STRUS_PATTERN_ERROR_UTILITIES_HPP_INCLUDED
 #include <stdexcept>
+#include "strus/errorCodes.hpp"
 #include "internationalization.hpp"
 
 #define THIS_COMPONENT_NAME	"strus pattern"
