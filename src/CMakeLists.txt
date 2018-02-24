@@ -13,17 +13,17 @@ set( source_files
 )
 
 include_directories(
-	"${Boost_INCLUDE_DIRS}"
-	"${Intl_INCLUDE_DIRS}"
-	"${PATTERN_INCLUDE_DIRS}"
-	"${CNODETRIE_INCLUDE_DIRS}"
-	"${TEXTWOLF_INCLUDE_DIRS}"
-	"${HYPERSCAN_INCLUDE_DIRS}"
-	"${TRE_INCLUDE_DIRS}"
-	"${strusbase_INCLUDE_DIRS}"
-	"${strusanalyzer_INCLUDE_DIRS}"
-	"${strusmodule_INCLUDE_DIRS}"
-	"${MAIN_SOURCE_DIR}"
+	${Boost_INCLUDE_DIRS}
+	${Intl_INCLUDE_DIRS}
+	${PATTERN_INCLUDE_DIRS}
+	${CNODETRIE_INCLUDE_DIRS}
+	${TEXTWOLF_INCLUDE_DIRS}
+	${HYPERSCAN_INCLUDE_DIRS}
+	${TRE_INCLUDE_DIRS}
+	${strusbase_INCLUDE_DIRS}
+	${strusanalyzer_INCLUDE_DIRS}
+	${strusmodule_INCLUDE_DIRS}
+	${MAIN_SOURCE_DIR}
 )
 
 link_directories(
