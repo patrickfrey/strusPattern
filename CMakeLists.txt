@@ -24,6 +24,7 @@ include( cmake/find_strus_package.cmake )
 include( cmake/find_tre.cmake )
 include( cmake/link_rules.cmake )
 include( cmake/intl.cmake )
+include( cmake/cppcheck.cmake )
 endif()
 
 find_strus_package( 3rdParty )
