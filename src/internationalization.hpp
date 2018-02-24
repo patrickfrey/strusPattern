@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Patrick P. Frey
+ * Copyright (c) 2014 Patrick P. Frey
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -26,6 +26,15 @@ namespace strus
 std::runtime_error runtime_error( const char* format, ...)
 #ifdef __GNUC__
 	__attribute__ ((format (printf, 1, 2)))
+#endif
+	;
+
+/// \brief Substitute for std::runtime_error with arguments
+/// \param[in] msg c printf format string
+/// \param[in] nofargs number of arguments passed to be substituted in the format string
+std::runtime_error runtime_error( int apperrno, const char* format, ...)
+#ifdef __GNUC__
+	__attribute__ ((format (printf, 2, 3)))
 #endif
 	;
 
