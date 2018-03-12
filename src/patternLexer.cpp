@@ -1084,13 +1084,13 @@ public:
 					if (error_pattern)
 					{
 						m_errorhnd->report(
-							hyperscanErrorCode( ErrorOperationBuildData, err),
+							hyperscanErrorCode( err),
 							_TXT( "failed to compile pattern \"%s\": %s\n"), error_pattern, compile_err->message);
 					}
 					else
 					{
 						m_errorhnd->report(
-							hyperscanErrorCode( ErrorOperationBuildData, err),
+							hyperscanErrorCode( err),
 							_TXT( "failed to build automaton from expressions: %s\n"), compile_err->message);
 					}
 					hs_free_compile_error( compile_err);
@@ -1098,7 +1098,7 @@ public:
 				else
 				{
 					m_errorhnd->report(
-						hyperscanErrorCode( ErrorOperationBuildData, err),
+						hyperscanErrorCode( err),
 						_TXT( "unknown errpr building automaton from expressions\n"));
 				}
 				return false;
