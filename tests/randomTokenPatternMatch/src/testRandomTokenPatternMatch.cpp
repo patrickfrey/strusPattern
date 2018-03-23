@@ -298,7 +298,7 @@ int main( int argc, const char** argv)
 			return 1;
 		}
 		initRand();
-		g_errorBuffer = strus::createErrorBuffer_standard( 0, 1+nofThreads);
+		g_errorBuffer = strus::createErrorBuffer_standard( 0, 1+nofThreads, NULL/*debug trace interface*/);
 		if (!g_errorBuffer)
 		{
 			std::cerr << "construction of error buffer failed" << std::endl;

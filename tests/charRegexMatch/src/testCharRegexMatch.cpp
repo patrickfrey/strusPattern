@@ -214,7 +214,7 @@ int main( int argc, const char** argv)
 {
 	try
 	{
-		g_errorBuffer = strus::createErrorBuffer_standard( 0, 1);
+		g_errorBuffer = strus::createErrorBuffer_standard( 0, 1, NULL/*debug trace interface*/);
 		if (!g_errorBuffer)
 		{
 			std::cerr << "construction of error buffer failed" << std::endl;
