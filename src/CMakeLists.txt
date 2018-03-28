@@ -9,7 +9,6 @@ set( source_files
 	unicodeUtils.cpp
 	patternLexer.cpp
 	patternMatcher.cpp
-	lexems.cpp
 )
 
 include_directories(
