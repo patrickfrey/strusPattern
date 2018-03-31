@@ -997,7 +997,7 @@ int main( int argc, const char** argv)
 		unsigned int nofPatterns = strus::utils::getUintValue( argv[ argidx+3]);
 		const char* outputpath = (argc - argidx > 4)? argv[ argidx+4] : 0;
 
-		strus::local_ptr<strus::PatternMatcherInterface> pt( strus::createPatternMatcher_stream( g_errorBuffer));
+		strus::local_ptr<strus::PatternMatcherInterface> pt( strus::createPatternMatcher_std( g_errorBuffer));
 		if (!pt.get()) throw std::runtime_error("failed to create pattern matcher");
 		strus::local_ptr<strus::PatternMatcherInstanceInterface> ptinst( pt->createInstance());
 		if (!ptinst.get()) throw std::runtime_error("failed to create pattern matcher instance");
