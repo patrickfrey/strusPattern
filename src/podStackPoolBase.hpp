@@ -50,7 +50,7 @@ public:
 #ifdef STRUS_LOWLEVEL_DEBUG
 		if (stk != 0 && !Parent::exists( stk-1))
 		{
-			throw strus::runtime_error( "%s", _TXT( "illegal list access (push)"));
+			throw std::runtime_error( _TXT( "illegal list access (push)"));
 		}
 #endif
 		PodStackElement<ELEMTYPE,SIZETYPE> listelem( elem, stk);
@@ -171,7 +171,7 @@ private:
 		}
 		if (ii != ie && si != 0)
 		{
-			throw strus::runtime_error( "%s", _TXT( "internal: circular list"));
+			throw std::runtime_error( _TXT( "internal: circular list"));
 		}
 	}
 };

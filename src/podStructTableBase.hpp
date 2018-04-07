@@ -101,7 +101,7 @@ public:
 #ifdef STRUS_USE_BASEADDR
 		if (idx < BASEADDR)
 		{
-			throw strus::runtime_error( "%s", _TXT("removing illegal element from table"));
+			throw std::runtime_error( _TXT("removing illegal element from table"));
 		}
 #endif
 #ifdef STRUS_CHECK_FREE_ITEMS
@@ -137,7 +137,7 @@ public:
 #ifdef STRUS_USE_BASEADDR
 			if (fi && fi < BASEADDR)
 			{
-				throw strus::runtime_error( "%s", _TXT("check table freelist failed"));
+				throw std::runtime_error( _TXT("check table freelist failed"));
 			}
 #endif
 		}

@@ -457,7 +457,7 @@ private:
 		{
 			if (index > MaxSubexpressionIndex+1)
 			{
-				throw strus::runtime_error( "%s", _TXT("error in sub expression selection index out of range"));
+				throw std::runtime_error( _TXT("error in sub expression selection index out of range"));
 			}
 			int errcode;
 			if (usewchar)
@@ -968,7 +968,7 @@ public:
 	{
 		try
 		{
-			if (m_idnamemap.find( id) != m_idnamemap.end()) throw strus::runtime_error( "%s", _TXT("duplicate definition"));
+			if (m_idnamemap.find( id) != m_idnamemap.end()) throw std::runtime_error( _TXT("duplicate definition"));
 			m_idnamemap[ id] = m_idnamestrings.size()+1;
 			m_idnamestrings.push_back( '\0');
 			m_idnamestrings.append( name);
@@ -994,7 +994,7 @@ public:
 		{
 			if (m_state != DefinitionPhase)
 			{
-				throw strus::runtime_error( "%s", _TXT("called define pattern after calling 'compile'"));
+				throw std::runtime_error( _TXT("called define pattern after calling 'compile'"));
 			}
 			m_data.patternTable.definePattern( id, expression, resultIndex, level, posbind);
 		}
@@ -1007,7 +1007,7 @@ public:
 		{
 			if (m_state != DefinitionPhase)
 			{
-				throw strus::runtime_error( "%s", _TXT("called define pattern after calling 'compile'"));
+				throw std::runtime_error( _TXT("called define pattern after calling 'compile'"));
 			}
 			m_data.patternTable.defineSymbol( symbolid, patternid, name);
 		}
@@ -1115,7 +1115,7 @@ public:
 		{
 			if (m_state != MatchPhase)
 			{
-				throw strus::runtime_error( "%s", _TXT("called create context without calling 'compile'"));
+				throw std::runtime_error( _TXT("called create context without calling 'compile'"));
 			}
 			return new PatternLexerContext( &m_data, m_errorhnd);
 		}

@@ -77,15 +77,15 @@ public:
 			}
 			else if (term.origsize() >= (std::size_t)std::numeric_limits<uint32_t>::max())
 			{
-				throw strus::runtime_error( "%s", _TXT("term event orig size out of range"));
+				throw std::runtime_error( _TXT("term event orig size out of range"));
 			}
 			else if (term.origseg() >= (std::size_t)std::numeric_limits<uint32_t>::max())
 			{
-				throw strus::runtime_error( "%s", _TXT("term event orig segment number out of range"));
+				throw std::runtime_error( _TXT("term event orig segment number out of range"));
 			}
 			else if (term.origpos() >= (std::size_t)std::numeric_limits<uint32_t>::max())
 			{
-				throw strus::runtime_error( "%s", _TXT("term event orig segment byte position out of range"));
+				throw std::runtime_error( _TXT("term event orig segment byte position out of range"));
 			}
 			uint32_t eventid = eventHandle( TermEvent, term.id());
 			EventData data( term.origseg(), term.origpos(), term.origseg(), term.origpos() + term.origsize(), term.ordpos(), term.ordpos()+1, 0/*subdataref*/);
@@ -292,15 +292,15 @@ public:
 #endif
 			if (range > std::numeric_limits<uint32_t>::max())
 			{
-				throw strus::runtime_error( "%s", _TXT("proximity range value out of range or negative"));
+				throw std::runtime_error( _TXT("proximity range value out of range or negative"));
 			}
 			if (argc > m_stack.size() || argc > (std::size_t)std::numeric_limits<uint32_t>::max())
 			{
-				throw strus::runtime_error( "%s", _TXT("expression references more arguments than nodes on the stack"));
+				throw std::runtime_error( _TXT("expression references more arguments than nodes on the stack"));
 			}
 			if (cardinality > (unsigned int)std::numeric_limits<uint32_t>::max())
 			{
-				throw strus::runtime_error( "%s", _TXT("illegal value for cardinality"));
+				throw std::runtime_error( _TXT("illegal value for cardinality"));
 			}
 			uint32_t slot_initsigval = 0;
 			uint32_t slot_initcount = cardinality?(uint32_t)cardinality:(uint32_t)argc;
@@ -428,7 +428,7 @@ public:
 			std::cout << "ATM push pattern '" << name << "'" << std::endl;
 #endif
 			uint32_t eventid = eventHandle( ReferenceEvent, m_data.patternMap.getOrCreate( name));
-			if (eventid == 0) throw strus::runtime_error( "%s", _TXT("failed to define pattern symbol"));
+			if (eventid == 0) throw std::runtime_error( _TXT("failed to define pattern symbol"));
 			m_stack.push_back( StackElement( eventid));
 #ifdef STRUS_LOWLEVEL_DEBUG
 			std::cout << "ATM stack size " << m_stack.size() << std::endl;
@@ -446,17 +446,17 @@ public:
 #endif
 			if (m_stack.empty())
 			{
-				throw strus::runtime_error( "%s", _TXT( "illegal operation attach variable when no node on the stack"));
+				throw std::runtime_error( _TXT( "illegal operation attach variable when no node on the stack"));
 			}
 			StackElement& elem = m_stack.back();
 			if (elem.variable)
 			{
-				throw strus::runtime_error( "%s", _TXT( "more than one variable assignment to a node"));
+				throw std::runtime_error( _TXT( "more than one variable assignment to a node"));
 			}
 			elem.variable = m_data.variableMap.getOrCreate( name);
 			if (elem.variable == 0)
 			{
-				throw strus::runtime_error( "%s", _TXT("failed to define variable symbol"));
+				throw std::runtime_error( _TXT("failed to define variable symbol"));
 			}
 		}
 		CATCH_ERROR_MAP( _TXT("failed to attach variable to top element of the pattern match expression stack: %s"), *m_errorhnd);
@@ -468,13 +468,13 @@ public:
 		{
 			if (m_stack.empty())
 			{
-				throw strus::runtime_error( "%s", _TXT("illegal operation close pattern when no node on the stack"));
+				throw std::runtime_error( _TXT("illegal operation close pattern when no node on the stack"));
 			}
 			StackElement& elem = m_stack.back();
 			uint32_t resultHandle = m_data.patternMap.getOrCreate( name);
 			if (resultHandle == 0)
 			{
-				throw strus::runtime_error( "%s", _TXT("failed to define result symbol"));
+				throw std::runtime_error( _TXT("failed to define result symbol"));
 			}
 			uint32_t resultEvent = eventHandle( ReferenceEvent, resultHandle);
 			uint32_t program = elem.program;
@@ -489,7 +489,7 @@ public:
 			}
 			else if (elem.variable)
 			{
-				throw strus::runtime_error( "%s", _TXT("variable assignments only allowed to subexpressions of pattern"));
+				throw std::runtime_error( _TXT("variable assignments only allowed to subexpressions of pattern"));
 			}
 			m_data.programTable.defineProgramResult( program, resultEvent, visible?resultHandle:0);
 #ifdef STRUS_LOWLEVEL_DEBUG

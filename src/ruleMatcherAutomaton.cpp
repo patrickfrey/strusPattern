@@ -134,7 +134,7 @@ void EventTriggerTable::remove( uint32_t idx)
 	TriggerInd& rec = m_triggerIndAr[ htidx];
 	if (aridx >= rec.m_size || rec.m_ar[ aridx] != idx)
 	{
-		throw strus::runtime_error( "%s",  _TXT("bad trigger index (remove trigger)"));
+		throw std::runtime_error( _TXT("bad trigger index (remove trigger)"));
 	}
 	m_triggerTab.remove( idx);
 	if (aridx != rec.m_size - 1)
@@ -256,7 +256,7 @@ void ProgramTable::defineEventFrequency( uint32_t eventid, double df)
 {
 	if (df <= std::numeric_limits<double>::epsilon())
 	{
-		throw strus::runtime_error( "%s", _TXT("illegal value for df (must be positive)"));
+		throw std::runtime_error( _TXT("illegal value for df (must be positive)"));
 	}
 	m_frequencyMap[ eventid] = df;
 }
@@ -623,9 +623,9 @@ void StateMachine::addObserveEvent( uint32_t event)
 {
 	std::size_t ei = 0, ee = MaxNofObserveEvents;
 	for (; ei < ee && m_observeEvents[ei] != 0; ++ei){}
-	if (ei == ee) throw strus::runtime_error( "%s",  _TXT("too many observe events defined"));
+	if (ei == ee) throw std::runtime_error( _TXT("too many observe events defined"));
 #ifndef STRUS_LOWLEVEL_DEBUG
-	throw strus::runtime_error( "%s",  _TXT("observe events only eanabled in LOWLEVEL debug mode (compile switch)"));
+	throw std::runtime_error( _TXT("observe events only eanabled in LOWLEVEL debug mode (compile switch)"));
 #endif
 }
 
@@ -724,7 +724,7 @@ void StateMachine::disposeEventDataReference( uint32_t eventdataref)
 	{
 		m_eventDataReferenceTable[ eventdataref];
 		m_eventItemList.check( ref.eventItemListIdx);
-		throw strus::runtime_error( "%s",  _TXT("illegal free of event data reference"));
+		throw std::runtime_error( _TXT("illegal free of event data reference"));
 	}
 }
 
@@ -1311,7 +1311,7 @@ void StateMachine::replayPastEvent( uint32_t eventid, const Rule& rule, uint32_t
 		}
 		if (followList.size())
 		{
-			throw strus::runtime_error( "%s", _TXT("internal: encountered past trigger with follow"));
+			throw std::runtime_error( _TXT("internal: encountered past trigger with follow"));
 			// ... only rules that really need the alternative event triggered should have an alternative key event
 		}
 	}
