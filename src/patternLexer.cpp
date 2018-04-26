@@ -1122,6 +1122,11 @@ public:
 		CATCH_ERROR_MAP_RETURN( _TXT("failed to create term match context: %s"), *m_errorhnd, 0);
 	}
 
+	virtual IntrospectionInterface* createIntrospection() const
+	{
+		return NULL;
+	}
+
 private:
 	ErrorBufferInterface* m_errorhnd;
 	TermMatchData m_data;

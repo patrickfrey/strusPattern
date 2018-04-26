@@ -581,6 +581,11 @@ public:
 		CATCH_ERROR_MAP_RETURN( _TXT("failed to compile (optimize) pattern matching automaton: %s"), *m_errorhnd, false);
 	}
 
+	virtual IntrospectionInterface* createIntrospection() const
+	{
+		return NULL;
+	}
+
 private:
 	struct StackElement
 	{
