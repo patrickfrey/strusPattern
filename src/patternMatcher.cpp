@@ -581,6 +581,11 @@ public:
 		CATCH_ERROR_MAP_RETURN( _TXT("failed to compile (optimize) pattern matching automaton: %s"), *m_errorhnd, false);
 	}
 
+	virtual analyzer::FunctionView view() const
+	{
+		return analyzer::FunctionView();
+	}
+
 	virtual IntrospectionInterface* createIntrospection() const
 	{
 		return NULL;
