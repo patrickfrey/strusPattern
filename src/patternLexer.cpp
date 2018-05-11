@@ -1127,11 +1127,6 @@ public:
 		return analyzer::FunctionView();
 	}
 
-	virtual IntrospectionInterface* createIntrospection() const
-	{
-		return NULL;
-	}
-
 private:
 	ErrorBufferInterface* m_errorhnd;
 	TermMatchData m_data;
