@@ -1,3 +1,10 @@
+strusPattern (0.16.0)
+  * change handling of gettext to avoid warning: return a const char*
+  * adapted changes in strus analyzer: introspection interface
+  * renaming of pattern matcher constructor function in library
+  * make use of new debug interface in strus base
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Fri, 11 May 2018 15:00:00 +0100
+
 strusPattern (0.15.7)
   * added make target cppcheck for static code analysis
   * adapted changes in error handling defined in strus base: simplified error codes
