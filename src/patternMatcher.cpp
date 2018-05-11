@@ -586,11 +586,6 @@ public:
 		return analyzer::FunctionView();
 	}
 
-	virtual IntrospectionInterface* createIntrospection() const
-	{
-		return NULL;
-	}
-
 private:
 	struct StackElement
 	{
