@@ -18,6 +18,7 @@
 #include "strus/base/stdint.h"
 #include "strus/base/symbolTable.hpp"
 #include "strus/base/string_conv.hpp"
+#include "strus/debugTraceInterface.hpp"
 #include "compactNodeTrie.hpp"
 #include "errorUtils.hpp"
 #include "internationalization.hpp"
@@ -33,8 +34,6 @@
 #include <map>
 #undef TRE_USE_SYSTEM_REGEX_H
 #include <tre/tre.h>
-
-#undef STRUS_LOWLEVEL_DEBUG
 
 using namespace strus;
 using namespace strus::analyzer;
@@ -233,7 +232,11 @@ class PatternTable
 {
 public:
 	explicit PatternTable( ErrorBufferInterface* errorhnd_)
-		:m_errorhnd(errorhnd_),m_hasEditDist(false){}
+		:m_errorhnd(errorhnd_),m_dbgtrace(0),m_withOneByteCharMap(false)
+	{
+		DebugTraceInterface* debugtrace = m_errorhnd->debugTrace();
+		if (debugtrace) m_dbgtrace = debugtrace->createTraceContext( "pattern");
+	}
 
 	void definePattern(
 			unsigned int id,
@@ -244,16 +247,9 @@ public:
 	{
 		std::string expression( expression_);
 		unsigned int editdist = extractEditDistFromExpression( expression);
-#ifdef STRUS_LOWLEVEL_DEBUG
-		std::cout << "define pattern " << id << " index " << (m_defar.size()+1)
-				<< " '" << expression;
-		if (subexpref) std::cout << "', select part " << subexpref;
-		std::cout << "', level " << level;
-		std::cout << ", resultidx " << resultIndex;
-		std::cout << ", editdist " << editdist;
-		std::cout << ", posbind " << ((int)(posbind+1) % 3 - 1);
-		std::cout << std::endl;
-#endif
+		if (m_dbgtrace) m_dbgtrace->event( "pattern", "idx=%d expr='%s' level=%d result=%d edist=%d posbind=%d",
+						(int)(m_defar.size()+1), expression.c_str(), (int)level, (int)resultIndex,
+						(int)editdist, ((int)(posbind+1) % 3 - 1));
 		m_defar.push_back( PatternDef( expression, 0/*subexpref*/, id, posbind, level, resultIndex, editdist));
 		if (m_defar.size() > std::numeric_limits<uint32_t>::max())
 		{
@@ -288,9 +284,7 @@ public:
 			if (symidx == 0) throw strus::runtime_error( "%s", m_errorhnd->fetchError());
 			throw strus::runtime_error(_TXT("symbol defined twice: '%s'"), name.c_str());
 		}
-#ifdef STRUS_LOWLEVEL_DEBUG
-		std::cout << "define symbol " << patternid << " as " << symbolid << " name '" << name << "'" << std::endl;
-#endif
+		if (m_dbgtrace) m_dbgtrace->event( "symbol", "patternid=%d symid=%d name='%s'", (int)patternid, (int)symbolid, name.c_str());
 		pst.idmap.push_back( symbolid);
 	}
 
@@ -340,9 +334,9 @@ public:
 			{
 				if (di->editdist()) break;
 			}
-			m_hasEditDist = (di != de);
+			m_withOneByteCharMap |= (di != de);
 		}
-		if (m_hasEditDist)
+		if (m_withOneByteCharMap)
 		{
 			//... always do rematch expression in case of using edit dist because a match is only a hint:
 			std::vector<PatternDef>::iterator di = m_defar.begin(), de = m_defar.end();
@@ -374,7 +368,7 @@ public:
 			for (std::size_t didx=0; di != de; ++di,++didx)
 			{
 				const char* expr;
-				if (m_hasEditDist)
+				if (m_withOneByteCharMap)
 				{
 					di->setExpressionOneByteCharMap();
 					expr = di->expression_onebyte().c_str();
@@ -395,7 +389,7 @@ public:
 					hspt.flagar[ didx] = options | HS_FLAG_SOM_LEFTMOST;
 					hspt.extar[ didx] = createPatternExprExtFlags( di->editdist());
 				}
-				else if (m_hasEditDist)
+				else if (m_withOneByteCharMap)
 				{
 					hspt.flagar[ didx] = options | HS_FLAG_SOM_LEFTMOST;
 					hspt.extar[ didx] = 0;
@@ -427,10 +421,15 @@ public:
 		}
 	}
 
-	///< Check, if there exists a pattern with edit distance match
-	bool hasEditDist() const
+	/// \brief Check, if there exists a pattern with edit distance match
+	bool withOneByteCharMap() const
 	{
-		return m_hasEditDist;
+		return m_withOneByteCharMap;
+	}
+	/// \brief Force mapping to a virtual character set of one byte characters used as hash and post filtering
+	void forceOneByteCharMap()
+	{
+		m_withOneByteCharMap = true;
 	}
 
 private:
@@ -635,13 +634,14 @@ private:
 	};
 
 	ErrorBufferInterface* m_errorhnd;
+	DebugTraceContextInterface* m_dbgtrace;
 	std::vector<PatternDef> m_defar;			///< list of expressions and their attributes defined for the automaton to recognize
 	std::vector<PatternSymbolTable> m_symtabmap;		///< map PatternDef::symtabref -> symbol table
 	typedef std::map<uint32_t,uint8_t> IdSymTabMap;
 	IdSymTabMap m_idsymtabmap;				///< map pattern id -> index in m_symtabmap == PatternDef::symtabref
 	typedef Reference<SubExpressionDef> SubExpressionReference;
 	std::vector<SubExpressionReference> m_subexprmap;	///< single regular expression patterns for extracting subexpressions if they are referenced.
-	bool m_hasEditDist;					///< true if the automaton has edit dist and had to be mapped down to a one byte character set serving as hash
+	bool m_withOneByteCharMap;				///< true if the automaton has to be mapped down to a one byte character set serving as hash
 };
 
 
@@ -715,7 +715,7 @@ public:
 		PatternLexerContext* THIS = (PatternLexerContext*)context;
 		try
 		{
-			if (THIS->m_data->patternTable.hasEditDist())
+			if (THIS->m_data->patternTable.withOneByteCharMap())
 			{
 				from = THIS->m_charmap.posar[ from];
 				to = THIS->m_charmap.posar[ to];
@@ -865,7 +865,7 @@ public:
 			}
 			// Collect all matches calling the Hyperscan engine:
 			hs_error_t err;
-			if (m_data->patternTable.hasEditDist())
+			if (m_data->patternTable.withOneByteCharMap())
 			{
 				m_charmap.init( src, srclen);
 				err = hs_scan( m_data->patterndb, m_charmap.value.c_str(), m_charmap.value.size(), 0/*reserved*/, m_hs_scratch, match_event_handler, this);
@@ -1047,6 +1047,10 @@ public:
 			else if (strus::caseInsensitiveEquals( name, "UCP"))
 			{
 				m_flags |= HS_FLAG_UCP;
+			}
+			else if (strus::caseInsensitiveEquals( name, "BYTECHAR"))
+			{
+				m_data.patternTable.forceOneByteCharMap();
 			}
 			else
 			{
