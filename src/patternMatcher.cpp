@@ -15,6 +15,7 @@
 #include "strus/patternMatcherInstanceInterface.hpp"
 #include "strus/patternMatcherContextInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
+#include "strus/debugTraceInterface.hpp"
 #include "strus/base/symbolTable.hpp"
 #include "strus/base/string_conv.hpp"
 #include "strus/reference.hpp"
@@ -26,7 +27,15 @@
 #include <iostream>
 #include <algorithm>
 
-#undef STRUS_LOWLEVEL_DEBUG
+#define STRUS_DBGTRACE_COMPONENT_NAME "pattern"
+#define DEBUG_OPEN( NAME) if (m_debugtrace) m_debugtrace->open( NAME);
+#define DEBUG_CLOSE() if (m_debugtrace) m_debugtrace->close();
+#define DEBUG_EVENT1( NAME, FMT, X1)                            if (m_debugtrace) m_debugtrace->event( NAME, FMT, X1);
+#define DEBUG_EVENT2( NAME, FMT, X1, X2)                        if (m_debugtrace) m_debugtrace->event( NAME, FMT, X1, X2);
+#define DEBUG_EVENT3( NAME, FMT, X1, X2, X3)                    if (m_debugtrace) m_debugtrace->event( NAME, FMT, X1, X2, X3);
+#define DEBUG_EVENT4( NAME, FMT, X1, X2, X3, X4)                if (m_debugtrace) m_debugtrace->event( NAME, FMT, X1, X2, X3, X4);
+#define DEBUG_EVENT5( NAME, FMT, X1, X2, X3, X4, X5)            if (m_debugtrace) m_debugtrace->event( NAME, FMT, X1, X2, X3, X4, X5);
+#define DEBUG_EVENT7( NAME, FMT, X1, X2, X3, X4, X5, X6, X7)    if (m_debugtrace) m_debugtrace->event( NAME, FMT, X1, X2, X3, X4, X5, X6, X7);
 
 using namespace strus;
 using namespace strus::analyzer;
@@ -55,18 +64,27 @@ class PatternMatcherContext
 {
 public:
 	PatternMatcherContext( const PatternMatcherData* data_, ErrorBufferInterface* errorhnd_)
-		:m_errorhnd(errorhnd_),m_data(data_),m_statemachine(new StateMachine(&data_->programTable)),m_nofEvents(0),m_curPosition(0){}
+		:m_errorhnd(errorhnd_)
+		,m_debugtrace(0)
+		,m_data(data_)
+		,m_statemachine(new StateMachine(&data_->programTable))
+		,m_nofEvents(0)
+		,m_curPosition(0)
+	{
+		DebugTraceInterface* dbgi = m_errorhnd->debugTrace();
+		if (dbgi) m_debugtrace = dbgi->createTraceContext( STRUS_DBGTRACE_COMPONENT_NAME);
+	}
 
 	virtual ~PatternMatcherContext()
-	{}
+	{
+		if (m_debugtrace) delete m_debugtrace;
+	}
 
 	virtual void putInput( const analyzer::PatternLexem& term)
 	{
 		try
 		{
-#ifdef STRUS_LOWLEVEL_DEBUG
-			std::cerr << "put input " << term.id() << " at " << term.ordpos() << std::endl;
-#endif
+			DEBUG_EVENT2( "input", "id=%u ordpos=%u", term.id(), (unsigned int)term.ordpos())
 			if (m_curPosition > term.ordpos())
 			{
 				throw strus::runtime_error(_TXT("term events not fed in ascending order (%u > %u)"), m_curPosition, term.ordpos());
@@ -175,9 +193,7 @@ public:
 		{
 			gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
 		}
-#ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << "result " << resultName << " at " << result.ordpos << std::endl;
-#endif
+		DEBUG_EVENT7( "result", "name=%s ordpos=%u ordend=%u start=[%u,%u] end=[%u,%u]", resultName, (unsigned int)result.start_ordpos, (unsigned int)result.end_ordpos, (unsigned int)result.start_origseg, (unsigned int)result.start_origpos, (unsigned int)result.end_origseg, (unsigned int)result.end_origpos);
 		res.push_back( PatternMatcherResult( resultName, result.start_ordpos, result.end_ordpos, result.start_origseg, result.start_origpos, result.end_origseg, result.end_origpos, rtitemlist));
 	}
 
@@ -244,11 +260,13 @@ public:
 
 private:
 	ErrorBufferInterface* m_errorhnd;
+	DebugTraceContextInterface* m_debugtrace;
 	const PatternMatcherData* m_data;
 	Reference<StateMachine> m_statemachine;
 	unsigned int m_nofEvents;
 	unsigned int m_curPosition;
 };
+
 
 /// \brief Interface for building the automaton for detecting patterns in a document stream
 class PatternMatcherInstance
@@ -256,9 +274,16 @@ class PatternMatcherInstance
 {
 public:
 	explicit PatternMatcherInstance( ErrorBufferInterface* errorhnd_)
-		:m_errorhnd(errorhnd_),m_data(errorhnd_),m_stack(),m_expression_event_cnt(0),m_popt(){}
+		:m_errorhnd(errorhnd_),m_debugtrace(0),m_data(errorhnd_),m_stack(),m_expression_event_cnt(0),m_popt()
+	{
+		DebugTraceInterface* dbgi = m_errorhnd->debugTrace();
+		if (dbgi) m_debugtrace = dbgi->createTraceContext( STRUS_DBGTRACE_COMPONENT_NAME);
+	}
 
-	virtual ~PatternMatcherInstance(){}
+	virtual ~PatternMatcherInstance()
+	{
+		if (m_debugtrace) delete m_debugtrace;
+	}
 
 	virtual void defineTermFrequency( unsigned int termid, double df)
 	{
@@ -269,14 +294,9 @@ public:
 	{
 		try
 		{
-#ifdef STRUS_LOWLEVEL_DEBUG
-			std::cout << "ATM push term " << (int)termid << std::endl;
-#endif
+			DEBUG_EVENT2( "term", "id=%d stack=%u", (int)termid, (unsigned int)m_stack.size()+1)
 			uint32_t eventid = eventHandle( TermEvent, termid);
 			m_stack.push_back( StackElement( eventid));
-#ifdef STRUS_LOWLEVEL_DEBUG
-			std::cout << "ATM stack size " << m_stack.size() << std::endl;
-#endif
 		}
 		CATCH_ERROR_MAP( _TXT("failed to push term on the pattern match expression stack: %s"), *m_errorhnd);
 	}
@@ -287,9 +307,7 @@ public:
 	{
 		try
 		{
-#ifdef STRUS_LOWLEVEL_DEBUG
-			std::cout << "ATM push expression " << (int)joinop << ", args " << argc << ", range " << range << ", cardinality " << cardinality << std::endl;
-#endif
+			DEBUG_EVENT4( "expression", "op=%d args=%u range=%d cardinality=%d", (int)joinop, (unsigned int)argc, range, cardinality)
 			if (range > std::numeric_limits<uint32_t>::max())
 			{
 				throw std::runtime_error( _TXT("proximity range value out of range or negative"));
@@ -413,9 +431,6 @@ public:
 			m_data.programTable.doneProgram( program);
 			m_stack.resize( m_stack.size() - argc);
 			m_stack.push_back( StackElement( slot_event, program));
-#ifdef STRUS_LOWLEVEL_DEBUG
-			std::cout << "ATM stack size " << m_stack.size() << std::endl;
-#endif
 		}
 		CATCH_ERROR_MAP( _TXT("failed to push expression on the pattern match expression stack: %s"), *m_errorhnd);
 	}
@@ -424,15 +439,10 @@ public:
 	{
 		try
 		{
-#ifdef STRUS_LOWLEVEL_DEBUG
-			std::cout << "ATM push pattern '" << name << "'" << std::endl;
-#endif
+			DEBUG_EVENT2( "pattern", "name=%s stack=%u", name.c_str(), (unsigned int)m_stack.size())
 			uint32_t eventid = eventHandle( ReferenceEvent, m_data.patternMap.getOrCreate( name));
 			if (eventid == 0) throw std::runtime_error( _TXT("failed to define pattern symbol"));
 			m_stack.push_back( StackElement( eventid));
-#ifdef STRUS_LOWLEVEL_DEBUG
-			std::cout << "ATM stack size " << m_stack.size() << std::endl;
-#endif
 		}
 		CATCH_ERROR_MAP( _TXT("failed to push pattern reference on the pattern match expression stack: %s"), *m_errorhnd);
 	}
@@ -441,9 +451,7 @@ public:
 	{
 		try
 		{
-#ifdef STRUS_LOWLEVEL_DEBUG
-			std::cout << "ATM attach variable '" << name  << "'" << std::endl;
-#endif
+			DEBUG_EVENT1( "variable", "name=%s", name.c_str())
 			if (m_stack.empty())
 			{
 				throw std::runtime_error( _TXT( "illegal operation attach variable when no node on the stack"));
@@ -492,10 +500,7 @@ public:
 				throw std::runtime_error( _TXT("variable assignments only allowed to subexpressions of pattern"));
 			}
 			m_data.programTable.defineProgramResult( program, resultEvent, visible?resultHandle:0);
-#ifdef STRUS_LOWLEVEL_DEBUG
-			std::cout << "ATM define token pattern '" << name << "'" << (visible?" (visible)":"") << " as program " << program << std::endl;
-			std::cout << "ATM stack size " << m_stack.size() << std::endl;
-#endif
+			DEBUG_EVENT3( "pattern", "name=%s visible=%s stack=%u", name.c_str(), visible?"true":"false", (unsigned int)m_stack.size())
 		}
 		CATCH_ERROR_MAP( _TXT("failed to close pattern definition on the pattern match expression stack: %s"), *m_errorhnd);
 	}
@@ -509,26 +514,24 @@ public:
 		CATCH_ERROR_MAP_RETURN( _TXT("failed to create pattern match context: %s"), *m_errorhnd, 0);
 	}
 
-#ifdef STRUS_LOWLEVEL_DEBUG
-	void printAutomatonStatistics()
+	void printAutomatonStatistics( std::ostream& out)
 	{
 		ProgramTable::Statistics stats = m_data.programTable.getProgramStatistics();
 		std::vector<uint32_t>::const_iterator di = stats.keyEventDist.begin(), de = stats.keyEventDist.end();
-		std::cout << "occurrence dist:";
+		out << "occurrence dist:";
 		for (int didx=0; di != de; ++di,++didx)
 		{
-			std::cout << " " << *di;
+			out << " " << *di;
 		}
-		std::cout << std::endl;
-		std::cout << "stop event list:";
+		out << std::endl;
+		out << "stop event list:";
 		std::vector<uint32_t>::const_iterator si = stats.stopWordSet.begin(), se = stats.stopWordSet.end();
 		for (; si != se; ++si)
 		{
-			std::cout << " " << *si;
+			out << " " << *si;
 		}
-		std::cout << std::endl;
+		out << std::endl;
 	}
-#endif
 
 	virtual void defineOption( const std::string& name, double value)
 	{
@@ -566,16 +569,24 @@ public:
 	{
 		try
 		{
-#ifdef STRUS_LOWLEVEL_DEBUG
-			std::cout << "automaton statistics before otimization:" << std::endl;
-			printAutomatonStatistics();
-#endif
+			if (m_debugtrace)
+			{
+				std::ostringstream out;
+				out << "automaton statistics before otimization:" << std::endl;
+				printAutomatonStatistics( out);
+				std::string outstr( out.str());
+				DEBUG_EVENT1( "statistics", "%s", outstr.c_str())
+			}
 			m_data.programTable.optimize( m_popt);
 
-#ifdef STRUS_LOWLEVEL_DEBUG
-			std::cout << "automaton statistics after otimization:" << std::endl;
-			printAutomatonStatistics();
-#endif
+			if (m_debugtrace)
+			{
+				std::ostringstream out;
+				out << "automaton statistics after otimization:" << std::endl;
+				printAutomatonStatistics( out);
+				std::string outstr( out.str());
+				DEBUG_EVENT1( "statistics", "%s", outstr.c_str())
+			}
 			return true;
 		}
 		CATCH_ERROR_MAP_RETURN( _TXT("failed to compile (optimize) pattern matching automaton: %s"), *m_errorhnd, false);
@@ -603,6 +614,7 @@ private:
 
 private:
 	ErrorBufferInterface* m_errorhnd;
+	DebugTraceContextInterface* m_debugtrace;
 	PatternMatcherData m_data;
 	std::vector<StackElement> m_stack;
 	uint32_t m_expression_event_cnt;

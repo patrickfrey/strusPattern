@@ -232,10 +232,14 @@ class PatternTable
 {
 public:
 	explicit PatternTable( ErrorBufferInterface* errorhnd_)
-		:m_errorhnd(errorhnd_),m_dbgtrace(0),m_withOneByteCharMap(false)
+		:m_errorhnd(errorhnd_),m_debugtrace(0),m_withOneByteCharMap(false)
 	{
 		DebugTraceInterface* debugtrace = m_errorhnd->debugTrace();
-		if (debugtrace) m_dbgtrace = debugtrace->createTraceContext( "pattern");
+		if (debugtrace) m_debugtrace = debugtrace->createTraceContext( "pattern");
+	}
+	~PatternTable()
+	{
+		if (m_debugtrace) delete m_debugtrace;
 	}
 
 	void definePattern(
@@ -247,7 +251,7 @@ public:
 	{
 		std::string expression( expression_);
 		unsigned int editdist = extractEditDistFromExpression( expression);
-		if (m_dbgtrace) m_dbgtrace->event( "pattern", "idx=%d expr='%s' level=%d result=%d edist=%d posbind=%d",
+		if (m_debugtrace) m_debugtrace->event( "pattern", "idx=%d expr='%s' level=%d result=%d edist=%d posbind=%d",
 						(int)(m_defar.size()+1), expression.c_str(), (int)level, (int)resultIndex,
 						(int)editdist, ((int)(posbind+1) % 3 - 1));
 		m_defar.push_back( PatternDef( expression, 0/*subexpref*/, id, posbind, level, resultIndex, editdist));
@@ -284,7 +288,7 @@ public:
 			if (symidx == 0) throw strus::runtime_error( "%s", m_errorhnd->fetchError());
 			throw strus::runtime_error(_TXT("symbol defined twice: '%s'"), name.c_str());
 		}
-		if (m_dbgtrace) m_dbgtrace->event( "symbol", "patternid=%d symid=%d name='%s'", (int)patternid, (int)symbolid, name.c_str());
+		if (m_debugtrace) m_debugtrace->event( "symbol", "patternid=%d symid=%d name='%s'", (int)patternid, (int)symbolid, name.c_str());
 		pst.idmap.push_back( symbolid);
 	}
 
@@ -634,7 +638,7 @@ private:
 	};
 
 	ErrorBufferInterface* m_errorhnd;
-	DebugTraceContextInterface* m_dbgtrace;
+	DebugTraceContextInterface* m_debugtrace;
 	std::vector<PatternDef> m_defar;			///< list of expressions and their attributes defined for the automaton to recognize
 	std::vector<PatternSymbolTable> m_symtabmap;		///< map PatternDef::symtabref -> symbol table
 	typedef std::map<uint32_t,uint8_t> IdSymTabMap;
