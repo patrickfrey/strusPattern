@@ -9,6 +9,7 @@ set( source_files
 	unicodeUtils.cpp
 	patternLexer.cpp
 	patternMatcher.cpp
+	resultFormat.cpp
 )
 
 include_directories(

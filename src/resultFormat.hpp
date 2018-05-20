@@ -15,40 +15,65 @@
 namespace strus
 {
 
-struct ResultFormatElement
-{
-	enum Op {Variable,String};
-	Op op;
-	const char* value;
-	const char* separator;
-};
+/// \brief Forward declaration
+class ErrorBufferInterface;
+/// \brief Forward declaration
+class DebugTraceContextInterface;
+
+typedef struct ResultFormat ResultFormat;
 
 class ResultFormatContext
 {
 public:
-	ResultFormatContext(){}
+	explicit ResultFormatContext( ErrorBufferInterface* errorhnd_);
+	~ResultFormatContext();
 
-	const char* map( const ResultFormatElement* fmt, std::size_t nofItems, const PatternMatcherResultItem* items);
+	/// \brief Map a result to a string
+	const char* map( const ResultFormat* fmt, std::size_t nofItems, const analyzer::PatternMatcherResultItem* items);
 
 private:
+	ErrorBufferInterface* m_errorhnd;
+	DebugTraceContextInterface* m_debugtrace;
 	struct Impl;
 	Impl* m_impl;
+};
+
+class ResultFormatVariableMap
+{
+public:
+	virtual ~ResultFormatVariableMap(){}
+	virtual const char* getVariable( const std::string& name)=0;
 };
 
 class ResultFormatTable
 {
 public:
-	ResultFormatTable(){}
+	ResultFormatTable( ErrorBufferInterface* errorhnd_, ResultFormatVariableMap* variableMap_);
+	~ResultFormatTable();
 
 	/// \brief Create a format string representation out of its source
 	/// \note Substituted elements are addressed as identifiers in curly brackets '{' '}'
 	/// \note Escaping of '{' and '}' is done with backslash '\', e.g. "\{" or "\}"
 	/// \return a {Variable,NULL} terminated array of elements
-	const ResultFormatElement* createFormat( const char* src);
+	const ResultFormat* createResultFormat( const char* src);
 
 private:
+	ErrorBufferInterface* m_errorhnd;
+	ResultFormatVariableMap* m_variableMap;
 	struct Impl;
 	Impl* m_impl;
+};
+
+struct ResultChunk
+{
+	const char* value;
+	std::size_t valuesize;
+	int start_seg;
+	int start_pos;
+	int end_seg;
+	int end_pos;
+
+	static bool parseNext( ResultChunk& result, char const*& src);
 };
 
 }//namespace

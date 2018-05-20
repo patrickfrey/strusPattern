@@ -439,7 +439,7 @@ static void createExpression( strus::PatternMatcherInstanceInterface* ptinst, co
 	}
 	if (tree->variable())
 	{
-		ptinst->attachVariable( tree->variable());
+		ptinst->attachVariable( tree->variable(), ""/*value*/);
 	}
 }
 
@@ -734,7 +734,7 @@ static TreeMatchResult matchTree( const TreeNode* tree, const strus::utils::Docu
 	}
 	if (rt.valid && tree->variable())
 	{
-		strus::analyzer::PatternMatcherResultItem item( tree->variable(), rt.ordpos, rt.ordpos + rt.ordsize, 0/*start_origseg*/, rt.startidx, 0/*end_origseg*/, rt.endidx);
+		strus::analyzer::PatternMatcherResultItem item( tree->variable(), ""/*value*/, rt.ordpos, rt.ordpos + rt.ordsize, 0/*start_origseg*/, rt.startidx, 0/*end_origseg*/, rt.endidx);
 		rt.itemar.push_back( item);
 	}
 	return rt;

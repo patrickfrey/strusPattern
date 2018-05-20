@@ -120,7 +120,7 @@ public:
 		while (0!=(item=m_statemachine->nextResultItem( itemList)))
 		{
 			const char* itemName = m_data->variableMap.key( item->variable);
-			PatternMatcherResultItem rtitem( itemName, item->data.start_ordpos, item->data.end_ordpos, item->data.start_origseg, item->data.start_origpos, item->data.end_origseg, item->data.end_origpos);
+			PatternMatcherResultItem rtitem( itemName, 0/*value*/, item->data.start_ordpos, item->data.end_ordpos, item->data.start_origseg, item->data.start_origpos, item->data.end_origseg, item->data.end_origpos);
 			resitemlist.push_back( rtitem);
 			if (item->data.subdataref)
 			{
@@ -447,11 +447,11 @@ public:
 		CATCH_ERROR_MAP( _TXT("failed to push pattern reference on the pattern match expression stack: %s"), *m_errorhnd);
 	}
 
-	virtual void attachVariable( const std::string& name)
+	virtual void attachVariable( const std::string& name, const std::string& formatstring)
 	{
 		try
 		{
-			DEBUG_EVENT1( "variable", "name=%s", name.c_str())
+			DEBUG_EVENT2( "variable", "name=%s format='%s'", name.c_str(), formatstring.c_str())
 			if (m_stack.empty())
 			{
 				throw std::runtime_error( _TXT( "illegal operation attach variable when no node on the stack"));
