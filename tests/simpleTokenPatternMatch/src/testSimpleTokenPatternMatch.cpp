@@ -138,10 +138,10 @@ static void createPattern( strus::PatternMatcherInstanceInterface* ptinst, const
 		{
 			char variablename[ 32];
 			snprintf( variablename, sizeof(variablename), "A%u", (unsigned int)op.variable);
-			ptinst->attachVariable( variablename, ""/*value*/);
+			ptinst->attachVariable( variablename);
 		}
 	}
-	ptinst->definePattern( ptname, ptname[0] != '_');
+	ptinst->definePattern( ptname, ""/*formatstring*/, ptname[0] != '_');
 }
 
 static void createPatterns( strus::PatternMatcherInstanceInterface* ptinst, const Pattern* patterns)

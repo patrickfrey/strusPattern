@@ -68,7 +68,7 @@ static void createTermOpRule( strus::PatternMatcherInstanceInterface* ptinst, co
 		ptinst->pushTerm( termid);
 		char variablename[ 32];
 		snprintf( variablename, sizeof(variablename), "A%u", (unsigned int)pi);
-		ptinst->attachVariable( variablename, ""/*value*/);
+		ptinst->attachVariable( variablename);
 	}
 	strus::utils::JoinOperation joinop = strus::utils::joinOperation( joinopstr);
 	ptinst->pushExpression( joinop, paramsize, range, cardinality);
@@ -85,7 +85,7 @@ static void createTermOpPattern( strus::PatternMatcherInstanceInterface* ptinst,
 		rulename.append( strbuf);
 	}
 	createTermOpRule( ptinst, operation, range, cardinality, param, paramsize);
-	ptinst->definePattern( rulename, true);
+	ptinst->definePattern( rulename, ""/*formatstring*/, true);
 }
 
 static void createRules( strus::PatternMatcherInstanceInterface* ptinst, const char* joinop, unsigned int nofFeatures, unsigned int nofRules)

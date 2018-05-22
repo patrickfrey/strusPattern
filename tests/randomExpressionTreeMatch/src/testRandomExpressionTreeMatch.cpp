@@ -439,7 +439,7 @@ static void createExpression( strus::PatternMatcherInstanceInterface* ptinst, co
 	}
 	if (tree->variable())
 	{
-		ptinst->attachVariable( tree->variable(), ""/*value*/);
+		ptinst->attachVariable( tree->variable());
 	}
 }
 
@@ -449,7 +449,7 @@ static void createRules( strus::PatternMatcherInstanceInterface* ptinst, const G
 	for (unsigned int tidx=0; ti != te; ++ti,++tidx)
 	{
 		createExpression( ptinst, ctx, *ti);
-		ptinst->definePattern( (*ti)->name(), true);
+		ptinst->definePattern( (*ti)->name(), ""/*formatstring*/, true);
 	}
 }
 
