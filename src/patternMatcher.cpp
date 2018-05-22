@@ -447,11 +447,11 @@ public:
 		CATCH_ERROR_MAP( _TXT("failed to push pattern reference on the pattern match expression stack: %s"), *m_errorhnd);
 	}
 
-	virtual void attachVariable( const std::string& name, const std::string& formatstring)
+	virtual void attachVariable( const std::string& name)
 	{
 		try
 		{
-			DEBUG_EVENT2( "variable", "name=%s format='%s'", name.c_str(), formatstring.c_str())
+			DEBUG_EVENT1( "variable", "name=%s", name.c_str())
 			if (m_stack.empty())
 			{
 				throw std::runtime_error( _TXT( "illegal operation attach variable when no node on the stack"));
@@ -470,7 +470,7 @@ public:
 		CATCH_ERROR_MAP( _TXT("failed to attach variable to top element of the pattern match expression stack: %s"), *m_errorhnd);
 	}
 
-	virtual void definePattern( const std::string& name, bool visible)
+	virtual void definePattern( const std::string& name, const std::string& formatstring, bool visible)
 	{
 		try
 		{
@@ -500,7 +500,7 @@ public:
 				throw std::runtime_error( _TXT("variable assignments only allowed to subexpressions of pattern"));
 			}
 			m_data.programTable.defineProgramResult( program, resultEvent, visible?resultHandle:0);
-			DEBUG_EVENT3( "pattern", "name=%s visible=%s stack=%u", name.c_str(), visible?"true":"false", (unsigned int)m_stack.size())
+			DEBUG_EVENT4( "pattern", "name=%s format='%s' visible=%s stack=%u", name.c_str(), formatstring.c_str(), visible?"true":"false", (unsigned int)m_stack.size())
 		}
 		CATCH_ERROR_MAP( _TXT("failed to close pattern definition on the pattern match expression stack: %s"), *m_errorhnd);
 	}

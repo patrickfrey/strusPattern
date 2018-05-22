@@ -40,7 +40,7 @@ link_directories(
 add_cppcheck( strus_pattern ${source_files} libstrus_pattern.cpp )
 
 add_library( local_rulematch STATIC ${source_files} )
-target_link_libraries( local_rulematch strus_base compactnodetrie_static hs ${Boost_LIBRARIES} ${TRE_LIBRARIES} ${Intl_LIBRARIES} )
+target_link_libraries( local_rulematch strus_base strus_pattern_resultformat compactnodetrie_static hs ${Boost_LIBRARIES} ${TRE_LIBRARIES} ${Intl_LIBRARIES} )
 set_property( TARGET local_rulematch PROPERTY POSITION_INDEPENDENT_CODE TRUE )
 
 add_library( strus_pattern SHARED libstrus_pattern.cpp )
