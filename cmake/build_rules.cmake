@@ -31,7 +31,6 @@ MESSAGE( STATUS "Debug postfix: '${CMAKE_DEBUG_POSTFIX}'" )
 
 set_property(GLOBAL PROPERTY rule_launch_compile ccache)
 set_property(GLOBAL PROPERTY rule_launch_link ccache)
-set( CMAKE_CXX_VISIBILITY_PRESET hidden )
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
 set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Wshadow -Wfatal-errors -fvisibility=hidden" )
