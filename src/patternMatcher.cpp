@@ -67,17 +67,19 @@ public:
 		:m_errorhnd(errorhnd_)
 		,m_debugtrace(0)
 		,m_data(data_)
-		,m_statemachine(new StateMachine(&data_->programTable))
+		,m_statemachine(0)
 		,m_nofEvents(0)
 		,m_curPosition(0)
 	{
 		DebugTraceInterface* dbgi = m_errorhnd->debugTrace();
 		if (dbgi) m_debugtrace = dbgi->createTraceContext( STRUS_DBGTRACE_COMPONENT_NAME);
+		m_statemachine = new StateMachine( &data_->programTable, m_debugtrace);
 	}
 
 	virtual ~PatternMatcherContext()
 	{
 		if (m_debugtrace) delete m_debugtrace;
+		delete m_statemachine;
 	}
 
 	virtual void putInput( const analyzer::PatternLexem& term)
@@ -250,8 +252,9 @@ public:
 	{
 		try
 		{
-			m_statemachine.reset( new StateMachine( &m_data->programTable));
-			if (!m_statemachine.get()) throw std::bad_alloc();
+			StateMachine* new_statemachine = new StateMachine( &m_data->programTable, m_debugtrace);
+			delete m_statemachine;
+			m_statemachine = new_statemachine;
 			m_nofEvents = 0;
 			m_curPosition = 0;
 		}
@@ -262,7 +265,7 @@ private:
 	ErrorBufferInterface* m_errorhnd;
 	DebugTraceContextInterface* m_debugtrace;
 	const PatternMatcherData* m_data;
-	Reference<StateMachine> m_statemachine;
+	StateMachine* m_statemachine;
 	unsigned int m_nofEvents;
 	unsigned int m_curPosition;
 };

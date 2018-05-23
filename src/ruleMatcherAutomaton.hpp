@@ -10,6 +10,7 @@
 #define _STRUS_RULE_MATCHER_AUTOMATON_HPP_INCLUDED
 #include "strus/base/stdint.h"
 #include "strus/base/unordered_map.hpp"
+#include "strus/debugTraceInterface.hpp"
 #include "podStructArrayBase.hpp"
 #include "podStructTableBase.hpp"
 #include "podStackPoolBase.hpp"
@@ -425,7 +426,7 @@ struct DisposeEvent
 class StateMachine
 {
 public:
-	explicit StateMachine( const ProgramTable* programTable_);
+	StateMachine( const ProgramTable* programTable_, DebugTraceContextInterface* debugtrace_);
 	StateMachine( const StateMachine& o);
 
 	void addObserveEvent( uint32_t event);
@@ -473,6 +474,7 @@ private:
 	void defineDisposeRule( uint32_t pos, uint32_t ruleidx);
 
 private:
+	DebugTraceContextInterface* m_debugtrace;
 	const ProgramTable* m_programTable;
 	EventTriggerTable m_eventTriggerTable;
 	ActionSlotTable m_actionSlotTable;
