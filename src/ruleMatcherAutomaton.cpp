@@ -907,16 +907,13 @@ void StateMachine::fireSignal(
 			}
 			appendEventData( rule.eventDataReferenceIdx, item);
 		}
-		else
+		else if (data.subdataref)
 		{
-			if (data.subdataref)
+			if (!rule.eventDataReferenceIdx)
 			{
-				if (!rule.eventDataReferenceIdx)
-				{
-					rule.eventDataReferenceIdx = createEventData();
-				}
-				joinEventData( rule.eventDataReferenceIdx, data.subdataref);
+				rule.eventDataReferenceIdx = createEventData();
 			}
+			joinEventData( rule.eventDataReferenceIdx, data.subdataref);
 		}
 		if (slot.start_ordpos == 0 || slot.start_ordpos > data.start_ordpos)
 		{
