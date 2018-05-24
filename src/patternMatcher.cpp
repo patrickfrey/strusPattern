@@ -19,6 +19,7 @@
 #include "strus/base/symbolTable.hpp"
 #include "strus/base/string_conv.hpp"
 #include "strus/reference.hpp"
+#include "strus/lib/pattern_resultformat.hpp"
 #include "ruleMatcherAutomaton.hpp"
 #include <map>
 #include <limits>
@@ -40,16 +41,47 @@
 using namespace strus;
 using namespace strus::analyzer;
 
+class VariableMap
+	:public PatternResultFormatVariableMap, public SymbolTable
+{
+public:
+	VariableMap(){}
+	virtual ~VariableMap(){}
+
+	virtual const char* getVariable( const std::string& name) const
+	{
+		int symid = SymbolTable::get( name);
+		if (!symid) return NULL;
+		return SymbolTable::key( symid);
+	}
+	const char* getOrCreateVariable( const std::string& name)
+	{
+		int symid = SymbolTable::getOrCreate( name);
+		if (!symid) return NULL;
+		return SymbolTable::key( symid);
+	}
+};
+
+
 struct PatternMatcherData
 {
 	explicit PatternMatcherData( ErrorBufferInterface* errorhnd)
-		:variableMap(),patternMap(),programTable(),exclusive(false),maxResultSize(100){}
+		:variableMap(),patternMap(),programTable(),resultFormatTable(0),resultFormatHandles(),exclusive(false),maxResultSize(100)
+	{
+		resultFormatTable = new PatternResultFormatTable( errorhnd, &variableMap);
+	}
 
-	SymbolTable variableMap;
+	VariableMap variableMap;
 	SymbolTable patternMap;
 	ProgramTable programTable;
+	PatternResultFormatTable* resultFormatTable;
+	std::vector<const PatternResultFormat*> resultFormatHandles;
 	bool exclusive;
 	unsigned int maxResultSize;
+
+private:
+	PatternMatcherData( const PatternMatcherData&){}	///... non copyable
+	void operator=( const PatternMatcherData&){}		///... non copyable
 };
 
 enum PatternEventType {TermEvent=0, ExpressionEvent=1, ReferenceEvent=2};
@@ -67,6 +99,7 @@ public:
 		:m_errorhnd(errorhnd_)
 		,m_debugtrace(0)
 		,m_data(data_)
+		,m_resultFormatContext(errorhnd_)
 		,m_statemachine(0)
 		,m_nofEvents(0)
 		,m_curPosition(0)
@@ -108,23 +141,32 @@ public:
 				throw std::runtime_error( _TXT("term event orig segment byte position out of range"));
 			}
 			uint32_t eventid = eventHandle( TermEvent, term.id());
-			EventData data( term.origseg(), term.origpos(), term.origseg(), term.origpos() + term.origsize(), term.ordpos(), term.ordpos()+1, 0/*subdataref*/);
+			EventData data( term.origseg(), term.origpos(), term.origseg(), term.origpos() + term.origsize(), term.ordpos(), term.ordpos()+1, 0/*subdataref*/, 0/*formathandle*/);
 			m_statemachine->doTransition( eventid, data);
 			++m_nofEvents;
 		}
 		CATCH_ERROR_MAP( _TXT("failed to feed input to pattern matcher: %s"), *m_errorhnd);
 	}
 
-	void gatherResultItems( std::vector<PatternMatcherResultItem>& resitemlist, uint32_t dataref) const
+	void gatherResultItems( std::vector<PatternMatcherResultItem>& resitemlist, uint32_t dataref)
 	{
 		uint32_t itemList = m_statemachine->getEventDataItemListIdx( dataref);
 		const EventItem* item;
 		while (0!=(item=m_statemachine->nextResultItem( itemList)))
 		{
 			const char* itemName = m_data->variableMap.key( item->variable);
-			PatternMatcherResultItem rtitem( itemName, 0/*value*/, item->data.start_ordpos, item->data.end_ordpos, item->data.start_origseg, item->data.start_origpos, item->data.end_origseg, item->data.end_origpos);
+			const char* itemValue = 0;
+			if (item->data.subdataref && item->data.formathandle)
+			{
+				const PatternResultFormat* fmt = m_data->resultFormatHandles[ item->data.formathandle-1];
+				std::vector<PatternMatcherResultItem> subresitemlist;
+				gatherResultItems( subresitemlist, item->data.subdataref);
+				itemValue = m_resultFormatContext.map( fmt, subresitemlist.size(), subresitemlist.data());
+			}
+			PatternMatcherResultItem rtitem( itemName, itemValue, item->data.start_ordpos, item->data.end_ordpos, item->data.start_origseg, item->data.start_origpos, item->data.end_origseg, item->data.end_origpos);
 			resitemlist.push_back( rtitem);
-			if (item->data.subdataref)
+
+			if (item->data.subdataref && !item->data.formathandle)
 			{
 				gatherResultItems( resitemlist, item->data.subdataref);
 			}
@@ -187,19 +229,30 @@ public:
 		return rt;
 	}
 
-	void pushResult( std::vector<analyzer::PatternMatcherResult>& res, const Result& result) const
+	void pushResult( std::vector<analyzer::PatternMatcherResult>& res, const Result& result)
 	{
 		const char* resultName = m_data->patternMap.key( result.resultHandle);
 		std::vector<PatternMatcherResultItem> rtitemlist;
+		const char* resultValue = 0;
 		if (result.eventDataReferenceIdx)
 		{
-			gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
+			if (result.formatHandle)
+			{
+				const PatternResultFormat* fmt = m_data->resultFormatHandles[ result.formatHandle-1];
+				std::vector<PatternMatcherResultItem> subrtitemlist;
+				gatherResultItems( subrtitemlist, result.eventDataReferenceIdx);
+				resultValue = m_resultFormatContext.map( fmt, subrtitemlist.size(), subrtitemlist.data());
+			}
+			else
+			{
+				gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
+			}
 		}
 		DEBUG_EVENT7( "result", "name=%s ordpos=%u ordend=%u start=[%u,%u] end=[%u,%u]", resultName, (unsigned int)result.start_ordpos, (unsigned int)result.end_ordpos, (unsigned int)result.start_origseg, (unsigned int)result.start_origpos, (unsigned int)result.end_origseg, (unsigned int)result.end_origpos);
-		res.push_back( PatternMatcherResult( resultName, 0/*value*/, result.start_ordpos, result.end_ordpos, result.start_origseg, result.start_origpos, result.end_origseg, result.end_origpos, rtitemlist));
+		res.push_back( PatternMatcherResult( resultName, resultValue, result.start_ordpos, result.end_ordpos, result.start_origseg, result.start_origpos, result.end_origseg, result.end_origpos, rtitemlist));
 	}
 
-	virtual std::vector<analyzer::PatternMatcherResult> fetchResults() const
+	virtual std::vector<analyzer::PatternMatcherResult> fetchResults()
 	{
 		try
 		{
@@ -265,6 +318,7 @@ private:
 	ErrorBufferInterface* m_errorhnd;
 	DebugTraceContextInterface* m_debugtrace;
 	const PatternMatcherData* m_data;
+	PatternResultFormatContext m_resultFormatContext;
 	StateMachine* m_statemachine;
 	unsigned int m_nofEvents;
 	unsigned int m_curPosition;
@@ -326,7 +380,6 @@ public:
 			uint32_t slot_initsigval = 0;
 			uint32_t slot_initcount = cardinality?(uint32_t)cardinality:(uint32_t)argc;
 			uint32_t slot_event = eventHandle( ExpressionEvent, ++m_expression_event_cnt);
-			uint32_t slot_resultHandle = 0;
 			Trigger::SigType slot_sigtype = Trigger::SigAny;
 
 			switch (joinop)
@@ -369,7 +422,7 @@ public:
 					slot_sigtype = Trigger::SigAnd;
 					break;
 			}
-			ActionSlotDef actionSlotDef( slot_initsigval, slot_initcount, slot_event, slot_resultHandle);
+			ActionSlotDef actionSlotDef( slot_initsigval, slot_initcount, slot_event, 0/*resultHandle*/, 0/*formatHandle*/);
 			uint32_t program = m_data.programTable.createProgram( range, actionSlotDef);
 
 			std::size_t ai = 0;
@@ -489,10 +542,16 @@ public:
 			}
 			uint32_t resultEvent = eventHandle( ReferenceEvent, resultHandle);
 			uint32_t program = elem.program;
+			uint32_t formatHandle = 0;
+			if (!formatstring.empty())
+			{
+				m_data.resultFormatHandles.push_back( m_data.resultFormatTable->createResultFormat( formatstring.c_str()));
+				formatHandle = m_data.resultFormatHandles.size();
+			}
 			if (!program)
 			{
 				//... atomic event we have to envelope into a program
-				ActionSlotDef actionSlotDef( 0/*val*/, 1/*count*/, resultEvent, resultHandle);
+				ActionSlotDef actionSlotDef( 0/*val*/, 1/*count*/, resultEvent, resultHandle, formatHandle);
 				program = m_data.programTable.createProgram( 0, actionSlotDef);
 				m_data.programTable.createTrigger(
 					program, elem.eventid, true/*isKeyEvent*/, Trigger::SigAny, 0, elem.variable);
@@ -502,7 +561,7 @@ public:
 			{
 				throw std::runtime_error( _TXT("variable assignments only allowed to subexpressions of pattern"));
 			}
-			m_data.programTable.defineProgramResult( program, resultEvent, visible?resultHandle:0);
+			m_data.programTable.defineProgramResult( program, resultEvent, visible?resultHandle:0, formatHandle);
 			DEBUG_EVENT4( "pattern", "name=%s format='%s' visible=%s stack=%u", name.c_str(), formatstring.c_str(), visible?"true":"false", (unsigned int)m_stack.size())
 		}
 		CATCH_ERROR_MAP( _TXT("failed to close pattern definition on the pattern match expression stack: %s"), *m_errorhnd);

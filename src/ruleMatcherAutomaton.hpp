@@ -90,16 +90,17 @@ struct ActionSlot
 	uint32_t event;
 	uint32_t rule;
 	uint32_t resultHandle;
+	uint32_t formatHandle;
 	uint32_t start_ordpos;
 	uint32_t end_ordpos;
 	uint32_t start_origseg;
 	uint32_t start_origpos;
 	uint16_t count;
 
-	ActionSlot( uint32_t value_, uint16_t count_, uint32_t event_, uint32_t rule_, uint32_t resultHandle_)
-		:value(value_),event(event_),rule(rule_),resultHandle(resultHandle_),start_ordpos(0),end_ordpos(0),start_origseg(0),start_origpos(0),count(count_){}
+	ActionSlot( uint32_t value_, uint16_t count_, uint32_t event_, uint32_t rule_, uint32_t resultHandle_, uint32_t formatHandle_)
+		:value(value_),event(event_),rule(rule_),resultHandle(resultHandle_),formatHandle(formatHandle_),start_ordpos(0),end_ordpos(0),start_origseg(0),start_origpos(0),count(count_){}
 	ActionSlot( const ActionSlot& o)
-		:value(o.value),event(o.event),rule(o.rule),resultHandle(o.resultHandle),start_ordpos(o.start_ordpos),end_ordpos(o.end_ordpos),start_origseg(o.start_origseg),start_origpos(o.start_origpos),count(o.count){}
+		:value(o.value),event(o.event),rule(o.rule),resultHandle(o.resultHandle),formatHandle(o.formatHandle),start_ordpos(o.start_ordpos),end_ordpos(o.end_ordpos),start_origseg(o.start_origseg),start_origpos(o.start_origpos),count(o.count){}
 };
 
 struct ActionSlotTableFreeListElem {uint32_t _;uint32_t next;};
@@ -205,13 +206,14 @@ struct EventData
 	uint32_t start_ordpos;
 	uint32_t end_ordpos;
 	uint32_t subdataref;
+	uint32_t formathandle;
 
 	EventData()
-		:start_origseg(0),end_origseg(0),start_origpos(0),end_origpos(0),start_ordpos(0),end_ordpos(0),subdataref(0){}
-	EventData( uint32_t start_origseg_, uint32_t start_origpos_, uint32_t end_origseg_, uint32_t end_origpos_, uint32_t start_ordpos_, uint32_t end_ordpos_, uint32_t subdataref_)
-		:start_origseg(start_origseg_),end_origseg(end_origseg_),start_origpos(start_origpos_),end_origpos(end_origpos_),start_ordpos(start_ordpos_),end_ordpos(end_ordpos_),subdataref(subdataref_){}
+		:start_origseg(0),end_origseg(0),start_origpos(0),end_origpos(0),start_ordpos(0),end_ordpos(0),subdataref(0),formathandle(0){}
+	EventData( uint32_t start_origseg_, uint32_t start_origpos_, uint32_t end_origseg_, uint32_t end_origpos_, uint32_t start_ordpos_, uint32_t end_ordpos_, uint32_t subdataref_, uint32_t formathandle_)
+		:start_origseg(start_origseg_),end_origseg(end_origseg_),start_origpos(start_origpos_),end_origpos(end_origpos_),start_ordpos(start_ordpos_),end_ordpos(end_ordpos_),subdataref(subdataref_),formathandle(formathandle_){}
 	EventData( const EventData& o)
-		:start_origseg(o.start_origseg),end_origseg(o.end_origseg),start_origpos(o.start_origpos),end_origpos(o.end_origpos),start_ordpos(o.start_ordpos),end_ordpos(o.end_ordpos),subdataref(o.subdataref){}
+		:start_origseg(o.start_origseg),end_origseg(o.end_origseg),start_origpos(o.start_origpos),end_origpos(o.end_origpos),start_ordpos(o.start_ordpos),end_ordpos(o.end_ordpos),subdataref(o.subdataref),formathandle(o.formathandle){}
 };
 
 struct EventStruct
@@ -269,32 +271,34 @@ struct EventItem
 
 struct Result
 {
-	uint32_t resultHandle;
-	uint32_t eventDataReferenceIdx;
-	uint32_t start_ordpos;
-	uint32_t end_ordpos;
-	uint32_t start_origseg;
-	uint32_t end_origseg;
-	uint32_t start_origpos;
-	uint32_t end_origpos;
+	uint32_t resultHandle;			///< handle indicating what pattern matched
+	uint32_t formatHandle;			///< handle to format string to print the result (0 for undefined)
+	uint32_t eventDataReferenceIdx;		///< reference to collected data of the result
+	uint32_t start_ordpos;			///< start ordinal position
+	uint32_t end_ordpos;			///< end ordinal position
+	uint32_t start_origseg;			///< start original position segment
+	uint32_t end_origseg;			///< end original position segment
+	uint32_t start_origpos;			///< start original position offset
+	uint32_t end_origpos;			///< end original position offset
 
-	Result( uint32_t resultHandle_, uint32_t eventDataReferenceIdx_, uint32_t start_ordpos_, uint32_t end_ordpos_, uint32_t start_origseg_, uint32_t start_origpos_, uint32_t end_origseg_, uint32_t end_origpos_)
-		:resultHandle(resultHandle_),eventDataReferenceIdx(eventDataReferenceIdx_),start_ordpos(start_ordpos_),end_ordpos(end_ordpos_),start_origseg(start_origseg_),end_origseg(end_origseg_),start_origpos(start_origpos_),end_origpos(end_origpos_){}
+	Result( uint32_t resultHandle_, uint32_t formatHandle_, uint32_t eventDataReferenceIdx_, uint32_t start_ordpos_, uint32_t end_ordpos_, uint32_t start_origseg_, uint32_t start_origpos_, uint32_t end_origseg_, uint32_t end_origpos_)
+		:resultHandle(resultHandle_),formatHandle(formatHandle_),eventDataReferenceIdx(eventDataReferenceIdx_),start_ordpos(start_ordpos_),end_ordpos(end_ordpos_),start_origseg(start_origseg_),end_origseg(end_origseg_),start_origpos(start_origpos_),end_origpos(end_origpos_){}
 	Result( const Result& o)
-		:resultHandle(o.resultHandle),eventDataReferenceIdx(o.eventDataReferenceIdx),start_ordpos(o.start_ordpos),end_ordpos(o.end_ordpos),start_origseg(o.start_origseg),end_origseg(o.end_origseg),start_origpos(o.start_origpos),end_origpos(o.end_origpos){}
+		:resultHandle(o.resultHandle),formatHandle(o.formatHandle),eventDataReferenceIdx(o.eventDataReferenceIdx),start_ordpos(o.start_ordpos),end_ordpos(o.end_ordpos),start_origseg(o.start_origseg),end_origseg(o.end_origseg),start_origpos(o.start_origpos),end_origpos(o.end_origpos){}
 };
 
 struct ActionSlotDef
 {
-	uint32_t initsigval;
-	uint32_t initcount;
-	uint32_t event;
-	uint32_t resultHandle;
+	uint32_t initsigval;		//< initial signal value (bitset)
+	uint32_t initcount;		//< initial count
+	uint32_t event;			//< event to issue
+	uint32_t resultHandle;		//< handle for the pattern result to create
+	uint32_t formatHandle;		//< handle for result format string
 
-	ActionSlotDef( uint32_t initsigval_, uint32_t initcount_, uint32_t event_, uint32_t resultHandle_)
-		:initsigval(initsigval_),initcount(initcount_),event(event_),resultHandle(resultHandle_){}
+	ActionSlotDef( uint32_t initsigval_, uint32_t initcount_, uint32_t event_, uint32_t resultHandle_, uint32_t formatHandle_)
+		:initsigval(initsigval_),initcount(initcount_),event(event_),resultHandle(resultHandle_),formatHandle(formatHandle_){}
 	ActionSlotDef( const ActionSlotDef& o)
-		:initsigval(o.initsigval),initcount(o.initcount),event(o.event),resultHandle(o.resultHandle){}
+		:initsigval(o.initsigval),initcount(o.initcount),event(o.event),resultHandle(o.resultHandle),formatHandle(o.formatHandle){}
 };
 
 struct TriggerDef
@@ -354,7 +358,7 @@ public:
 	const Program& operator[]( uint32_t programidx) const	{return m_programMap[ programidx-1];}
 	const TriggerDefList& triggerList() const		{return m_triggerList;}
 
-	void defineProgramResult( uint32_t programidx, uint32_t eventid, uint32_t resultHandle);
+	void defineProgramResult( uint32_t programidx, uint32_t eventid, uint32_t resultHandle, uint32_t formatHandle);
 
 	uint32_t getEventProgramList( uint32_t eventid) const;
 	const ProgramTrigger* nextProgramPtr( uint32_t& programlist) const;

@@ -292,11 +292,12 @@ void ProgramTable::doneProgram( uint32_t programidx)
 	}
 }
 
-void ProgramTable::defineProgramResult( uint32_t programidx, uint32_t eventid, uint32_t resultHandle)
+void ProgramTable::defineProgramResult( uint32_t programidx, uint32_t eventid, uint32_t resultHandle, uint32_t formatHandle)
 {
 	Program& program = m_programMap[ programidx-1];
 	program.slotDef.event = eventid;
 	program.slotDef.resultHandle = resultHandle;
+	program.slotDef.formatHandle = formatHandle;
 }
 
 void ProgramTable::defineEventProgramAlt( uint32_t eventid, uint32_t programidx, uint32_t past_eventid)
@@ -928,7 +929,7 @@ void StateMachine::fireSignal(
 		{
 			if (slot.event)
 			{
-				EventStruct followEventData( EventData( slot.start_origseg, slot.start_origpos, data.end_origseg, data.end_origpos, slot.start_ordpos, slot.end_ordpos, rule.eventDataReferenceIdx), slot.event);
+				EventStruct followEventData( EventData( slot.start_origseg, slot.start_origpos, data.end_origseg, data.end_origpos, slot.start_ordpos, slot.end_ordpos, rule.eventDataReferenceIdx, slot.formatHandle), slot.event);
 				if (rule.eventDataReferenceIdx)
 				{
 					referenceEventData( rule.eventDataReferenceIdx);
@@ -937,7 +938,7 @@ void StateMachine::fireSignal(
 			}
 			if (slot.resultHandle)
 			{
-				m_results.add( Result( slot.resultHandle, rule.eventDataReferenceIdx, slot.start_ordpos, slot.end_ordpos, slot.start_origseg, slot.start_origpos, data.end_origseg, data.end_origpos));
+				m_results.add( Result( slot.resultHandle, slot.formatHandle, rule.eventDataReferenceIdx, slot.start_ordpos, slot.end_ordpos, slot.start_origseg, slot.start_origpos, data.end_origseg, data.end_origpos));
 				if (rule.eventDataReferenceIdx)
 				{
 					referenceEventData( rule.eventDataReferenceIdx);
@@ -1181,7 +1182,8 @@ void StateMachine::installProgram( uint32_t keyevent, const ProgramTrigger& prog
 	rule.actionSlotIdx =
 		1+m_actionSlotTable.add(
 			ActionSlot( program.slotDef.initsigval, program.slotDef.initcount,
-					program.slotDef.event, ruleidx, program.slotDef.resultHandle));
+					program.slotDef.event, ruleidx,
+					program.slotDef.resultHandle, program.slotDef.formatHandle));
 
 	ActionSlot& slot = m_actionSlotTable[ rule.actionSlotIdx-1];
 	uint32_t program_triggerListItr = program.triggerListIdx;
