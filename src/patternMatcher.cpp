@@ -196,7 +196,7 @@ public:
 			gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
 		}
 		DEBUG_EVENT7( "result", "name=%s ordpos=%u ordend=%u start=[%u,%u] end=[%u,%u]", resultName, (unsigned int)result.start_ordpos, (unsigned int)result.end_ordpos, (unsigned int)result.start_origseg, (unsigned int)result.start_origpos, (unsigned int)result.end_origseg, (unsigned int)result.end_origpos);
-		res.push_back( PatternMatcherResult( resultName, result.start_ordpos, result.end_ordpos, result.start_origseg, result.start_origpos, result.end_origseg, result.end_origpos, rtitemlist));
+		res.push_back( PatternMatcherResult( resultName, 0/*value*/, result.start_ordpos, result.end_ordpos, result.start_origseg, result.start_origpos, result.end_origseg, result.end_origpos, rtitemlist));
 	}
 
 	virtual std::vector<analyzer::PatternMatcherResult> fetchResults() const

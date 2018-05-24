@@ -763,7 +763,7 @@ static std::vector<strus::analyzer::PatternMatcherResult>
 			TreeMatchResult match = matchTree( candidateTree, doc, didx, endpos, ri->first);
 			if (match.valid)
 			{
-				strus::analyzer::PatternMatcherResult result( candidateTree->name(), match.ordpos, match.ordpos + match.ordsize, 0/*start_origseg*/, match.startidx, 0/*end_origseg*/, match.endidx, match.itemar);
+				strus::analyzer::PatternMatcherResult result( candidateTree->name(), 0/*value*/, match.ordpos, match.ordpos + match.ordsize, 0/*start_origseg*/, match.startidx, 0/*end_origseg*/, match.endidx, match.itemar);
 				rt.push_back( result);
 			}
 		}
@@ -838,7 +838,7 @@ static std::vector<strus::analyzer::PatternMatcherResult>
 	{
 		std::vector<strus::analyzer::PatternMatcherResultItem> items = ri->items();
 		std::sort( items.begin(), items.end(), compareResultItem);
-		rt.push_back( strus::analyzer::PatternMatcherResult( ri->name(), ri->start_ordpos(), ri->end_ordpos(), ri->start_origseg(), ri->start_origpos(), ri->end_origseg(), ri->end_origpos(), items));
+		rt.push_back( strus::analyzer::PatternMatcherResult( ri->name(), ri->value(), ri->start_ordpos(), ri->end_ordpos(), ri->start_origseg(), ri->start_origpos(), ri->end_origseg(), ri->end_origpos(), items));
 	}
 	std::sort( rt.begin(), rt.end(), compareResult);
 	return rt;
