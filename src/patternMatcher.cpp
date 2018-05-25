@@ -161,7 +161,7 @@ public:
 				const PatternResultFormat* fmt = m_data->resultFormatHandles[ item->data.formathandle-1];
 				std::vector<PatternMatcherResultItem> subresitemlist;
 				gatherResultItems( subresitemlist, item->data.subdataref);
-				itemValue = m_resultFormatContext.map( fmt, subresitemlist.size(), subresitemlist.data());
+				itemValue = m_resultFormatContext.map( fmt, subresitemlist.data(), subresitemlist.size());
 			}
 			PatternMatcherResultItem rtitem( itemName, itemValue, item->data.start_ordpos, item->data.end_ordpos, item->data.start_origseg, item->data.start_origpos, item->data.end_origseg, item->data.end_origpos);
 			resitemlist.push_back( rtitem);
@@ -241,7 +241,7 @@ public:
 				const PatternResultFormat* fmt = m_data->resultFormatHandles[ result.formatHandle-1];
 				std::vector<PatternMatcherResultItem> subrtitemlist;
 				gatherResultItems( subrtitemlist, result.eventDataReferenceIdx);
-				resultValue = m_resultFormatContext.map( fmt, subrtitemlist.size(), subrtitemlist.data());
+				resultValue = m_resultFormatContext.map( fmt, subrtitemlist.data(), subrtitemlist.size());
 			}
 			else
 			{
