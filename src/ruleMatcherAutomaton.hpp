@@ -335,8 +335,8 @@ struct ProgramTrigger
 
 	ProgramTrigger( uint32_t programidx_, uint32_t past_eventid_)
 		:programidx(programidx_),past_eventid(past_eventid_){}
-	ProgramTrigger( const ProgramTrigger& o)
-		:programidx(o.programidx),past_eventid(o.past_eventid){}
+	void assign( const ProgramTrigger& o)
+		{programidx=o.programidx;past_eventid=o.past_eventid;}
 };
 
 struct ProgramTableFreeListElem {uint32_t _;uint32_t next;};
