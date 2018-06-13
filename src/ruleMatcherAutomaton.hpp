@@ -99,8 +99,8 @@ struct ActionSlot
 
 	ActionSlot( uint32_t value_, uint16_t count_, uint32_t event_, uint32_t rule_, uint32_t resultHandle_, uint32_t formatHandle_)
 		:value(value_),event(event_),rule(rule_),resultHandle(resultHandle_),formatHandle(formatHandle_),start_ordpos(0),end_ordpos(0),start_origseg(0),start_origpos(0),count(count_){}
-	ActionSlot( const ActionSlot& o)
-		:value(o.value),event(o.event),rule(o.rule),resultHandle(o.resultHandle),formatHandle(o.formatHandle),start_ordpos(o.start_ordpos),end_ordpos(o.end_ordpos),start_origseg(o.start_origseg),start_origpos(o.start_origpos),count(o.count){}
+	void assign( const ActionSlot& o)
+		{value=o.value;event=o.event;rule=o.rule;resultHandle=o.resultHandle;formatHandle=o.formatHandle;start_ordpos=o.start_ordpos;end_ordpos=o.end_ordpos;start_origseg=o.start_origseg;start_origpos=o.start_origpos;count=o.count;}
 };
 
 struct ActionSlotTableFreeListElem {uint32_t _;uint32_t next;};
@@ -119,8 +119,8 @@ struct LinkedTrigger
 {
 	LinkedTrigger( uint32_t link_, const Trigger& trigger_)
 		:link(link_),trigger(trigger_){}
-	LinkedTrigger( const LinkedTrigger& o)
-		:link(o.link),trigger(o.trigger){}
+	void assign( const LinkedTrigger& o)
+		{link=o.link;trigger=o.trigger;}
 
 	uint32_t link;
 	Trigger trigger;
@@ -179,8 +179,8 @@ public:
 
 	explicit Rule( uint32_t lastpos_=0)
 		:actionSlotIdx(0),eventTriggerListIdx(0),eventDataReferenceIdx(0),done(0),lastpos(lastpos_){}
-	Rule( const Rule& o)
-		:actionSlotIdx(o.actionSlotIdx),eventTriggerListIdx(o.eventTriggerListIdx),eventDataReferenceIdx(o.eventDataReferenceIdx),done(o.done),lastpos(o.lastpos){}
+	void assign( const Rule& o)
+		{actionSlotIdx=o.actionSlotIdx;eventTriggerListIdx=o.eventTriggerListIdx;eventDataReferenceIdx=o.eventDataReferenceIdx;done=o.done;lastpos=o.lastpos;}
 
 	bool isActive() const	{return actionSlotIdx!=0;}
 };
@@ -253,8 +253,8 @@ struct EventDataReference
 		:eventItemListIdx(0),referenceCount(0){}
 	EventDataReference( uint32_t eventItemListIdx_, uint32_t referenceCount_)
 		:eventItemListIdx(eventItemListIdx_),referenceCount(referenceCount_){}
-	EventDataReference( const EventDataReference& o)
-		:eventItemListIdx(o.eventItemListIdx),referenceCount(o.referenceCount){}
+	void assign( const EventDataReference& o)
+		{eventItemListIdx=o.eventItemListIdx;referenceCount=o.referenceCount;}
 };
 struct EventDataReferenceTableFreeListElem {uint32_t _;uint32_t next;};
 typedef PodStructTableBase<EventDataReference,uint32_t,EventDataReferenceTableFreeListElem,BaseAddrEventDataReferenceTable> EventDataReferenceTable;
@@ -312,8 +312,8 @@ struct TriggerDef
 
 	TriggerDef( uint32_t event_, bool isKeyEvent_, Trigger::SigType sigtype_, uint32_t sigval_, uint32_t variable_)
 		:event(event_),isKeyEvent((unsigned char)isKeyEvent_),sigtype((unsigned char)sigtype_),sigval(sigval_),variable(variable_){}
-	TriggerDef( const TriggerDef& o)
-		:event(o.event),isKeyEvent(o.isKeyEvent),sigtype(o.sigtype),sigval(o.sigval),variable(o.variable){}
+	void assign( const TriggerDef& o)
+		{event=o.event;isKeyEvent=o.isKeyEvent;sigtype=o.sigtype;sigval=o.sigval;variable=o.variable;}
 };
 
 struct Program
@@ -324,8 +324,8 @@ struct Program
 
 	Program( uint32_t positionRange_, const ActionSlotDef& slotDef_)
 		:slotDef(slotDef_),triggerListIdx(0),positionRange(positionRange_){}
-	Program( const Program& o)
-		:slotDef(o.slotDef),triggerListIdx(o.triggerListIdx),positionRange(o.positionRange){}
+	void assign( const Program& o)
+		{slotDef=o.slotDef;triggerListIdx=o.triggerListIdx;positionRange=o.positionRange;}
 };
 
 struct ProgramTrigger
