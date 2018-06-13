@@ -57,8 +57,8 @@ public:
 	{
 		if (variable_ > MaxVariableId) throw std::runtime_error( _TXT("too many variables defined"));
 	}
-	Trigger( const Trigger& o)
-		:m_slot(o.m_slot),m_sigtype(o.m_sigtype),m_variable(o.m_variable),m_sigval(o.m_sigval){}
+	void assign( const Trigger& o)
+		{m_slot=o.m_slot;m_sigtype=o.m_sigtype;m_variable=o.m_variable;m_sigval=o.m_sigval;}
 
 	uint32_t slot() const		{return m_slot;}
 	SigType sigtype() const		{return (SigType)m_sigtype;}
@@ -77,8 +77,8 @@ struct EventTrigger
 {
 	EventTrigger( uint32_t event_, const Trigger& trigger_)
 		:event(event_),trigger(trigger_){}
-	EventTrigger( const EventTrigger& o)
-		:event(o.event),trigger(o.trigger){}
+	void assign( const EventTrigger& o)
+		{event=o.event;trigger=o.trigger;}
 
 	uint32_t event;
 	Trigger trigger;
