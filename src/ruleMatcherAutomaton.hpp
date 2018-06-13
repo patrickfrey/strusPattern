@@ -212,8 +212,9 @@ struct EventData
 		:start_origseg(0),end_origseg(0),start_origpos(0),end_origpos(0),start_ordpos(0),end_ordpos(0),subdataref(0),formathandle(0){}
 	EventData( uint32_t start_origseg_, uint32_t start_origpos_, uint32_t end_origseg_, uint32_t end_origpos_, uint32_t start_ordpos_, uint32_t end_ordpos_, uint32_t subdataref_, uint32_t formathandle_)
 		:start_origseg(start_origseg_),end_origseg(end_origseg_),start_origpos(start_origpos_),end_origpos(end_origpos_),start_ordpos(start_ordpos_),end_ordpos(end_ordpos_),subdataref(subdataref_),formathandle(formathandle_){}
-	EventData( const EventData& o)
-		:start_origseg(o.start_origseg),end_origseg(o.end_origseg),start_origpos(o.start_origpos),end_origpos(o.end_origpos),start_ordpos(o.start_ordpos),end_ordpos(o.end_ordpos),subdataref(o.subdataref),formathandle(o.formathandle){}
+
+	void assign( const EventData& o)
+		{start_origseg=o.start_origseg;end_origseg=o.end_origseg;start_origpos=o.start_origpos;end_origpos=o.end_origpos;start_ordpos=o.start_ordpos;end_ordpos=o.end_ordpos;subdataref=o.subdataref;formathandle=o.formathandle;}
 };
 
 struct EventStruct
@@ -225,8 +226,8 @@ struct EventStruct
 		:data(),eventid(0){}
 	EventStruct( const EventData& data_, uint32_t eventid_)
 		:data(data_),eventid(eventid_){}
-	EventStruct( const EventStruct& o)
-		:data(o.data),eventid(o.eventid){}
+	void assign( const EventStruct& o)
+		{data=o.data; eventid=o.eventid;}
 };
 typedef PodStructArrayBase<EventStruct,std::size_t,BaseAddrEventStructList> EventStructList;
 
@@ -283,8 +284,8 @@ struct Result
 
 	Result( uint32_t resultHandle_, uint32_t formatHandle_, uint32_t eventDataReferenceIdx_, uint32_t start_ordpos_, uint32_t end_ordpos_, uint32_t start_origseg_, uint32_t start_origpos_, uint32_t end_origseg_, uint32_t end_origpos_)
 		:resultHandle(resultHandle_),formatHandle(formatHandle_),eventDataReferenceIdx(eventDataReferenceIdx_),start_ordpos(start_ordpos_),end_ordpos(end_ordpos_),start_origseg(start_origseg_),end_origseg(end_origseg_),start_origpos(start_origpos_),end_origpos(end_origpos_){}
-	Result( const Result& o)
-		:resultHandle(o.resultHandle),formatHandle(o.formatHandle),eventDataReferenceIdx(o.eventDataReferenceIdx),start_ordpos(o.start_ordpos),end_ordpos(o.end_ordpos),start_origseg(o.start_origseg),end_origseg(o.end_origseg),start_origpos(o.start_origpos),end_origpos(o.end_origpos){}
+	void assign( const Result& o)
+		{resultHandle=o.resultHandle;formatHandle=o.formatHandle;eventDataReferenceIdx=o.eventDataReferenceIdx;start_ordpos=o.start_ordpos;end_ordpos=o.end_ordpos;start_origseg=o.start_origseg;end_origseg=o.end_origseg;start_origpos=o.start_origpos;end_origpos=o.end_origpos;}
 };
 
 struct ActionSlotDef
