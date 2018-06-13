@@ -57,8 +57,8 @@ public:
 	{
 		if (variable_ > MaxVariableId) throw std::runtime_error( _TXT("too many variables defined"));
 	}
-	Trigger( const Trigger& o)
-		:m_slot(o.m_slot),m_sigtype(o.m_sigtype),m_variable(o.m_variable),m_sigval(o.m_sigval){}
+	void assign( const Trigger& o)
+		{m_slot=o.m_slot;m_sigtype=o.m_sigtype;m_variable=o.m_variable;m_sigval=o.m_sigval;}
 
 	uint32_t slot() const		{return m_slot;}
 	SigType sigtype() const		{return (SigType)m_sigtype;}
@@ -77,8 +77,8 @@ struct EventTrigger
 {
 	EventTrigger( uint32_t event_, const Trigger& trigger_)
 		:event(event_),trigger(trigger_){}
-	EventTrigger( const EventTrigger& o)
-		:event(o.event),trigger(o.trigger){}
+	void assign( const EventTrigger& o)
+		{event=o.event;trigger=o.trigger;}
 
 	uint32_t event;
 	Trigger trigger;
@@ -298,8 +298,8 @@ struct ActionSlotDef
 
 	ActionSlotDef( uint32_t initsigval_, uint32_t initcount_, uint32_t event_, uint32_t resultHandle_, uint32_t formatHandle_)
 		:initsigval(initsigval_),initcount(initcount_),event(event_),resultHandle(resultHandle_),formatHandle(formatHandle_){}
-	ActionSlotDef( const ActionSlotDef& o)
-		:initsigval(o.initsigval),initcount(o.initcount),event(o.event),resultHandle(o.resultHandle),formatHandle(o.formatHandle){}
+	void assign( const ActionSlotDef& o)
+		{initsigval=o.initsigval;initcount=o.initcount;event=o.event;resultHandle=o.resultHandle;formatHandle=o.formatHandle;}
 };
 
 struct TriggerDef
@@ -372,8 +372,8 @@ public:
 	
 		OptimizeOptions()		
 			:stopwordOccurrenceFactor(0.01f),weightFactor(10.0f),maxRange(5){}
-		OptimizeOptions( const OptimizeOptions& o)
-			:stopwordOccurrenceFactor(o.stopwordOccurrenceFactor),weightFactor(o.weightFactor),maxRange(o.maxRange){}
+		void assign( const OptimizeOptions& o)
+			{stopwordOccurrenceFactor=o.stopwordOccurrenceFactor;weightFactor=o.weightFactor;maxRange=o.maxRange;}
 	};
 	void optimize( OptimizeOptions& opt);
 
@@ -419,8 +419,8 @@ struct DisposeEvent
 
 	DisposeEvent( uint32_t pos_, uint32_t idx_)
 		:pos(pos_),idx(idx_){}
-	DisposeEvent( const DisposeEvent& o)
-		:pos(o.pos),idx(o.idx){}
+	void assign( const DisposeEvent& o)
+		{pos=o.pos;idx=o.idx;}
 
 	bool operator<( const DisposeEvent& o) const
 	{
