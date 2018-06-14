@@ -266,8 +266,8 @@ struct EventItem
 
 	EventItem( uint32_t variable_, const EventData& data_)
 		:variable(variable_),data(data_){}
-	EventItem( const EventItem& o)
-		:variable(o.variable),data(o.data){}
+	void assign( const EventItem& o)
+		{variable=o.variable;data=o.data;}
 };
 
 struct Result
