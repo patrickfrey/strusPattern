@@ -68,7 +68,7 @@ struct PatternMatcherData
 	explicit PatternMatcherData( ErrorBufferInterface* errorhnd)
 		:variableMap(),patternMap(),programTable(),resultFormatTable(0),resultFormatHandles(),exclusive(false),maxResultSize(100)
 	{
-		resultFormatTable = new PatternResultFormatTable( errorhnd, &variableMap);
+		resultFormatTable = new PatternResultFormatTable( &variableMap, errorhnd);
 	}
 
 	VariableMap variableMap;
