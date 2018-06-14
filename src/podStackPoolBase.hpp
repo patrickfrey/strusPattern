@@ -31,8 +31,8 @@ struct PodStackElement
 
 	PodStackElement( ELEMTYPE value_, SIZETYPE next_)
 		:value(value_),next(next_){}
-	PodStackElement( const PodStackElement& o)
-		:value(o.value),next(o.next){}
+	void assign( const PodStackElement& o)
+		{value=o.value;next=o.next;}
 };
 
 template <typename ELEMTYPE, typename SIZETYPE, unsigned int BASEADDR>
