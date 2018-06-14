@@ -234,19 +234,19 @@ public:
 		const char* resultName = m_data->patternMap.key( result.resultHandle);
 		std::vector<PatternMatcherResultItem> rtitemlist;
 		const char* resultValue = 0;
-		if (result.eventDataReferenceIdx)
+		if (result.formatHandle)
 		{
-			if (result.formatHandle)
+			const PatternResultFormat* fmt = m_data->resultFormatHandles[ result.formatHandle-1];
+			std::vector<PatternMatcherResultItem> subrtitemlist;
+			if (result.eventDataReferenceIdx)
 			{
-				const PatternResultFormat* fmt = m_data->resultFormatHandles[ result.formatHandle-1];
-				std::vector<PatternMatcherResultItem> subrtitemlist;
 				gatherResultItems( subrtitemlist, result.eventDataReferenceIdx);
-				resultValue = m_resultFormatContext.map( fmt, subrtitemlist.data(), subrtitemlist.size());
 			}
-			else
-			{
-				gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
-			}
+			resultValue = m_resultFormatContext.map( fmt, subrtitemlist.data(), subrtitemlist.size());
+		}
+		else if (result.eventDataReferenceIdx)
+		{
+			gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
 		}
 		DEBUG_EVENT7( "result", "name=%s ordpos=%u ordend=%u start=[%u,%u] end=[%u,%u]", resultName, (unsigned int)result.start_ordpos, (unsigned int)result.end_ordpos, (unsigned int)result.start_origseg, (unsigned int)result.start_origpos, (unsigned int)result.end_origseg, (unsigned int)result.end_origpos);
 		res.push_back( PatternMatcherResult( resultName, resultValue, result.start_ordpos, result.end_ordpos, result.start_origseg, result.start_origpos, result.end_origseg, result.end_origpos, rtitemlist));
