@@ -128,20 +128,20 @@ public:
 			{
 				m_statemachine->setCurrentPos( m_curPosition = term.ordpos());
 			}
-			else if (term.origsize() >= (std::size_t)std::numeric_limits<uint32_t>::max())
+			else if (term.origsize() >= std::numeric_limits<int32_t>::max())
 			{
 				throw std::runtime_error( _TXT("term event orig size out of range"));
 			}
-			else if (term.origseg() >= (std::size_t)std::numeric_limits<uint32_t>::max())
+			else if (term.origpos().seg() >= std::numeric_limits<int32_t>::max())
 			{
 				throw std::runtime_error( _TXT("term event orig segment number out of range"));
 			}
-			else if (term.origpos() >= (std::size_t)std::numeric_limits<uint32_t>::max())
+			else if (term.origpos().ofs() >= std::numeric_limits<int32_t>::max())
 			{
 				throw std::runtime_error( _TXT("term event orig segment byte position out of range"));
 			}
 			uint32_t eventid = eventHandle( TermEvent, term.id());
-			EventData data( term.origseg(), term.origpos(), term.origseg(), term.origpos() + term.origsize(), term.ordpos(), term.ordpos()+1, 0/*subdataref*/, 0/*formathandle*/);
+			EventData data( term.origpos().seg(), term.origpos().ofs(), term.origpos().seg(), term.origpos().ofs() + term.origsize(), term.ordpos(), term.ordpos()+1, 0/*subdataref*/, 0/*formathandle*/);
 			m_statemachine->doTransition( eventid, data);
 			++m_nofEvents;
 		}
@@ -163,7 +163,7 @@ public:
 				gatherResultItems( subresitemlist, item->data.subdataref);
 				itemValue = m_resultFormatContext.map( fmt, subresitemlist.data(), subresitemlist.size());
 			}
-			PatternMatcherResultItem rtitem( itemName, itemValue, item->data.start_ordpos, item->data.end_ordpos, item->data.start_origseg, item->data.start_origpos, item->data.end_origseg, item->data.end_origpos);
+			PatternMatcherResultItem rtitem( itemName, itemValue, item->data.start_ordpos, item->data.end_ordpos, analyzer::Position(item->data.start_origseg, item->data.start_origpos), analyzer::Position(item->data.end_origseg, item->data.end_origpos));
 			resitemlist.push_back( rtitem);
 
 			if (item->data.subdataref && !item->data.formathandle)
@@ -249,7 +249,7 @@ public:
 			gatherResultItems( rtitemlist, result.eventDataReferenceIdx);
 		}
 		DEBUG_EVENT7( "result", "name=%s ordpos=%u ordend=%u start=[%u,%u] end=[%u,%u]", resultName, (unsigned int)result.start_ordpos, (unsigned int)result.end_ordpos, (unsigned int)result.start_origseg, (unsigned int)result.start_origpos, (unsigned int)result.end_origseg, (unsigned int)result.end_origpos);
-		res.push_back( PatternMatcherResult( resultName, resultValue, result.start_ordpos, result.end_ordpos, result.start_origseg, result.start_origpos, result.end_origseg, result.end_origpos, rtitemlist));
+		res.push_back( PatternMatcherResult( resultName, resultValue, result.start_ordpos, result.end_ordpos, analyzer::Position(result.start_origseg, result.start_origpos), analyzer::Position(result.end_origseg, result.end_origpos), rtitemlist));
 	}
 
 	virtual std::vector<analyzer::PatternMatcherResult> fetchResults()
@@ -321,7 +321,7 @@ private:
 	PatternResultFormatContext m_resultFormatContext;
 	StateMachine* m_statemachine;
 	unsigned int m_nofEvents;
-	unsigned int m_curPosition;
+	int m_curPosition;
 };
 
 

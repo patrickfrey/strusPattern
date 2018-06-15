@@ -51,10 +51,10 @@ struct SymbolDef
 
 struct ResultDef
 {
-	unsigned int id;
-	unsigned int ordpos;
-	unsigned int origpos;
-	unsigned int origsize;
+	int id;
+	int ordpos;
+	int origpos;
+	int origsize;
 };
 
 struct TestDef
@@ -253,7 +253,7 @@ int main( int argc, const char** argv)
 				const ResultDef& exp = expected[ridx];
 				if (exp.id != ri->id()) break;
 				if (exp.ordpos != ri->ordpos()) break;
-				if (exp.origpos != ri->origpos()) break;
+				if (exp.origpos != ri->origpos().ofs()) break;
 				if (exp.origsize != ri->origsize()) break;
 			}
 			if (ri != re || expected[ridx].origsize != 0)

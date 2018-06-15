@@ -129,29 +129,29 @@ void utils::printResults( std::ostream& out, const std::vector<strus::SegmenterP
 		ri = results.begin(), re = results.end();
 	for (; ri != re; ++ri)
 	{
-		std::size_t start_origsegsrcpos = segmentposmap.empty()?ri->start_origseg():segmentposmap[ ri->start_origseg()];
-		std::size_t end_origsegsrcpos = segmentposmap.empty()?ri->end_origseg():segmentposmap[ ri->end_origseg()];
+		std::size_t start_origsegsrcpos = segmentposmap.empty()?ri->origpos().seg():segmentposmap[ ri->origpos().seg()];
+		std::size_t end_origsegsrcpos = segmentposmap.empty()?ri->origend().seg():segmentposmap[ ri->origend().seg()];
 
-		out << "match '" << ri->name() << "' at " << ri->start_ordpos() << ".." << ri->end_ordpos() << " ["
-		    << start_origsegsrcpos << "|" << ri->start_origpos() << ".."
-		    << end_origsegsrcpos << "|" << ri->end_origpos()
-		    << "]:";
+		out << "match '" << ri->name() << "' at " << ri->ordpos() << ".." << ri->ordend() << " ["
+			<< start_origsegsrcpos << "|" << ri->origpos().ofs() << ".."
+			<< end_origsegsrcpos << "|" << ri->origend().ofs()
+			<< "]:";
 		std::vector<strus::analyzer::PatternMatcherResultItem>::const_iterator
 			ei = ri->items().begin(), ee = ri->items().end();
 	
 		for (; ei != ee; ++ei)
 		{
-			start_origsegsrcpos = segmentposmap.empty()?ei->start_origseg():segmentposmap[ ei->start_origseg()];
-			end_origsegsrcpos = segmentposmap.empty()?ei->end_origseg():segmentposmap[ ei->end_origseg()];
+			start_origsegsrcpos = segmentposmap.empty()?ei->origpos().seg():segmentposmap[ ei->origpos().seg()];
+			end_origsegsrcpos = segmentposmap.empty()?ei->origend().seg():segmentposmap[ ei->origend().seg()];
 
-			out << " " << ei->name() << " [" << ei->start_ordpos()<< ".." << ei->end_ordpos()
-					<< ", " << start_origsegsrcpos << "|" << ei->start_origpos()
-					<< ".." << end_origsegsrcpos << "|" << ei->end_origpos()
+			out << " " << ei->name() << " [" << ei->ordpos()<< ".." << ei->ordend()
+					<< ", " << start_origsegsrcpos << "|" << ei->origpos().ofs()
+					<< ".." << end_origsegsrcpos << "|" << ei->origend().ofs()
 					<< "]";
 			if (src)
 			{
-				std::size_t start_srcpos = start_origsegsrcpos + ei->start_origpos();
-				std::size_t end_srcpos = end_origsegsrcpos + ei->end_origpos();
+				std::size_t start_srcpos = start_origsegsrcpos + ei->origpos().ofs();
+				std::size_t end_srcpos = end_origsegsrcpos + ei->origend().ofs();
 				out << " '" << std::string( src+start_srcpos, end_srcpos-start_srcpos) << "'";
 			}
 		}

@@ -905,11 +905,11 @@ public:
 					case analyzer::BindContent:
 						ordpos = 1;
 						origpos = mi->origpos;
-						rt.push_back( analyzer::PatternLexem( mi->id, 1, 0/*origseg*/, mi->origpos, mi->origsize));
+						rt.push_back( analyzer::PatternLexem( mi->id, 1, analyzer::Position(0/*origseg*/, mi->origpos), mi->origsize));
 						++mi;
 						goto EXITLOOP;
 					case analyzer::BindSuccessor:
-						rt.push_back( analyzer::PatternLexem( mi->id, 1, 0/*origseg*/, mi->origpos, mi->origsize));
+						rt.push_back( analyzer::PatternLexem( mi->id, 1, analyzer::Position(0/*origseg*/, mi->origpos), mi->origsize));
 						break;
 					case analyzer::BindPredecessor:
 						break;
@@ -932,13 +932,13 @@ public:
 							origpos = mi->origpos;
 							++ordpos;
 						}
-						rt.push_back( analyzer::PatternLexem( mi->id, ordpos, 0/*origseg*/, mi->origpos, mi->origsize));
+						rt.push_back( analyzer::PatternLexem( mi->id, ordpos, analyzer::Position(0/*origseg*/, mi->origpos), mi->origsize));
 						break;
 					case analyzer::BindSuccessor:
-						rt.push_back( analyzer::PatternLexem( mi->id, ordpos+1, 0/*origseg*/, mi->origpos, mi->origsize));
+						rt.push_back( analyzer::PatternLexem( mi->id, ordpos+1, analyzer::Position(0/*origseg*/, mi->origpos), mi->origsize));
 						break;
 					case analyzer::BindPredecessor:
-						rt.push_back( analyzer::PatternLexem( mi->id, ordpos, 0/*origseg*/, mi->origpos, mi->origsize));
+						rt.push_back( analyzer::PatternLexem( mi->id, ordpos, analyzer::Position(0/*origseg*/, mi->origpos), mi->origsize));
 						break;
 				}
 				lastposbind = mi->posbind;

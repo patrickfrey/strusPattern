@@ -473,7 +473,7 @@ static std::vector<strus::analyzer::PatternMatcherResult> processDocument( const
 	unsigned int didx = 0;
 	for (; di != de; ++di,++didx)
 	{
-		mt->putInput( strus::analyzer::PatternLexem( di->termid, di->pos, 0/*origseg*/, didx, 1));
+		mt->putInput( strus::analyzer::PatternLexem( di->termid, di->pos, strus::analyzer::Position(0/*origseg*/, didx), 1));
 		if (g_errorBuffer->hasError()) throw std::runtime_error("error matching rules");
 	}
 	std::vector<strus::analyzer::PatternMatcherResult> results = mt->fetchResults();
@@ -734,7 +734,9 @@ static TreeMatchResult matchTree( const TreeNode* tree, const strus::utils::Docu
 	}
 	if (rt.valid && tree->variable())
 	{
-		strus::analyzer::PatternMatcherResultItem item( tree->variable(), ""/*value*/, rt.ordpos, rt.ordpos + rt.ordsize, 0/*start_origseg*/, rt.startidx, 0/*end_origseg*/, rt.endidx);
+		strus::analyzer::PatternMatcherResultItem item( tree->variable(), ""/*value*/, rt.ordpos, rt.ordpos + rt.ordsize,
+								strus::analyzer::Position(0/*start_origseg*/, rt.startidx),
+								strus::analyzer::Position(0/*end_origseg*/, rt.endidx));
 		rt.itemar.push_back( item);
 	}
 	return rt;
@@ -763,7 +765,9 @@ static std::vector<strus::analyzer::PatternMatcherResult>
 			TreeMatchResult match = matchTree( candidateTree, doc, didx, endpos, ri->first);
 			if (match.valid)
 			{
-				strus::analyzer::PatternMatcherResult result( candidateTree->name(), 0/*value*/, match.ordpos, match.ordpos + match.ordsize, 0/*start_origseg*/, match.startidx, 0/*end_origseg*/, match.endidx, match.itemar);
+				strus::analyzer::PatternMatcherResult result( candidateTree->name(), 0/*value*/, match.ordpos, match.ordpos + match.ordsize,
+										strus::analyzer::Position(0/*start_origseg*/, match.startidx),
+										strus::analyzer::Position(0/*end_origseg*/, match.endidx), match.itemar);
 				rt.push_back( result);
 			}
 		}
@@ -785,12 +789,12 @@ bool compareResultItem( const strus::analyzer::PatternMatcherResultItem &res1, c
 {
 	int cmp = std::strcmp( res1.name(), res2.name());
 	if (cmp) return cmp < 0;
-	if (res1.start_ordpos() != res2.start_ordpos()) return res1.start_ordpos() < res2.start_ordpos();
-	if (res1.end_ordpos() != res2.end_ordpos()) return res1.end_ordpos() < res2.end_ordpos();
-	if (res1.start_origseg() != res2.start_origseg()) return res1.start_origseg() < res2.start_origseg();
-	if (res1.start_origpos() != res2.start_origpos()) return res1.start_origpos() < res2.start_origpos();
-	if (res1.end_origseg() != res2.end_origseg()) return res1.end_origseg() < res2.end_origseg();
-	if (res1.end_origpos() != res2.end_origpos()) return res1.end_origpos() < res2.end_origpos();
+	if (res1.ordpos() != res2.ordpos()) return res1.ordpos() < res2.ordpos();
+	if (res1.ordend() != res2.ordend()) return res1.ordend() < res2.ordend();
+	if (res1.origpos().seg() != res2.origpos().seg()) return res1.origpos().seg() < res2.origpos().seg();
+	if (res1.origpos().ofs() != res2.origpos().ofs()) return res1.origpos().ofs() < res2.origpos().ofs();
+	if (res1.origend().seg() != res2.origend().seg()) return res1.origend().seg() < res2.origend().seg();
+	if (res1.origend().ofs() != res2.origend().ofs()) return res1.origend().ofs() < res2.origend().ofs();
 	return true;
 }
 
@@ -798,12 +802,12 @@ bool compareResult( const strus::analyzer::PatternMatcherResult &res1, const str
 {
 	int cmp = std::strcmp( res1.name(), res2.name());
 	if (cmp) return cmp < 0;
-	if (res1.start_ordpos() != res2.start_ordpos()) return res1.start_ordpos() < res2.start_ordpos();
-	if (res1.end_ordpos() != res2.end_ordpos()) return res1.end_ordpos() < res2.end_ordpos();
-	if (res1.start_origseg() != res2.start_origseg()) return res1.start_origseg() < res2.start_origseg();
-	if (res1.end_origseg() != res2.end_origseg()) return res1.end_origseg() < res2.end_origseg();
-	if (res1.start_origpos() != res2.start_origpos()) return res1.start_origpos() < res2.start_origpos();
-	if (res1.end_origpos() != res2.end_origpos()) return res1.end_origpos() < res2.end_origpos();
+	if (res1.ordpos() != res2.ordpos()) return res1.ordpos() < res2.ordpos();
+	if (res1.ordend() != res2.ordend()) return res1.ordend() < res2.ordend();
+	if (res1.origpos().seg() != res2.origpos().seg()) return res1.origpos().seg() < res2.origpos().seg();
+	if (res1.origend().seg() != res2.origend().seg()) return res1.origend().seg() < res2.origend().seg();
+	if (res1.origpos().ofs() != res2.origpos().ofs()) return res1.origpos().ofs() < res2.origpos().ofs();
+	if (res1.origend().ofs() != res2.origend().ofs()) return res1.origend().ofs() < res2.origend().ofs();
 	if (res1.items().size() != res2.items().size()) return res1.items().size() < res2.items().size();
 	std::vector<strus::analyzer::PatternMatcherResultItem>::const_iterator
 		i1 = res1.items().begin(), e1 = res1.items().end(),
@@ -838,7 +842,11 @@ static std::vector<strus::analyzer::PatternMatcherResult>
 	{
 		std::vector<strus::analyzer::PatternMatcherResultItem> items = ri->items();
 		std::sort( items.begin(), items.end(), compareResultItem);
-		rt.push_back( strus::analyzer::PatternMatcherResult( ri->name(), ri->value(), ri->start_ordpos(), ri->end_ordpos(), ri->start_origseg(), ri->start_origpos(), ri->end_origseg(), ri->end_origpos(), items));
+		rt.push_back( 
+			strus::analyzer::PatternMatcherResult(
+				ri->name(), ri->value(), ri->ordpos(), ri->ordend(),
+				strus::analyzer::Position( ri->origpos().seg(), ri->origpos().ofs()),
+				strus::analyzer::Position( ri->origend().seg(), ri->origend().ofs()), items));
 	}
 	std::sort( rt.begin(), rt.end(), compareResult);
 	return rt;
@@ -870,13 +878,13 @@ static bool compareResults( const std::vector<strus::analyzer::PatternMatcherRes
 	for (; xi != xe; ++xi)
 	{
 		std::ostringstream item;
-		item << xi->name() << "_" << xi->start_ordpos() << ".." << xi->end_ordpos() << "(" << xi->start_origseg() << "|" << xi->start_origpos() << " .. " << xi->end_origseg() << "|" << xi->end_origpos() << ")";
+		item << xi->name() << "_" << xi->ordpos() << ".." << xi->ordend() << "(" << xi->origpos().seg() << "|" << xi->origpos().ofs() << " .. " << xi->origend().seg() << "|" << xi->origend().ofs() << ")";
 		set_exp.insert( item.str());
 	}
 	for (; ri != re; ++ri)
 	{
 		std::ostringstream item;
-		item << ri->name() << "_" << ri->start_ordpos() << ".." << ri->end_ordpos() << "(" << ri->start_origseg() << "|" << ri->start_origpos() << " .. " << ri->end_origseg() << "|" << ri->end_origpos() << ")";
+		item << ri->name() << "_" << ri->ordpos() << ".." << ri->ordend() << "(" << ri->origpos().seg() << "|" << ri->origpos().ofs() << " .. " << ri->origend().seg() << "|" << ri->origend().ofs() << ")";
 		set_res.insert( item.str());
 	}
 	std::set<std::string>::const_iterator sri = set_res.begin(), sre = set_res.end();

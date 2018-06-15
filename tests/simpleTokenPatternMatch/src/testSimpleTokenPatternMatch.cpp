@@ -162,7 +162,7 @@ static std::vector<strus::analyzer::PatternMatcherResult>
 	unsigned int didx = 0;
 	for (; di != de; ++di,++didx)
 	{
-		mt->putInput( strus::analyzer::PatternLexem( di->termid, di->pos, 0/*origseg*/, didx, 1));
+		mt->putInput( strus::analyzer::PatternLexem( di->termid, di->pos, strus::analyzer::Position( 0/*origseg*/, didx), 1));
 		if (g_errorBuffer->hasError()) throw std::runtime_error("error matching rules");
 	}
 	results = mt->fetchResults();
@@ -263,7 +263,7 @@ int main( int argc, const char** argv)
 		std::set<Match> matches;
 		for (;ri != re; ++ri)
 		{
-			matches.insert( Match( ri->name(), ri->start_ordpos()));
+			matches.insert( Match( ri->name(), ri->ordpos()));
 		}
 		std::set<Match>::const_iterator li = matches.begin(), le = matches.end();
 		for (; li != le; ++li)

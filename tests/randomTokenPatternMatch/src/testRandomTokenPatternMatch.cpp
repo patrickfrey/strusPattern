@@ -143,7 +143,7 @@ static unsigned int processDocument( const strus::PatternMatcherInstanceInterfac
 	unsigned int didx = 0;
 	for (; di != de; ++di,++didx)
 	{
-		mt->putInput( strus::analyzer::PatternLexem( di->termid, di->pos, 0/*segpos*/, didx, 1));
+		mt->putInput( strus::analyzer::PatternLexem( di->termid, di->pos, strus::analyzer::Position(0/*segpos*/, didx), 1));
 	}
 	if (g_errorBuffer->hasError())
 	{
