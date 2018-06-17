@@ -443,7 +443,7 @@ private:
 		{
 			throw strus::runtime_error(_TXT("too many patter symbol tables defined, %u allowed"), (unsigned int)m_defar.size());
 		}
-		m_symtabmap.push_back( PatternSymbolTable());
+		m_symtabmap.push_back( PatternSymbolTable( m_errorhnd));
 		return m_symtabmap.size();
 	}
 
@@ -631,8 +631,8 @@ private:
 		Reference<SymbolTable> symtab;
 		std::vector<unsigned int> idmap;
 
-		PatternSymbolTable()
-			:symtab( new SymbolTable()),idmap(){}
+		explicit PatternSymbolTable( ErrorBufferInterface* errorhnd)
+			:symtab( new SymbolTable(errorhnd)),idmap(){}
 		PatternSymbolTable( const PatternSymbolTable& o)
 			:symtab(o.symtab),idmap(o.idmap){}
 	};

@@ -45,7 +45,8 @@ class VariableMap
 	:public PatternResultFormatVariableMap, public SymbolTable
 {
 public:
-	VariableMap(){}
+	VariableMap( ErrorBufferInterface* errorhnd)
+		:SymbolTable(errorhnd){}
 	virtual ~VariableMap(){}
 
 	virtual const char* getVariable( const std::string& name) const
@@ -66,7 +67,13 @@ public:
 struct PatternMatcherData
 {
 	explicit PatternMatcherData( ErrorBufferInterface* errorhnd)
-		:variableMap(),patternMap(),programTable(),resultFormatTable(0),resultFormatHandles(),exclusive(false),maxResultSize(100)
+		:variableMap(errorhnd)
+		,patternMap(errorhnd)
+		,programTable()
+		,resultFormatTable(0)
+		,resultFormatHandles()
+		,exclusive(false)
+		,maxResultSize(100)
 	{
 		resultFormatTable = new PatternResultFormatTable( &variableMap, errorhnd);
 	}
@@ -80,8 +87,13 @@ struct PatternMatcherData
 	unsigned int maxResultSize;
 
 private:
-	PatternMatcherData( const PatternMatcherData&){}	///... non copyable
-	void operator=( const PatternMatcherData&){}		///... non copyable
+#if __cplusplus >= 201103L
+	PatternMatcherData( const PatternMatcherData&) = delete;
+	void operator=( const PatternMatcherData&) = delete;
+#else
+	PatternMatcherData( const PatternMatcherData&){}
+	void operator=( const PatternMatcherData&){}
+#endif
 };
 
 enum PatternEventType {TermEvent=0, ExpressionEvent=1, ReferenceEvent=2};
