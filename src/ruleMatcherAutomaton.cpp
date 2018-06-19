@@ -916,11 +916,20 @@ void StateMachine::fireSignal(
 			}
 			joinEventData( rule.eventDataReferenceIdx, data.subdataref);
 		}
-		if (slot.start_ordpos == 0 || slot.start_ordpos > data.start_ordpos)
+		if (slot.start_ordpos == 0)
 		{
 			slot.start_ordpos = data.start_ordpos;
 			slot.start_origseg = data.start_origseg;
 			slot.start_origpos = data.start_origpos;
+		}
+		else if (slot.start_ordpos > data.start_ordpos)
+		{
+			slot.start_ordpos = data.start_ordpos;
+			if (slot.start_origseg > data.start_origseg || (slot.start_origseg == data.start_origseg && slot.start_origpos > data.start_origpos))
+			{
+				slot.start_origseg = data.start_origseg;
+				slot.start_origpos = data.start_origpos;
+			}
 		}
 	}
 	if (match)

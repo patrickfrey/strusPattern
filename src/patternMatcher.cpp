@@ -99,8 +99,8 @@ private:
 enum PatternEventType {TermEvent=0, ExpressionEvent=1, ReferenceEvent=2};
 static uint32_t eventHandle( PatternEventType type_, uint32_t idx)
 {
-	if (idx >= (1<<30)) throw strus::runtime_error( "%s",  _TXT("event handle out of range"));
-	return idx | ((uint32_t)type_ << 30);
+	if (idx >= (1<<29)) throw strus::runtime_error( "%s",  _TXT("event handle out of range"));
+	return idx | ((uint32_t)type_ << 29);
 }
 
 class PatternMatcherContext
