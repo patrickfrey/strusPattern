@@ -168,11 +168,14 @@ public:
 		{
 			const char* itemName = m_data->variableMap.key( item->variable);
 			const char* itemValue = 0;
-			if (item->data.subdataref && item->data.formathandle)
+			if (item->data.formathandle)
 			{
 				const PatternResultFormat* fmt = m_data->resultFormatHandles[ item->data.formathandle-1];
 				std::vector<PatternMatcherResultItem> subresitemlist;
-				gatherResultItems( subresitemlist, item->data.subdataref);
+				if (item->data.subdataref)
+				{
+					gatherResultItems( subresitemlist, item->data.subdataref);
+				}
 				itemValue = m_resultFormatContext.map( fmt, subresitemlist.data(), subresitemlist.size());
 			}
 			PatternMatcherResultItem rtitem( itemName, itemValue, item->data.start_ordpos, item->data.end_ordpos, analyzer::Position(item->data.start_origseg, item->data.start_origpos), analyzer::Position(item->data.end_origseg, item->data.end_origpos));
