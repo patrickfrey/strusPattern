@@ -142,9 +142,9 @@ Contact		= sequence_struct( SENT, Name, email=EMAIL | 10 );
 		AMOUNT^1        : /\b[0-9]{1,3}\b/;
 		CURRENCY_CHF    : /\b[Ss]{0,1}[Ff][Rr][.]{0,1}\b/;
 		CURRENCY_EUR    : /\b[Ee][Uu][Rr][.]{0,1}\b/;
-		Currency        = CURRENCY_CHF ["CHF"];
-		Currency        = CURRENCY_EUR ["EUR"];
-		MoneyAmount     = sequence_imm( value=AMOUNT, currency=Currency) ["{currency} {value}"];
+		Currency        = CURRENCY_CHF <font color=green><b>["CHF"]</b></font>;
+		Currency        = CURRENCY_EUR <font color=green><b>["EUR"]</b></font>;
+		MoneyAmount     = sequence_imm( value=AMOUNT, currency=Currency) <font color=green><b>["{currency} {value}"]</b></font>;
 	</pre>
 	<p id="description">
 	The pattern format strings ["CHF"] and ["EUR"] refer to constants, where ["{currency} {value}"] substitutes two variables of the
