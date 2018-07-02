@@ -107,15 +107,16 @@ Contact		= sequence_struct( SENT, Name, email=EMAIL | 10 );
 	A "Contact" is defined as a sequence of a name as we defined it and an email address in a proximity
 	distance of maximum 10 tokens, without an end of sentence marker appearing in between a candidate match.
 	</p>
+
 	<h4>Apporximative matching with an edit distace</h4>
 	<p id="description">
 	You can also do approximative matching with strusPattern. If you specify a pattern with an operator '~' followed by a positive number after the regular
 	expression defining a token, all tokens within this edit distance of the expression are output as matching tokens. Example:
 	</p>
 	<pre>
-		John = /[Jj]ohn/ ~1;
-		Samuel = /[Ss]amuel/ ~1;
-		Kawelaschwili = /[Kk]awelaschwili/ ~2;
+		John          : /[Jj]ohn/ ~1;
+		Samuel        : /[Ss]amuel/ ~1;
+		Kawelaschwili : /[Kk]awelaschwili/ ~2;
 	</pre>
 	<p id="description">
 	It is recommended to <i>carefully choose the edit distance</i>. The number of matches will explode with a value that is too high.
@@ -130,6 +131,27 @@ Contact		= sequence_struct( SENT, Name, email=EMAIL | 10 );
 	The difference of character codes in sequences of natural languages in phonetic scripts seems to be discriminating enough for the solution 
 	to preform well. This has been shown in a real project with non trivial data.
 	</p>
+	<h4>Formatting pattern matcher results</h4>
+	<p id="description">
+	The result value of a pattern or a subexpression matched can be defined with by a format string in square brackets ('[' ']'). 
+	The following example patterns shows the handling of money amounts with currencies in patterns:
+	</p>
+	<pre>
+		AMOUNT^3        : /\b[0-9]{1,3}'[0-9]{3,3}'[0-9]{3,3}\b/;
+		AMOUNT^2        : /\b[0-9]{1,3}'[0-9]{3,3}\b/;
+		AMOUNT^1        : /\b[0-9]{1,3}\b/;
+		CURRENCY_CHF    : /\b[Ss]{0,1}[Ff][Rr][.]{0,1}\b/;
+		CURRENCY_EUR    : /\b[Ee][Uu][Rr][.]{0,1}\b/;
+		Currency        = CURRENCY_CHF ["CHF"];
+		Currency        = CURRENCY_EUR ["EUR"];
+		MoneyAmount     = sequence_imm( value=AMOUNT, currency=Currency) ["{currency} {value}"];
+	</pre>
+	<p id="description">
+	The pattern format strings ["CHF"] and ["EUR"] refer to constants, where ["{currency} {value}"] substitutes two variables of the
+	subexpressions of the patterns. An input "3'645 Eur" would generate a value "EUR 3'645" in this example.
+	For lexems there are no format strings possible in the grammar.
+	</p>
+
 	<h4>Define the patterns in C++</h4>
 	<p id="description"><font color=red>No documentation available yet.</font></p>
 	<h4>Define the patterns in Python</h4>
