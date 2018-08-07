@@ -28,7 +28,7 @@ Install packages with 'apt-get'/aptitude.
 	do
 	git clone https://github.com/patrickfrey/$strusprj $strusprj
 	cd $strusprj
-	cmake -DCMAKE_BUILD_TYPE=Release -DLIB_INSTALL_DIR=/usr/local/lib .
+	cmake -DCMAKE_BUILD_TYPE=Release -DLIB_INSTALL_DIR=lib .
 	make
 	make install
 	cd ..
