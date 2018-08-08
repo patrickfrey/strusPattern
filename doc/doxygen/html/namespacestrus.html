@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>strusStream: strus Namespace Reference</title>
+<title>strusPattern: strus Namespace Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -26,8 +26,8 @@
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">strusStream
-   &#160;<span id="projectnumber">0.14</span>
+   <div id="projectname">strusPattern
+   &#160;<span id="projectnumber">0.16</span>
    </div>
   </td>
  </tr>
@@ -63,22 +63,22 @@
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a231b2fef86010442b863f8c34608b87c"><td class="memItemLeft" align="right" valign="top">PatternLexerInterface *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a231b2fef86010442b863f8c34608b87c">createPatternLexer_stream</a> (ErrorBufferInterface *errorhnd)</td></tr>
-<tr class="memdesc:a231b2fef86010442b863f8c34608b87c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create the interface for regular expression matching on text.  <a href="#a231b2fef86010442b863f8c34608b87c">More...</a><br/></td></tr>
-<tr class="separator:a231b2fef86010442b863f8c34608b87c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a007fa27288a1fec6d4207e609498f02c"><td class="memItemLeft" align="right" valign="top">PatternMatcherInterface *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a007fa27288a1fec6d4207e609498f02c">createPatternMatcher_stream</a> (ErrorBufferInterface *errorhnd)</td></tr>
-<tr class="memdesc:a007fa27288a1fec6d4207e609498f02c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create the interface for pattern matching on a stream of tokens.  <a href="#a007fa27288a1fec6d4207e609498f02c">More...</a><br/></td></tr>
-<tr class="separator:a007fa27288a1fec6d4207e609498f02c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0ad6e53e1ab94a7fd8f1bd5b2efbe788"><td class="memItemLeft" align="right" valign="top">PatternLexerInterface *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a0ad6e53e1ab94a7fd8f1bd5b2efbe788">createPatternLexer_std</a> (ErrorBufferInterface *errorhnd)</td></tr>
+<tr class="memdesc:a0ad6e53e1ab94a7fd8f1bd5b2efbe788"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create the interface for regular expression matching on text based on hyperscan.  <a href="#a0ad6e53e1ab94a7fd8f1bd5b2efbe788">More...</a><br/></td></tr>
+<tr class="separator:a0ad6e53e1ab94a7fd8f1bd5b2efbe788"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a576b40e45ac9ef95a92c8146eb29d592"><td class="memItemLeft" align="right" valign="top">PatternMatcherInterface *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a576b40e45ac9ef95a92c8146eb29d592">createPatternMatcher_std</a> (ErrorBufferInterface *errorhnd)</td></tr>
+<tr class="memdesc:a576b40e45ac9ef95a92c8146eb29d592"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create the interface for pattern matching on a regular language with tokens as alphabet.  <a href="#a576b40e45ac9ef95a92c8146eb29d592">More...</a><br/></td></tr>
+<tr class="separator:a576b40e45ac9ef95a92c8146eb29d592"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>strus toplevel namespace </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="a231b2fef86010442b863f8c34608b87c"></a>
+<a class="anchor" id="a0ad6e53e1ab94a7fd8f1bd5b2efbe788"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">PatternLexerInterface* strus::createPatternLexer_stream </td>
+          <td class="memname">PatternLexerInterface* strus::createPatternLexer_std </td>
           <td>(</td>
           <td class="paramtype">ErrorBufferInterface *&#160;</td>
           <td class="paramname"><em>errorhnd</em></td><td>)</td>
@@ -87,16 +87,16 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Create the interface for regular expression matching on text. </p>
+<p>Create the interface for regular expression matching on text based on hyperscan. </p>
 
 </div>
 </div>
-<a class="anchor" id="a007fa27288a1fec6d4207e609498f02c"></a>
+<a class="anchor" id="a576b40e45ac9ef95a92c8146eb29d592"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">PatternMatcherInterface* strus::createPatternMatcher_stream </td>
+          <td class="memname">PatternMatcherInterface* strus::createPatternMatcher_std </td>
           <td>(</td>
           <td class="paramtype">ErrorBufferInterface *&#160;</td>
           <td class="paramname"><em>errorhnd</em></td><td>)</td>
@@ -105,7 +105,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Create the interface for pattern matching on a stream of tokens. </p>
+<p>Create the interface for pattern matching on a regular language with tokens as alphabet. </p>
 
 </div>
 </div>
@@ -113,7 +113,7 @@ Functions</h2></td></tr>
 <!-- HTML footer for doxygen 1.8.6-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Feb 16 2017 12:28:40 for strusStream by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Aug 8 2018 18:25:05 for strusPattern by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

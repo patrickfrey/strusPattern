@@ -4,36 +4,25 @@
 <param name="FrameName" value="right">
 </OBJECT>
 <UL>
-  <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a231b2fef86010442b863f8c34608b87c"><param name="Name" value="createPatternLexer_stream"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a0ad6e53e1ab94a7fd8f1bd5b2efbe788"><param name="Name" value="createPatternLexer_std"></OBJECT>
   <UL>
-    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a231b2fef86010442b863f8c34608b87c"><param name="Name" value="pattern.hpp"></OBJECT>
-    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a231b2fef86010442b863f8c34608b87c"><param name="Name" value="strus"></OBJECT>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a0ad6e53e1ab94a7fd8f1bd5b2efbe788"><param name="Name" value="pattern.hpp"></OBJECT>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a0ad6e53e1ab94a7fd8f1bd5b2efbe788"><param name="Name" value="strus"></OBJECT>
   </UL>
-  <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a007fa27288a1fec6d4207e609498f02c"><param name="Name" value="createPatternMatcher_stream"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a576b40e45ac9ef95a92c8146eb29d592"><param name="Name" value="createPatternMatcher_std"></OBJECT>
   <UL>
-    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a007fa27288a1fec6d4207e609498f02c"><param name="Name" value="pattern.hpp"></OBJECT>
-    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a007fa27288a1fec6d4207e609498f02c"><param name="Name" value="strus"></OBJECT>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a576b40e45ac9ef95a92c8146eb29d592"><param name="Name" value="pattern.hpp"></OBJECT>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a576b40e45ac9ef95a92c8146eb29d592"><param name="Name" value="strus"></OBJECT>
   </UL>
   <LI><OBJECT type="text/sitemap"><param name="Local" value="pattern_8hpp.html"><param name="Name" value="pattern.hpp"></OBJECT>
   <UL>
-    <LI><OBJECT type="text/sitemap"><param name="Local" value="pattern_8hpp.html#a231b2fef86010442b863f8c34608b87c"><param name="Name" value="createPatternLexer_stream"></OBJECT>
-    <LI><OBJECT type="text/sitemap"><param name="Local" value="pattern_8hpp.html#a007fa27288a1fec6d4207e609498f02c"><param name="Name" value="createPatternMatcher_stream"></OBJECT>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="pattern_8hpp.html#a0ad6e53e1ab94a7fd8f1bd5b2efbe788"><param name="Name" value="createPatternLexer_std"></OBJECT>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="pattern_8hpp.html#a576b40e45ac9ef95a92c8146eb29d592"><param name="Name" value="createPatternMatcher_std"></OBJECT>
   </UL>
   <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html"><param name="Name" value="strus"></OBJECT>
   <UL>
-    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a231b2fef86010442b863f8c34608b87c"><param name="Name" value="createPatternLexer_stream"></OBJECT>
-    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a007fa27288a1fec6d4207e609498f02c"><param name="Name" value="createPatternMatcher_stream"></OBJECT>
-  </UL>
-  <LI><OBJECT type="text/sitemap"><param name="Local" value="versionPattern_8hpp.html#a84ff51a090da0bcdca53981fc75aef16"><param name="Name" value="STRUS_STREAM_VERSION"></OBJECT>
-  <LI><OBJECT type="text/sitemap"><param name="Local" value="versionPattern_8hpp.html#a1e2acca8e6d5e2dca2f62320093c0e37"><param name="Name" value="STRUS_STREAM_VERSION_MAJOR"></OBJECT>
-  <LI><OBJECT type="text/sitemap"><param name="Local" value="versionPattern_8hpp.html#a711f3ad6d1030f66e8c4b85839dabcf7"><param name="Name" value="STRUS_STREAM_VERSION_MINOR"></OBJECT>
-  <LI><OBJECT type="text/sitemap"><param name="Local" value="versionPattern_8hpp.html#a4e1ffec97dad88cb7d35ece6a5c97f87"><param name="Name" value="STRUS_STREAM_VERSION_STRING"></OBJECT>
-  <LI><OBJECT type="text/sitemap"><param name="Local" value="versionPattern_8hpp.html"><param name="Name" value="versionPattern.hpp"></OBJECT>
-  <UL>
-    <LI><OBJECT type="text/sitemap"><param name="Local" value="versionPattern_8hpp.html#a84ff51a090da0bcdca53981fc75aef16"><param name="Name" value="STRUS_STREAM_VERSION"></OBJECT>
-    <LI><OBJECT type="text/sitemap"><param name="Local" value="versionPattern_8hpp.html#a1e2acca8e6d5e2dca2f62320093c0e37"><param name="Name" value="STRUS_STREAM_VERSION_MAJOR"></OBJECT>
-    <LI><OBJECT type="text/sitemap"><param name="Local" value="versionPattern_8hpp.html#a711f3ad6d1030f66e8c4b85839dabcf7"><param name="Name" value="STRUS_STREAM_VERSION_MINOR"></OBJECT>
-    <LI><OBJECT type="text/sitemap"><param name="Local" value="versionPattern_8hpp.html#a4e1ffec97dad88cb7d35ece6a5c97f87"><param name="Name" value="STRUS_STREAM_VERSION_STRING"></OBJECT>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a0ad6e53e1ab94a7fd8f1bd5b2efbe788"><param name="Name" value="createPatternLexer_std"></OBJECT>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a576b40e45ac9ef95a92c8146eb29d592"><param name="Name" value="createPatternMatcher_std"></OBJECT>
   </UL>
 </UL>
 </BODY>

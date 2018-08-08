@@ -7,17 +7,15 @@ Default topic=index.html
 Index file=index.hhk
 Language=0x409 English (United States)
 Binary TOC=YES
-Title=strusStream
+Title=strusPattern
 
 [WINDOWS]
-main="strusStream","index.hhc","index.hhk","index.html","index.html",,,,,0x23520,,0x10387e,,,,,,,,0
+main="strusPattern","index.hhc","index.hhk","index.html","index.html",,,,,0x23520,,0x10387e,,,,,,,,0
 
 [FILES]
 pattern_8hpp_source.html
-versionPattern_8hpp_source.html
 strus_8md.html
 pattern_8hpp.html
-versionPattern_8hpp.html
 namespacestrus.html
 dir_d44c64559bbebec7f509842c48db8b23.html
 dir_a73361def35442ed7e38ef668dbae29f.html
@@ -27,8 +25,6 @@ namespaces.html
 namespacemembers.html
 namespacemembers_func.html
 files.html
-globals.html
-globals_defs.html
 tab_a.png
 tab_b.png
 tab_h.png
