@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// \brief Exported functions of the strus stream library
-/// \file libstrus_stream.cpp
+/// \brief Exported functions of the strus pattern matching library based on hyperscan for regex matching
+/// \file libstrus_pattern.cpp
 #include "strus/lib/pattern.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "patternMatcher.hpp"
@@ -18,7 +18,7 @@
 using namespace strus;
 static bool g_intl_initialized = false;
 
-DLL_PUBLIC PatternMatcherInterface* strus::createPatternMatcher_stream( ErrorBufferInterface* errorhnd)
+DLL_PUBLIC PatternMatcherInterface* strus::createPatternMatcher_std( ErrorBufferInterface* errorhnd)
 {
 	try
 	{
@@ -32,7 +32,7 @@ DLL_PUBLIC PatternMatcherInterface* strus::createPatternMatcher_stream( ErrorBuf
 	CATCH_ERROR_MAP_RETURN( _TXT("error creating token pattern match interface: %s"), *errorhnd, 0);
 }
 
-DLL_PUBLIC PatternLexerInterface* strus::createPatternLexer_stream( ErrorBufferInterface* errorhnd)
+DLL_PUBLIC PatternLexerInterface* strus::createPatternLexer_std( ErrorBufferInterface* errorhnd)
 {
 	try
 	{

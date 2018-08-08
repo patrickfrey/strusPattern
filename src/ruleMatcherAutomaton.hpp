@@ -9,7 +9,8 @@
 #ifndef _STRUS_RULE_MATCHER_AUTOMATON_HPP_INCLUDED
 #define _STRUS_RULE_MATCHER_AUTOMATON_HPP_INCLUDED
 #include "strus/base/stdint.h"
-#include "utils.hpp"
+#include "strus/base/unordered_map.hpp"
+#include "strus/debugTraceInterface.hpp"
 #include "podStructArrayBase.hpp"
 #include "podStructTableBase.hpp"
 #include "podStackPoolBase.hpp"
@@ -17,6 +18,7 @@
 #include "internationalization.hpp"
 #include <vector>
 #include <map>
+#include <set>
 #include <string>
 #include <stdexcept>
 
@@ -50,19 +52,18 @@ public:
 		return ar[i];
 	}
 
-	Trigger( uint32_t slot_, SigType sigtype_, uint32_t sigval_, uint32_t variable_, float weight_)
-		:m_slot(slot_),m_sigtype(sigtype_),m_variable(variable_),m_sigval(sigval_),m_weight(weight_)
+	Trigger( uint32_t slot_, SigType sigtype_, uint32_t sigval_, uint32_t variable_)
+		:m_slot(slot_),m_sigtype(sigtype_),m_variable(variable_),m_sigval(sigval_)
 	{
-		if (variable_ > MaxVariableId) throw strus::runtime_error(_TXT("too many variables defined"));
+		if (variable_ > MaxVariableId) throw std::runtime_error( _TXT("too many variables defined"));
 	}
-	Trigger( const Trigger& o)
-		:m_slot(o.m_slot),m_sigtype(o.m_sigtype),m_variable(o.m_variable),m_sigval(o.m_sigval),m_weight(o.m_weight){}
+	void assign( const Trigger& o)
+		{m_slot=o.m_slot;m_sigtype=o.m_sigtype;m_variable=o.m_variable;m_sigval=o.m_sigval;}
 
 	uint32_t slot() const		{return m_slot;}
 	SigType sigtype() const		{return (SigType)m_sigtype;}
 	uint32_t sigval() const		{return (uint32_t)m_sigval;}
 	uint32_t variable() const	{return (uint32_t)m_variable;}
-	float weight() const		{return m_weight;}
 
 private:
 	enum {MaxVariableId=(1<<28)-1};
@@ -70,15 +71,14 @@ private:
 	unsigned int m_sigtype:4;
 	unsigned int m_variable:28;
 	uint32_t m_sigval;
-	float m_weight;
 };
 
 struct EventTrigger
 {
 	EventTrigger( uint32_t event_, const Trigger& trigger_)
 		:event(event_),trigger(trigger_){}
-	EventTrigger( const EventTrigger& o)
-		:event(o.event),trigger(o.trigger){}
+	void assign( const EventTrigger& o)
+		{event=o.event;trigger=o.trigger;}
 
 	uint32_t event;
 	Trigger trigger;
@@ -90,16 +90,17 @@ struct ActionSlot
 	uint32_t event;
 	uint32_t rule;
 	uint32_t resultHandle;
+	uint32_t formatHandle;
 	uint32_t start_ordpos;
 	uint32_t end_ordpos;
 	uint32_t start_origseg;
 	uint32_t start_origpos;
 	uint16_t count;
 
-	ActionSlot( uint32_t value_, uint16_t count_, uint32_t event_, uint32_t rule_, uint32_t resultHandle_)
-		:value(value_),event(event_),rule(rule_),resultHandle(resultHandle_),start_ordpos(0),end_ordpos(0),start_origseg(0),start_origpos(0),count(count_){}
-	ActionSlot( const ActionSlot& o)
-		:value(o.value),event(o.event),rule(o.rule),resultHandle(o.resultHandle),start_ordpos(o.start_ordpos),end_ordpos(o.end_ordpos),start_origseg(o.start_origseg),start_origpos(o.start_origpos),count(o.count){}
+	ActionSlot( uint32_t value_, uint16_t count_, uint32_t event_, uint32_t rule_, uint32_t resultHandle_, uint32_t formatHandle_)
+		:value(value_),event(event_),rule(rule_),resultHandle(resultHandle_),formatHandle(formatHandle_),start_ordpos(0),end_ordpos(0),start_origseg(0),start_origpos(0),count(count_){}
+	void assign( const ActionSlot& o)
+		{value=o.value;event=o.event;rule=o.rule;resultHandle=o.resultHandle;formatHandle=o.formatHandle;start_ordpos=o.start_ordpos;end_ordpos=o.end_ordpos;start_origseg=o.start_origseg;start_origpos=o.start_origpos;count=o.count;}
 };
 
 struct ActionSlotTableFreeListElem {uint32_t _;uint32_t next;};
@@ -118,8 +119,8 @@ struct LinkedTrigger
 {
 	LinkedTrigger( uint32_t link_, const Trigger& trigger_)
 		:link(link_),trigger(trigger_){}
-	LinkedTrigger( const LinkedTrigger& o)
-		:link(o.link),trigger(o.trigger){}
+	void assign( const LinkedTrigger& o)
+		{link=o.link;trigger=o.trigger;}
 
 	uint32_t link;
 	Trigger trigger;
@@ -178,8 +179,8 @@ public:
 
 	explicit Rule( uint32_t lastpos_=0)
 		:actionSlotIdx(0),eventTriggerListIdx(0),eventDataReferenceIdx(0),done(0),lastpos(lastpos_){}
-	Rule( const Rule& o)
-		:actionSlotIdx(o.actionSlotIdx),eventTriggerListIdx(o.eventTriggerListIdx),eventDataReferenceIdx(o.eventDataReferenceIdx),done(o.done),lastpos(o.lastpos){}
+	void assign( const Rule& o)
+		{actionSlotIdx=o.actionSlotIdx;eventTriggerListIdx=o.eventTriggerListIdx;eventDataReferenceIdx=o.eventDataReferenceIdx;done=o.done;lastpos=o.lastpos;}
 
 	bool isActive() const	{return actionSlotIdx!=0;}
 };
@@ -205,13 +206,15 @@ struct EventData
 	uint32_t start_ordpos;
 	uint32_t end_ordpos;
 	uint32_t subdataref;
+	uint32_t formathandle;
 
 	EventData()
-		:start_origseg(0),end_origseg(0),start_origpos(0),end_origpos(0),start_ordpos(0),end_ordpos(0),subdataref(0){}
-	EventData( uint32_t start_origseg_, uint32_t start_origpos_, uint32_t end_origseg_, uint32_t end_origpos_, uint32_t start_ordpos_, uint32_t end_ordpos_, uint32_t subdataref_)
-		:start_origseg(start_origseg_),end_origseg(end_origseg_),start_origpos(start_origpos_),end_origpos(end_origpos_),start_ordpos(start_ordpos_),end_ordpos(end_ordpos_),subdataref(subdataref_){}
-	EventData( const EventData& o)
-		:start_origseg(o.start_origseg),end_origseg(o.end_origseg),start_origpos(o.start_origpos),end_origpos(o.end_origpos),start_ordpos(o.start_ordpos),end_ordpos(o.end_ordpos),subdataref(o.subdataref){}
+		:start_origseg(0),end_origseg(0),start_origpos(0),end_origpos(0),start_ordpos(0),end_ordpos(0),subdataref(0),formathandle(0){}
+	EventData( uint32_t start_origseg_, uint32_t start_origpos_, uint32_t end_origseg_, uint32_t end_origpos_, uint32_t start_ordpos_, uint32_t end_ordpos_, uint32_t subdataref_, uint32_t formathandle_)
+		:start_origseg(start_origseg_),end_origseg(end_origseg_),start_origpos(start_origpos_),end_origpos(end_origpos_),start_ordpos(start_ordpos_),end_ordpos(end_ordpos_),subdataref(subdataref_),formathandle(formathandle_){}
+
+	void assign( const EventData& o)
+		{start_origseg=o.start_origseg;end_origseg=o.end_origseg;start_origpos=o.start_origpos;end_origpos=o.end_origpos;start_ordpos=o.start_ordpos;end_ordpos=o.end_ordpos;subdataref=o.subdataref;formathandle=o.formathandle;}
 };
 
 struct EventStruct
@@ -223,8 +226,8 @@ struct EventStruct
 		:data(),eventid(0){}
 	EventStruct( const EventData& data_, uint32_t eventid_)
 		:data(data_),eventid(eventid_){}
-	EventStruct( const EventStruct& o)
-		:data(o.data),eventid(o.eventid){}
+	void assign( const EventStruct& o)
+		{data=o.data; eventid=o.eventid;}
 };
 typedef PodStructArrayBase<EventStruct,std::size_t,BaseAddrEventStructList> EventStructList;
 
@@ -250,8 +253,8 @@ struct EventDataReference
 		:eventItemListIdx(0),referenceCount(0){}
 	EventDataReference( uint32_t eventItemListIdx_, uint32_t referenceCount_)
 		:eventItemListIdx(eventItemListIdx_),referenceCount(referenceCount_){}
-	EventDataReference( const EventDataReference& o)
-		:eventItemListIdx(o.eventItemListIdx),referenceCount(o.referenceCount){}
+	void assign( const EventDataReference& o)
+		{eventItemListIdx=o.eventItemListIdx;referenceCount=o.referenceCount;}
 };
 struct EventDataReferenceTableFreeListElem {uint32_t _;uint32_t next;};
 typedef PodStructTableBase<EventDataReference,uint32_t,EventDataReferenceTableFreeListElem,BaseAddrEventDataReferenceTable> EventDataReferenceTable;
@@ -259,43 +262,44 @@ typedef PodStructTableBase<EventDataReference,uint32_t,EventDataReferenceTableFr
 struct EventItem
 {
 	uint32_t variable;
-	float weight;
 	EventData data;
 
-	EventItem( uint32_t variable_, float weight_, const EventData& data_)
-		:variable(variable_),weight(weight_),data(data_){}
-	EventItem( const EventItem& o)
-		:variable(o.variable),weight(o.weight),data(o.data){}
+	EventItem( uint32_t variable_, const EventData& data_)
+		:variable(variable_),data(data_){}
+	void assign( const EventItem& o)
+		{variable=o.variable;data=o.data;}
 };
 
 struct Result
 {
-	uint32_t resultHandle;
-	uint32_t eventDataReferenceIdx;
-	uint32_t start_ordpos;
-	uint32_t end_ordpos;
-	uint32_t start_origseg;
-	uint32_t end_origseg;
-	uint32_t start_origpos;
-	uint32_t end_origpos;
+	uint32_t resultHandle;			///< handle indicating what pattern matched
+	uint32_t formatHandle;			///< handle to format string to print the result (0 for undefined)
+	uint32_t eventDataReferenceIdx;		///< reference to collected data of the result
+	uint32_t start_ordpos;			///< start ordinal position
+	uint32_t end_ordpos;			///< end ordinal position
+	uint32_t start_origseg;			///< start original position segment
+	uint32_t end_origseg;			///< end original position segment
+	uint32_t start_origpos;			///< start original position offset
+	uint32_t end_origpos;			///< end original position offset
 
-	Result( uint32_t resultHandle_, uint32_t eventDataReferenceIdx_, uint32_t start_ordpos_, uint32_t end_ordpos_, uint32_t start_origseg_, uint32_t start_origpos_, uint32_t end_origseg_, uint32_t end_origpos_)
-		:resultHandle(resultHandle_),eventDataReferenceIdx(eventDataReferenceIdx_),start_ordpos(start_ordpos_),end_ordpos(end_ordpos_),start_origseg(start_origseg_),end_origseg(end_origseg_),start_origpos(start_origpos_),end_origpos(end_origpos_){}
-	Result( const Result& o)
-		:resultHandle(o.resultHandle),eventDataReferenceIdx(o.eventDataReferenceIdx),start_ordpos(o.start_ordpos),end_ordpos(o.end_ordpos),start_origseg(o.start_origseg),end_origseg(o.end_origseg),start_origpos(o.start_origpos),end_origpos(o.end_origpos){}
+	Result( uint32_t resultHandle_, uint32_t formatHandle_, uint32_t eventDataReferenceIdx_, uint32_t start_ordpos_, uint32_t end_ordpos_, uint32_t start_origseg_, uint32_t start_origpos_, uint32_t end_origseg_, uint32_t end_origpos_)
+		:resultHandle(resultHandle_),formatHandle(formatHandle_),eventDataReferenceIdx(eventDataReferenceIdx_),start_ordpos(start_ordpos_),end_ordpos(end_ordpos_),start_origseg(start_origseg_),end_origseg(end_origseg_),start_origpos(start_origpos_),end_origpos(end_origpos_){}
+	void assign( const Result& o)
+		{resultHandle=o.resultHandle;formatHandle=o.formatHandle;eventDataReferenceIdx=o.eventDataReferenceIdx;start_ordpos=o.start_ordpos;end_ordpos=o.end_ordpos;start_origseg=o.start_origseg;end_origseg=o.end_origseg;start_origpos=o.start_origpos;end_origpos=o.end_origpos;}
 };
 
 struct ActionSlotDef
 {
-	uint32_t initsigval;
-	uint32_t initcount;
-	uint32_t event;
-	uint32_t resultHandle;
+	uint32_t initsigval;		//< initial signal value (bitset)
+	uint32_t initcount;		//< initial count
+	uint32_t event;			//< event to issue
+	uint32_t resultHandle;		//< handle for the pattern result to create
+	uint32_t formatHandle;		//< handle for result format string
 
-	ActionSlotDef( uint32_t initsigval_, uint32_t initcount_, uint32_t event_, uint32_t resultHandle_)
-		:initsigval(initsigval_),initcount(initcount_),event(event_),resultHandle(resultHandle_){}
-	ActionSlotDef( const ActionSlotDef& o)
-		:initsigval(o.initsigval),initcount(o.initcount),event(o.event),resultHandle(o.resultHandle){}
+	ActionSlotDef( uint32_t initsigval_, uint32_t initcount_, uint32_t event_, uint32_t resultHandle_, uint32_t formatHandle_)
+		:initsigval(initsigval_),initcount(initcount_),event(event_),resultHandle(resultHandle_),formatHandle(formatHandle_){}
+	void assign( const ActionSlotDef& o)
+		{initsigval=o.initsigval;initcount=o.initcount;event=o.event;resultHandle=o.resultHandle;formatHandle=o.formatHandle;}
 };
 
 struct TriggerDef
@@ -305,12 +309,11 @@ struct TriggerDef
 	unsigned char sigtype;
 	uint32_t sigval;
 	uint32_t variable;
-	float weight;
 
-	TriggerDef( uint32_t event_, bool isKeyEvent_, Trigger::SigType sigtype_, uint32_t sigval_, uint32_t variable_, float weight_)
-		:event(event_),isKeyEvent((unsigned char)isKeyEvent_),sigtype((unsigned char)sigtype_),sigval(sigval_),variable(variable_),weight(weight_){}
-	TriggerDef( const TriggerDef& o)
-		:event(o.event),isKeyEvent(o.isKeyEvent),sigtype(o.sigtype),sigval(o.sigval),variable(o.variable),weight(o.weight){}
+	TriggerDef( uint32_t event_, bool isKeyEvent_, Trigger::SigType sigtype_, uint32_t sigval_, uint32_t variable_)
+		:event(event_),isKeyEvent((unsigned char)isKeyEvent_),sigtype((unsigned char)sigtype_),sigval(sigval_),variable(variable_){}
+	void assign( const TriggerDef& o)
+		{event=o.event;isKeyEvent=o.isKeyEvent;sigtype=o.sigtype;sigval=o.sigval;variable=o.variable;}
 };
 
 struct Program
@@ -321,8 +324,8 @@ struct Program
 
 	Program( uint32_t positionRange_, const ActionSlotDef& slotDef_)
 		:slotDef(slotDef_),triggerListIdx(0),positionRange(positionRange_){}
-	Program( const Program& o)
-		:slotDef(o.slotDef),triggerListIdx(o.triggerListIdx),positionRange(o.positionRange){}
+	void assign( const Program& o)
+		{slotDef=o.slotDef;triggerListIdx=o.triggerListIdx;positionRange=o.positionRange;}
 };
 
 struct ProgramTrigger
@@ -332,8 +335,8 @@ struct ProgramTrigger
 
 	ProgramTrigger( uint32_t programidx_, uint32_t past_eventid_)
 		:programidx(programidx_),past_eventid(past_eventid_){}
-	ProgramTrigger( const ProgramTrigger& o)
-		:programidx(o.programidx),past_eventid(o.past_eventid){}
+	void assign( const ProgramTrigger& o)
+		{programidx=o.programidx;past_eventid=o.past_eventid;}
 };
 
 struct ProgramTableFreeListElem {uint32_t _;uint32_t next;};
@@ -350,13 +353,13 @@ public:
 	void defineEventFrequency( uint32_t eventid, double df);
 
 	uint32_t createProgram( uint32_t positionRange_, const ActionSlotDef& actionSlotDef_);
-	void createTrigger( uint32_t program, uint32_t event, bool isKeyEvent, Trigger::SigType sigtype, uint32_t sigval, uint32_t variable, float weight);
+	void createTrigger( uint32_t program, uint32_t event, bool isKeyEvent, Trigger::SigType sigtype, uint32_t sigval, uint32_t variable);
 	void doneProgram( uint32_t program);
 
 	const Program& operator[]( uint32_t programidx) const	{return m_programMap[ programidx-1];}
 	const TriggerDefList& triggerList() const		{return m_triggerList;}
 
-	void defineProgramResult( uint32_t programidx, uint32_t eventid, uint32_t resultHandle);
+	void defineProgramResult( uint32_t programidx, uint32_t eventid, uint32_t resultHandle, uint32_t formatHandle);
 
 	uint32_t getEventProgramList( uint32_t eventid) const;
 	const ProgramTrigger* nextProgramPtr( uint32_t& programlist) const;
@@ -369,8 +372,8 @@ public:
 	
 		OptimizeOptions()		
 			:stopwordOccurrenceFactor(0.01f),weightFactor(10.0f),maxRange(5){}
-		OptimizeOptions( const OptimizeOptions& o)
-			:stopwordOccurrenceFactor(o.stopwordOccurrenceFactor),weightFactor(o.weightFactor),maxRange(o.maxRange){}
+		void assign( const OptimizeOptions& o)
+			{stopwordOccurrenceFactor=o.stopwordOccurrenceFactor;weightFactor=o.weightFactor;maxRange=o.maxRange;}
 	};
 	void optimize( OptimizeOptions& opt);
 
@@ -398,7 +401,7 @@ private:
 	typedef PodStructTableBase<Program,uint32_t,ProgramTableFreeListElem,BaseAddrProgramTable> ProgramMap;
 	ProgramMap m_programMap;
 	PodStackPoolBase<ProgramTrigger,uint32_t,BaseAddrProgramList> m_programTriggerList;
-	typedef utils::UnorderedMap<uint32_t,uint32_t> EventProgamTriggerMap;
+	typedef strus::unordered_map<uint32_t,uint32_t> EventProgamTriggerMap;
 	EventProgamTriggerMap m_eventProgamTriggerMap;
 	std::set<uint32_t> m_stopWordSet;
 	typedef std::map<uint32_t,uint32_t> EventOccurrenceMap;
@@ -416,8 +419,8 @@ struct DisposeEvent
 
 	DisposeEvent( uint32_t pos_, uint32_t idx_)
 		:pos(pos_),idx(idx_){}
-	DisposeEvent( const DisposeEvent& o)
-		:pos(o.pos),idx(o.idx){}
+	void assign( const DisposeEvent& o)
+		{pos=o.pos;idx=o.idx;}
 
 	bool operator<( const DisposeEvent& o) const
 	{
@@ -428,7 +431,7 @@ struct DisposeEvent
 class StateMachine
 {
 public:
-	explicit StateMachine( const ProgramTable* programTable_);
+	StateMachine( const ProgramTable* programTable_, DebugTraceContextInterface* debugtrace_);
 	StateMachine( const StateMachine& o);
 
 	void addObserveEvent( uint32_t event);
@@ -476,6 +479,7 @@ private:
 	void defineDisposeRule( uint32_t pos, uint32_t ruleidx);
 
 private:
+	DebugTraceContextInterface* m_debugtrace;
 	const ProgramTable* m_programTable;
 	EventTriggerTable m_eventTriggerTable;
 	ActionSlotTable m_actionSlotTable;

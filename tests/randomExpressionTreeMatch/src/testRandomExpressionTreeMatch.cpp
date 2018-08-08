@@ -14,6 +14,8 @@
 #include "strus/patternMatcherInterface.hpp"
 #include "strus/patternMatcherInstanceInterface.hpp"
 #include "strus/patternMatcherContextInterface.hpp"
+#include "strus/base/local_ptr.hpp"
+#include "strus/base/thread.hpp"
 #include "testUtils.hpp"
 #include <stdexcept>
 #include <iostream>
@@ -21,6 +23,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 #include <memory>
@@ -30,10 +33,6 @@
 #include <cstring>
 #include <iomanip>
 #include <algorithm>
-#include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/date_time.hpp>
-#include "boost/date_time/posix_time/posix_time.hpp"
 
 #undef STRUS_LOWLEVEL_DEBUG
 
@@ -89,9 +88,9 @@ public:
 	}
 	void attachVariable( unsigned int variable_)
 	{
-		char name[ 64];
-		::snprintf( name, sizeof(name), "V%u", variable_);
-		m_variable.append( name);
+		char namestr[ 64];
+		::snprintf( namestr, sizeof(namestr), "V%u", variable_);
+		m_variable.append( namestr);
 	}
 	void removeVariable()
 	{
@@ -99,9 +98,9 @@ public:
 	}
 	void setName( unsigned int idx_)
 	{
-		char name[ 64];
-		::snprintf( name, sizeof(name), "pattern_%u", idx_);
-		m_rulename.append( name);
+		char namestr[ 64];
+		::snprintf( namestr, sizeof(namestr), "pattern_%u", idx_);
+		m_rulename.append( namestr);
 	}
 	const char* name() const
 	{
@@ -440,7 +439,7 @@ static void createExpression( strus::PatternMatcherInstanceInterface* ptinst, co
 	}
 	if (tree->variable())
 	{
-		ptinst->attachVariable( tree->variable(), 1.0);
+		ptinst->attachVariable( tree->variable());
 	}
 }
 
@@ -450,7 +449,7 @@ static void createRules( strus::PatternMatcherInstanceInterface* ptinst, const G
 	for (unsigned int tidx=0; ti != te; ++ti,++tidx)
 	{
 		createExpression( ptinst, ctx, *ti);
-		ptinst->definePattern( (*ti)->name(), true);
+		ptinst->definePattern( (*ti)->name(), ""/*formatstring*/, true);
 	}
 }
 
@@ -469,12 +468,12 @@ static std::vector<strus::utils::Document> createRandomDocuments( unsigned int c
 
 static std::vector<strus::analyzer::PatternMatcherResult> processDocument( const strus::PatternMatcherInstanceInterface* ptinst, const strus::utils::Document& doc, std::map<std::string,double>& globalstats)
 {
-	std::auto_ptr<strus::PatternMatcherContextInterface> mt( ptinst->createContext());
+	strus::local_ptr<strus::PatternMatcherContextInterface> mt( ptinst->createContext());
 	std::vector<strus::utils::DocumentItem>::const_iterator di = doc.itemar.begin(), de = doc.itemar.end();
 	unsigned int didx = 0;
 	for (; di != de; ++di,++didx)
 	{
-		mt->putInput( strus::analyzer::PatternLexem( di->termid, di->pos, 0/*origseg*/, didx, 1));
+		mt->putInput( strus::analyzer::PatternLexem( di->termid, di->pos, strus::analyzer::Position(0/*origseg*/, didx), 1));
 		if (g_errorBuffer->hasError()) throw std::runtime_error("error matching rules");
 	}
 	std::vector<strus::analyzer::PatternMatcherResult> results = mt->fetchResults();
@@ -523,14 +522,13 @@ struct TreeMatchResult
 	unsigned int ordpos;
 	unsigned int ordsize;
 	std::vector<strus::analyzer::PatternMatcherResultItem> itemar;
-	float weight;
 
 	TreeMatchResult()
-		:valid(false),startidx(0),endidx(0),ordpos(0),ordsize(0),weight(0.0f){}
+		:valid(false),startidx(0),endidx(0),ordpos(0),ordsize(0){}
 	TreeMatchResult( std::size_t startidx_, std::size_t endidx_, unsigned int ordpos_, unsigned int ordsize_)
-		:valid(true),startidx(startidx_),endidx(endidx_),ordpos(ordpos_),ordsize(ordsize_),weight(0.0f){}
+		:valid(true),startidx(startidx_),endidx(endidx_),ordpos(ordpos_),ordsize(ordsize_){}
 	TreeMatchResult( const TreeMatchResult& o)
-		:valid(o.valid),startidx(o.startidx),endidx(o.endidx),ordpos(o.ordpos),ordsize(o.ordsize),itemar(o.itemar),weight(o.weight){}
+		:valid(o.valid),startidx(o.startidx),endidx(o.endidx),ordpos(o.ordpos),ordsize(o.ordsize),itemar(o.itemar){}
 	TreeMatchResult& operator=( const TreeMatchResult& o)
 	{
 		valid = o.valid;
@@ -539,7 +537,6 @@ struct TreeMatchResult
 		ordpos = o.ordpos;
 		ordsize = o.ordsize;
 		itemar = o.itemar;
-		weight = o.weight;
 		return *this;
 	}
 
@@ -737,7 +734,9 @@ static TreeMatchResult matchTree( const TreeNode* tree, const strus::utils::Docu
 	}
 	if (rt.valid && tree->variable())
 	{
-		strus::analyzer::PatternMatcherResultItem item( tree->variable(), rt.ordpos, rt.ordpos + rt.ordsize, 0/*start_origseg*/, rt.startidx, 0/*end_origseg*/, rt.endidx, rt.weight);
+		strus::analyzer::PatternMatcherResultItem item( tree->variable(), ""/*value*/, rt.ordpos, rt.ordpos + rt.ordsize,
+								strus::analyzer::Position(0/*start_origseg*/, rt.startidx),
+								strus::analyzer::Position(0/*end_origseg*/, rt.endidx));
 		rt.itemar.push_back( item);
 	}
 	return rt;
@@ -766,7 +765,9 @@ static std::vector<strus::analyzer::PatternMatcherResult>
 			TreeMatchResult match = matchTree( candidateTree, doc, didx, endpos, ri->first);
 			if (match.valid)
 			{
-				strus::analyzer::PatternMatcherResult result( candidateTree->name(), match.ordpos, match.ordpos + match.ordsize, 0/*start_origseg*/, match.startidx, 0/*end_origseg*/, match.endidx, match.itemar);
+				strus::analyzer::PatternMatcherResult result( candidateTree->name(), 0/*value*/, match.ordpos, match.ordpos + match.ordsize,
+										strus::analyzer::Position(0/*start_origseg*/, match.startidx),
+										strus::analyzer::Position(0/*end_origseg*/, match.endidx), match.itemar);
 				rt.push_back( result);
 			}
 		}
@@ -788,12 +789,12 @@ bool compareResultItem( const strus::analyzer::PatternMatcherResultItem &res1, c
 {
 	int cmp = std::strcmp( res1.name(), res2.name());
 	if (cmp) return cmp < 0;
-	if (res1.start_ordpos() != res2.start_ordpos()) return res1.start_ordpos() < res2.start_ordpos();
-	if (res1.end_ordpos() != res2.end_ordpos()) return res1.end_ordpos() < res2.end_ordpos();
-	if (res1.start_origseg() != res2.start_origseg()) return res1.start_origseg() < res2.start_origseg();
-	if (res1.start_origpos() != res2.start_origpos()) return res1.start_origpos() < res2.start_origpos();
-	if (res1.end_origseg() != res2.end_origseg()) return res1.end_origseg() < res2.end_origseg();
-	if (res1.end_origpos() != res2.end_origpos()) return res1.end_origpos() < res2.end_origpos();
+	if (res1.ordpos() != res2.ordpos()) return res1.ordpos() < res2.ordpos();
+	if (res1.ordend() != res2.ordend()) return res1.ordend() < res2.ordend();
+	if (res1.origpos().seg() != res2.origpos().seg()) return res1.origpos().seg() < res2.origpos().seg();
+	if (res1.origpos().ofs() != res2.origpos().ofs()) return res1.origpos().ofs() < res2.origpos().ofs();
+	if (res1.origend().seg() != res2.origend().seg()) return res1.origend().seg() < res2.origend().seg();
+	if (res1.origend().ofs() != res2.origend().ofs()) return res1.origend().ofs() < res2.origend().ofs();
 	return true;
 }
 
@@ -801,12 +802,12 @@ bool compareResult( const strus::analyzer::PatternMatcherResult &res1, const str
 {
 	int cmp = std::strcmp( res1.name(), res2.name());
 	if (cmp) return cmp < 0;
-	if (res1.start_ordpos() != res2.start_ordpos()) return res1.start_ordpos() < res2.start_ordpos();
-	if (res1.end_ordpos() != res2.end_ordpos()) return res1.end_ordpos() < res2.end_ordpos();
-	if (res1.start_origseg() != res2.start_origseg()) return res1.start_origseg() < res2.start_origseg();
-	if (res1.end_origseg() != res2.end_origseg()) return res1.end_origseg() < res2.end_origseg();
-	if (res1.start_origpos() != res2.start_origpos()) return res1.start_origpos() < res2.start_origpos();
-	if (res1.end_origpos() != res2.end_origpos()) return res1.end_origpos() < res2.end_origpos();
+	if (res1.ordpos() != res2.ordpos()) return res1.ordpos() < res2.ordpos();
+	if (res1.ordend() != res2.ordend()) return res1.ordend() < res2.ordend();
+	if (res1.origpos().seg() != res2.origpos().seg()) return res1.origpos().seg() < res2.origpos().seg();
+	if (res1.origend().seg() != res2.origend().seg()) return res1.origend().seg() < res2.origend().seg();
+	if (res1.origpos().ofs() != res2.origpos().ofs()) return res1.origpos().ofs() < res2.origpos().ofs();
+	if (res1.origend().ofs() != res2.origend().ofs()) return res1.origend().ofs() < res2.origend().ofs();
 	if (res1.items().size() != res2.items().size()) return res1.items().size() < res2.items().size();
 	std::vector<strus::analyzer::PatternMatcherResultItem>::const_iterator
 		i1 = res1.items().begin(), e1 = res1.items().end(),
@@ -841,7 +842,11 @@ static std::vector<strus::analyzer::PatternMatcherResult>
 	{
 		std::vector<strus::analyzer::PatternMatcherResultItem> items = ri->items();
 		std::sort( items.begin(), items.end(), compareResultItem);
-		rt.push_back( strus::analyzer::PatternMatcherResult( ri->name(), ri->start_ordpos(), ri->end_ordpos(), ri->start_origseg(), ri->start_origpos(), ri->end_origseg(), ri->end_origpos(), items));
+		rt.push_back( 
+			strus::analyzer::PatternMatcherResult(
+				ri->name(), ri->value(), ri->ordpos(), ri->ordend(),
+				strus::analyzer::Position( ri->origpos().seg(), ri->origpos().ofs()),
+				strus::analyzer::Position( ri->origend().seg(), ri->origend().ofs()), items));
 	}
 	std::sort( rt.begin(), rt.end(), compareResult);
 	return rt;
@@ -868,17 +873,18 @@ static bool compareResults( const std::vector<strus::analyzer::PatternMatcherRes
 {
 	std::vector<strus::analyzer::PatternMatcherResult>::const_iterator ri = results.begin(), re = results.end();
 	std::vector<strus::analyzer::PatternMatcherResult>::const_iterator xi = expectedResults.begin(), xe = expectedResults.end();
-	std::set<std::string> set_res, set_exp;
+	std::set<std::string> set_res;
+	std::set<std::string> set_exp;
 	for (; xi != xe; ++xi)
 	{
 		std::ostringstream item;
-		item << xi->name() << "_" << xi->start_ordpos() << ".." << xi->end_ordpos() << "(" << xi->start_origseg() << "|" << xi->start_origpos() << " .. " << xi->end_origseg() << "|" << xi->end_origpos() << ")";
+		item << xi->name() << "_" << xi->ordpos() << ".." << xi->ordend() << "(" << xi->origpos().seg() << "|" << xi->origpos().ofs() << " .. " << xi->origend().seg() << "|" << xi->origend().ofs() << ")";
 		set_exp.insert( item.str());
 	}
 	for (; ri != re; ++ri)
 	{
 		std::ostringstream item;
-		item << ri->name() << "_" << ri->start_ordpos() << ".." << ri->end_ordpos() << "(" << ri->start_origseg() << "|" << ri->start_origpos() << " .. " << ri->end_origseg() << "|" << ri->end_origpos() << ")";
+		item << ri->name() << "_" << ri->ordpos() << ".." << ri->ordend() << "(" << ri->origpos().seg() << "|" << ri->origpos().ofs() << " .. " << ri->origend().seg() << "|" << ri->origend().ofs() << ")";
 		set_res.insert( item.str());
 	}
 	std::set<std::string>::const_iterator sri = set_res.begin(), sre = set_res.end();
@@ -987,7 +993,7 @@ int main( int argc, const char** argv)
 			return 1;
 		}
 		initRand();
-		g_errorBuffer = strus::createErrorBuffer_standard( 0, 1+nofThreads);
+		g_errorBuffer = strus::createErrorBuffer_standard( 0, 1+nofThreads, NULL/*debug trace interface*/);
 		if (!g_errorBuffer)
 		{
 			std::cerr << "construction of error buffer failed" << std::endl;
@@ -999,9 +1005,9 @@ int main( int argc, const char** argv)
 		unsigned int nofPatterns = strus::utils::getUintValue( argv[ argidx+3]);
 		const char* outputpath = (argc - argidx > 4)? argv[ argidx+4] : 0;
 
-		std::auto_ptr<strus::PatternMatcherInterface> pt( strus::createPatternMatcher_stream( g_errorBuffer));
+		strus::local_ptr<strus::PatternMatcherInterface> pt( strus::createPatternMatcher_std( g_errorBuffer));
 		if (!pt.get()) throw std::runtime_error("failed to create pattern matcher");
-		std::auto_ptr<strus::PatternMatcherInstanceInterface> ptinst( pt->createInstance());
+		strus::local_ptr<strus::PatternMatcherInstanceInterface> ptinst( pt->createInstance());
 		if (!ptinst.get()) throw std::runtime_error("failed to create pattern matcher instance");
 
 		GlobalContext ctx( nofFeatures, nofPatterns);
@@ -1018,7 +1024,6 @@ int main( int argc, const char** argv)
 		{
 			throw std::runtime_error( "error creating automaton for evaluating rules");
 		}
-		boost::posix_time::time_duration duration;
 #ifdef STRUS_LOWLEVEL_DEBUG
 		std::cout << "patterns processed" << std::endl;
 		std::vector<TreeNode*>::const_iterator ti = treear.begin(), te = treear.end();
@@ -1028,7 +1033,7 @@ int main( int argc, const char** argv)
 		}
 #endif
 		std::cerr << "starting rule evaluation ..." << std::endl;
-	
+
 		std::map<std::string,double> stats;
 		unsigned int totalNofMatches = processDocuments( ptinst.get(), keyTokenMap, treear, docs, stats, outputpath);
 		unsigned int totalNofDocs = docs.size();

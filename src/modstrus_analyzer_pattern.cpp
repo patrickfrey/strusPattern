@@ -15,12 +15,12 @@
 
 static const strus::PatternLexerConstructor lexer =
 {
-	"std", strus::createPatternLexer_stream
+	"std", strus::createPatternLexer_std
 };
 
 static const strus::PatternMatcherConstructor matcher =
 {
-	"std", strus::createPatternMatcher_stream
+	"std", strus::createPatternMatcher_std
 };
 
 static const char* intel_hyperscan_license =

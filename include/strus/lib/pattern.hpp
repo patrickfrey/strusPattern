@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// \brief Exported functions of the strus stream library implementing pattern matching of rules built from document terms
-/// \file error.hpp
+/// \brief Exported functions of the strus standard pattern matching library with a lexer based on hyperscan
+/// \file pattern.hpp
 #ifndef _STRUS_PATTERN_LIB_HPP_INCLUDED
 #define _STRUS_PATTERN_LIB_HPP_INCLUDED
 #include <cstdio>
@@ -23,12 +23,12 @@ class TokenMarkupInstanceInterface;
 /// \brief Forward declaration
 class ErrorBufferInterface;
 
-/// \brief Create the interface for regular expression matching on text
-PatternLexerInterface* createPatternLexer_stream(
+/// \brief Create the interface for regular expression matching on text based on hyperscan
+PatternLexerInterface* createPatternLexer_std(
 		ErrorBufferInterface* errorhnd);
 
-/// \brief Create the interface for pattern matching on a stream of tokens
-PatternMatcherInterface* createPatternMatcher_stream(
+/// \brief Create the interface for pattern matching on a regular language with tokens as alphabet
+PatternMatcherInterface* createPatternMatcher_std(
 		ErrorBufferInterface* errorhnd);
 
 }//namespace

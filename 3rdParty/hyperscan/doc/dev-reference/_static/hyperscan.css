@@ -1,4 +1,0 @@
-/* Differentiate the way we display regex fragments. */
-.regexp {
-  color: darkred !important;
-}

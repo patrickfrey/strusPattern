@@ -4,7 +4,7 @@ Version: @STRUS_VERSION@
 Binary: struspattern
 Maintainer: Patrick Frey <patrickpfrey@yahoo.com>
 Architecture: any
-Build-Depends: debhelper (>= 4.1.16), cmake,
+Build-Depends: debhelper (>= 4.1.16), cmake, ragel, libtre-dev, python,
  libboost-dev, libboost-thread-dev, libboost-system-dev,
  libboost-date-time-dev, libboost-regex-dev, strusbase-dev,
  strus-dev, strusanalyzer-dev, strustrace-dev, strusmodule-dev

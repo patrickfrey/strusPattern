@@ -13,6 +13,7 @@
 #include "strus/patternMatcherInstanceInterface.hpp"
 #include "strus/patternMatcherContextInterface.hpp"
 #include "strus/analyzer/patternLexem.hpp"
+#include "strus/base/local_ptr.hpp"
 #include "testUtils.hpp"
 #include <stdexcept>
 #include <iostream>
@@ -137,10 +138,10 @@ static void createPattern( strus::PatternMatcherInstanceInterface* ptinst, const
 		{
 			char variablename[ 32];
 			snprintf( variablename, sizeof(variablename), "A%u", (unsigned int)op.variable);
-			ptinst->attachVariable( variablename, 1.0f);
+			ptinst->attachVariable( variablename);
 		}
 	}
-	ptinst->definePattern( ptname, ptname[0] != '_');
+	ptinst->definePattern( ptname, ""/*formatstring*/, ptname[0] != '_');
 }
 
 static void createPatterns( strus::PatternMatcherInstanceInterface* ptinst, const Pattern* patterns)
@@ -156,12 +157,12 @@ static std::vector<strus::analyzer::PatternMatcherResult>
 	processDocument( strus::PatternMatcherInstanceInterface* ptinst, const Document& doc)
 {
 	std::vector<strus::analyzer::PatternMatcherResult> results;
-	std::auto_ptr<strus::PatternMatcherContextInterface> mt( ptinst->createContext());
+	strus::local_ptr<strus::PatternMatcherContextInterface> mt( ptinst->createContext());
 	std::vector<DocumentItem>::const_iterator di = doc.itemar.begin(), de = doc.itemar.end();
 	unsigned int didx = 0;
 	for (; di != de; ++di,++didx)
 	{
-		mt->putInput( strus::analyzer::PatternLexem( di->termid, di->pos, 0/*origseg*/, didx, 1));
+		mt->putInput( strus::analyzer::PatternLexem( di->termid, di->pos, strus::analyzer::Position( 0/*origseg*/, didx), 1));
 		if (g_errorBuffer->hasError()) throw std::runtime_error("error matching rules");
 	}
 	results = mt->fetchResults();
@@ -214,7 +215,7 @@ static const Pattern testPatterns[32] =
 		 {Operation::Expression,0,0,PT::OpSequence,1,0,2}},
 		{101,0}
 	},
-	{0,{Operation::None}}
+	{0,{{Operation::None}},{0}}
 };
 
 int main( int argc, const char** argv)
@@ -223,7 +224,7 @@ int main( int argc, const char** argv)
 	{
 		initRand();
 
-		g_errorBuffer = strus::createErrorBuffer_standard( 0, 1);
+		g_errorBuffer = strus::createErrorBuffer_standard( 0, 1, NULL/*debug trace interface*/);
 		if (!g_errorBuffer)
 		{
 			std::cerr << "construction of error buffer failed" << std::endl;
@@ -236,9 +237,9 @@ int main( int argc, const char** argv)
 		}
 		unsigned int documentSize = 100;
 
-		std::auto_ptr<strus::PatternMatcherInterface> pt( strus::createPatternMatcher_stream( g_errorBuffer));
+		strus::local_ptr<strus::PatternMatcherInterface> pt( strus::createPatternMatcher_std( g_errorBuffer));
 		if (!pt.get()) throw std::runtime_error("failed to create pattern matcher");
-		std::auto_ptr<strus::PatternMatcherInstanceInterface> ptinst( pt->createInstance());
+		strus::local_ptr<strus::PatternMatcherInstanceInterface> ptinst( pt->createInstance());
 		if (!ptinst.get()) throw std::runtime_error("failed to create pattern matcher instance");
 		createPatterns( ptinst.get(), testPatterns);
 		ptinst->compile();
@@ -262,7 +263,7 @@ int main( int argc, const char** argv)
 		std::set<Match> matches;
 		for (;ri != re; ++ri)
 		{
-			matches.insert( Match( ri->name(), ri->start_ordpos()));
+			matches.insert( Match( ri->name(), ri->ordpos()));
 		}
 		std::set<Match>::const_iterator li = matches.begin(), le = matches.end();
 		for (; li != le; ++li)

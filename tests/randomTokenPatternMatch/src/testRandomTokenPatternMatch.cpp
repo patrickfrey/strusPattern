@@ -13,6 +13,8 @@
 #include "strus/patternMatcherInterface.hpp"
 #include "strus/patternMatcherInstanceInterface.hpp"
 #include "strus/patternMatcherContextInterface.hpp"
+#include "strus/base/local_ptr.hpp"
+#include "strus/base/thread.hpp"
 #include "testUtils.hpp"
 #include <stdexcept>
 #include <iostream>
@@ -28,10 +30,6 @@
 #include <cmath>
 #include <cstring>
 #include <iomanip>
-#include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/date_time.hpp>
-#include "boost/date_time/posix_time/posix_time.hpp"
 
 #undef STRUS_LOWLEVEL_DEBUG
 
@@ -70,7 +68,7 @@ static void createTermOpRule( strus::PatternMatcherInstanceInterface* ptinst, co
 		ptinst->pushTerm( termid);
 		char variablename[ 32];
 		snprintf( variablename, sizeof(variablename), "A%u", (unsigned int)pi);
-		ptinst->attachVariable( variablename, 1.0f);
+		ptinst->attachVariable( variablename);
 	}
 	strus::utils::JoinOperation joinop = strus::utils::joinOperation( joinopstr);
 	ptinst->pushExpression( joinop, paramsize, range, cardinality);
@@ -87,7 +85,7 @@ static void createTermOpPattern( strus::PatternMatcherInstanceInterface* ptinst,
 		rulename.append( strbuf);
 	}
 	createTermOpRule( ptinst, operation, range, cardinality, param, paramsize);
-	ptinst->definePattern( rulename, true);
+	ptinst->definePattern( rulename, ""/*formatstring*/, true);
 }
 
 static void createRules( strus::PatternMatcherInstanceInterface* ptinst, const char* joinop, unsigned int nofFeatures, unsigned int nofRules)
@@ -140,12 +138,12 @@ static std::vector<strus::utils::Document> createRandomDocuments( unsigned int c
 
 static unsigned int processDocument( const strus::PatternMatcherInstanceInterface* ptinst, const strus::utils::Document& doc, std::map<std::string,double>& globalstats)
 {
-	std::auto_ptr<strus::PatternMatcherContextInterface> mt( ptinst->createContext());
+	strus::local_ptr<strus::PatternMatcherContextInterface> mt( ptinst->createContext());
 	std::vector<strus::utils::DocumentItem>::const_iterator di = doc.itemar.begin(), de = doc.itemar.end();
 	unsigned int didx = 0;
 	for (; di != de; ++di,++didx)
 	{
-		mt->putInput( strus::analyzer::PatternLexem( di->termid, di->pos, 0/*segpos*/, didx, 1));
+		mt->putInput( strus::analyzer::PatternLexem( di->termid, di->pos, strus::analyzer::Position(0/*segpos*/, didx), 1));
 	}
 	if (g_errorBuffer->hasError())
 	{
@@ -217,7 +215,7 @@ public:
 public:
 	void accumulateStats( std::map<std::string,double> addstats, unsigned int nofMatches, unsigned int nofDocs)
 	{
-		boost::mutex::scoped_lock lock( mutex);
+		strus::scoped_lock lock( mutex);
 		std::map<std::string,double>::const_iterator
 			li = addstats.begin(), le = addstats.end();
 		for (; li != le; ++li)
@@ -231,7 +229,7 @@ public:
 	}
 
 private:
-	boost::mutex mutex;
+	strus::mutex mutex;
 };
 
 class Task
@@ -300,7 +298,7 @@ int main( int argc, const char** argv)
 			return 1;
 		}
 		initRand();
-		g_errorBuffer = strus::createErrorBuffer_standard( 0, 1+nofThreads);
+		g_errorBuffer = strus::createErrorBuffer_standard( 0, 1+nofThreads, NULL/*debug trace interface*/);
 		if (!g_errorBuffer)
 		{
 			std::cerr << "construction of error buffer failed" << std::endl;
@@ -312,9 +310,9 @@ int main( int argc, const char** argv)
 		unsigned int nofPatterns = strus::utils::getUintValue( argv[ argidx+3]);
 		const char* joinop = (argc - argidx > 4)?argv[ argidx+4]:0;
 
-		std::auto_ptr<strus::PatternMatcherInterface> pt( strus::createPatternMatcher_stream( g_errorBuffer));
+		strus::local_ptr<strus::PatternMatcherInterface> pt( strus::createPatternMatcher_std( g_errorBuffer));
 		if (!pt.get()) throw std::runtime_error("failed to create pattern matcher");
-		std::auto_ptr<strus::PatternMatcherInstanceInterface> ptinst( pt->createInstance());
+		strus::local_ptr<strus::PatternMatcherInstanceInterface> ptinst( pt->createInstance());
 		if (!ptinst.get()) throw std::runtime_error("failed to create pattern matcher instance");
 		createRules( ptinst.get(), joinop, nofFeatures, nofPatterns);
 		if (doOpimize)
@@ -326,27 +324,26 @@ int main( int argc, const char** argv)
 			throw std::runtime_error( "error creating automaton for evaluating rules");
 		}
 		Globals globals( ptinst.get());
-		boost::posix_time::time_duration duration;
 		if (nofThreads)
 		{
 			std::cerr << "starting " << nofThreads << " threads for rule evaluation ..." << std::endl;
-			boost::posix_time::ptime start_time = boost::posix_time::microsec_clock::local_time();
 
 			std::vector<Task> taskar;
 			for (unsigned int ti=0; ti<nofThreads; ++ti)
 			{
 				taskar.push_back( Task( &globals, createRandomDocuments( nofDocuments, documentSize, nofFeatures)));
 			}
+			std::vector<strus::Reference<strus::thread> > threadGroup;
 			{
-				boost::thread_group tgroup;
 				for (unsigned int ti=0; ti<nofThreads; ++ti)
 				{
-					tgroup.create_thread( boost::bind( &Task::run, &taskar[ti]));
+					Task* task = &taskar.at( ti);
+					strus::Reference<strus::thread> th( new strus::thread( &Task::run, task));
+					threadGroup.push_back( th);
 				}
-				tgroup.join_all();
+				std::vector<strus::Reference<strus::thread> >::iterator gi = threadGroup.begin(), ge = threadGroup.end();
+				for (; gi != ge; ++gi) (*gi)->join();
 			}
-			boost::posix_time::ptime end_time = boost::posix_time::microsec_clock::local_time();
-			duration = end_time - start_time;
 			if (!globals.errors.empty())
 			{
 				std::vector<std::string>::const_iterator ei = globals.errors.begin(), ee = globals.errors.end();
@@ -360,21 +357,17 @@ int main( int argc, const char** argv)
 		{
 			std::vector<strus::utils::Document> docs = createRandomDocuments( nofDocuments, documentSize, nofFeatures);
 			std::cerr << "starting rule evaluation ..." << std::endl;
-			boost::posix_time::ptime start_time = boost::posix_time::microsec_clock::local_time();
-	
+
 			std::map<std::string,double> stats;
 			globals.totalNofMatches = processDocuments( ptinst.get(), docs, globals.stats);
 			globals.totalNofDocs = docs.size();
-
-			boost::posix_time::ptime end_time = boost::posix_time::microsec_clock::local_time();
-			duration = end_time - start_time;
 		}
 		if (g_errorBuffer->hasError())
 		{
 			throw std::runtime_error("uncaugth exception");
 		}
 		std::cerr << "OK" << std::endl;
-		std::cerr << "processed " << nofPatterns << " patterns on " << globals.totalNofDocs << " documents with total " << globals.totalNofMatches << " matches in " << duration.total_milliseconds() << " milliseconds" << std::endl;
+		std::cerr << "processed " << nofPatterns << " patterns on " << globals.totalNofDocs << " documents with total " << globals.totalNofMatches << " matches" << std::endl;
 		std::cerr << "statistiscs:" << std::endl;
 		std::map<std::string,double>::const_iterator gi = globals.stats.begin(), ge = globals.stats.end();
 		for (; gi != ge; ++gi)

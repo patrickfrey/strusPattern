@@ -16,21 +16,16 @@
 <div id="content">
 	<h1>Strus Pattern</h1>
 	<h2>Description</h2>
-	<p id="description"><i>StrusPattern</i> is an event or dataflow driven pattern detection library for 
+	<p id="description"><i>StrusPattern</i> is an event-driven pattern detection library for 
 	text processing with a competitive performance, suitable for processing large sets of patterns.
-	It can be used for detecting multipart entities or structures in text. In a bigger context it can
-	support NLP and entity recognition.<br/>
-	The current implementation status allows us to detect patterns that are describable as expression 
-	trees with basic tokens as leafs. The basic tokens are recognized with regular expressions on text.<br/>
-	We are aware that this is only one part of the field, but an important one. But for the support
-	of statistical classifiers we have only ideas floating around till now. We are trying to find
-	good connectors to existing libraries for maschine learning and to provide the universe for
-	processing and storing features for retrieval in this context.
+	It can be used for detecting multipart entities or structures in text.<br/>
+	The basic tokens are either terms of the analyzer output or entities recognized with regular 
+	expressions.
 	</p>
 
 	<h2>The Intel hyperscan library</h3>
-	<p id="description"><i>StrusPattern</i> uses the <a href="https://01.org/hyperscan">hyperscan</a> library from <i>Intel</i>
-	for tokenization.<br/>
+	<p id="description"><i>StrusPattern</i> uses the <a href="https://01.org/hyperscan">hyperscan</a>
+	library from <i>Intel</i> for matching regular expressions.<br/>
 	Thanks to <i>Intel</i> for publishing this great work as open source.
 	</p>
 
@@ -49,29 +44,15 @@
 	</li>
 	<li>The <a href="https://uima.apache.org/ruta.html">Uima Ruta</a> workbench for rule-based text annotation,
 	licensed under the <a href="http://www.apache.org/licenses">Apache license</a>.
-	APIs available for Java an C++. With Uima Ruta you get a framework to define arbitrary rules on text with
+	APIs available for Java and C++. With Uima Ruta you get a framework to define arbitrary rules on text with
 	its connectors to the big <i>Apache</i> universe for scalable data processing.
 	</li>
 	</ol>
 	</p>
 
-	<h2>How StrusPattern works</h2>
-	<p id="description">
-	<i>StrusPattern</i> is completely dataflow driven. It does not detect patterns by an imperative procedure 
-	triggered by events in the source data stream. Though it does start the initiation of a pattern
-	detection with a key event triggering it.
-	But rather than subsequently executing a program, it installs for every pattern node triggered a small set
-	of triggers and a slot with an expiration time. Signals are fired to the slot when an event matching
-	a trigger occurrs in the subsequent event stream. The completion all awaited signals of a slot leads
-	to an emission of a signal for other slots waiting for it and/or the production of a result.<br/>
-	This pattern of processing can also be found in other form in event driven stream processing libraries:
-	A node waits untils all conditions of a rule all fulfilled and emits an event that is forwarded to another
-	node. If a timeout for the rule occurrs, then the rule is discarded.
-	</p>
-
 	<h3>Operators</h3>
 	<p id="description">
-	<i>StrusPattern</i> defines patterns as expression trees of nodes. Each node represents a basic token
+	<i>StrusPattern</i> defines patterns as an expression tree of nodes. Each node represents a basic token
 	in the source or operators on tuples of nodes. Most of the operators supported are named according to the
 	<a href="http://www.project-strus.net/builtin_functions.htm">posting join operators</a> in the
 	strus query evaluation. Not all of them are implemented though and some exist in <i>StrusPattern</i>,
@@ -81,10 +62,10 @@
 	<li><b>any</b>: Matches if any of the argument subexpressions or tokens matches.</li>
 	<li><b>and</b>: Matches if all of the argument subexpressions or tokens match with the same ordinal position.</li>
 	<li><b>sequence</b>: Matches if the argument subexpressions or tokens appear in the order as the arguments within a proximity range of ordinal positions specified.</li>
-	<li><b>sequence_imm</b>: <i>imm</i> means immediate. Same as sequence, but the elements have no gaps in between. No gap means that the oridinal position of the follower element in the sequence is the end ordinal position of the predecessor plus 1.</li>
-	<li><b>sequence_struct</b>: Matches if the argument subexpressions or tokens appear in the order as the arguments within a proximity range of ordinal positions specified without a structure delimiter (e.g. end of sentence token), specified as first argument, within the span of a match.</li>
+	<li><b>sequence_imm</b>: Same as 'sequence', but the elements have no gaps in between. No gap means that the start ordinal position of the follower element in the sequence is the end ordinal position of the predecessor.</li>
+	<li><b>sequence_struct</b>: Matches if the argument subexpressions or tokens appear in the order as the arguments within a proximity range of ordinal positions specified without a structure delimiter (e.g. end of sentence token), specified as the first argument, within the span of a match.</li>
 	<li><b>within</b>: Matches if the argument subexpressions or tokens appear in arbitrary order within a proximity range of ordinal positions specified.</li>
-	<li><b>within_struct</b>: Matches if the argument subexpressions or tokens appear in arbitrary order within a proximity range of ordinal positions specified without a structure delimiter (e.g. end of sentence token), specified as first argument, within the span of a match.</li>
+	<li><b>within_struct</b>: Matches if the argument subexpressions or tokens appear in arbitrary order within a proximity range of ordinal positions specified without a structure delimiter (e.g. end of sentence token), specified as the first argument, within the span of a match.</li>
 	</ol>
 	</p>
 
@@ -92,10 +73,10 @@
 	<p id="description">The following example illustrates how <i>StrusPattern</i> works.
 	</p>
 	<h3>Example patterns defined</h3>
-	<h4>Define the patterns with in a configuration file</h4>
+	<h4>Define the patterns in a text file</h4>
 	<p id="description">We define the example rules defined in the following listing in a file "example.rul".
-	The declarations with an identifier followed by a ':' specify the tokens defined by regular expressions. The counting of the different token start positions defines the ordinal positions of the tokens. The number following a '^' after the name of the token defines its level, a sort of priorization. Tokens covered completely by a token of a higher level are not part of the output and for ordinal position assignments. We use the possibiliy to supersede rules. In our example we define a hierarchy <b>SENT</b> (end of sentence) &lt; <b>ABBREV</b> (abbreviation) &lt; <b>URL</b> &lt; <b>EMAIL</b>. It means that a dot is an end of sentence marker if not part of an abbreviation, URL or email address. An abbreviation is not recognized as such, if part of an URL. An URL is not an URL, if part of an email address, etc.
-	<br/>The declarations with an identifier followed by a '=' specify the patterns defined on tokens with the ordinal position as position reference for proximity range specifications.
+	The declarations with an identifier followed by a ':' specify the tokens defined by regular expressions. The counting of the different token start positions defines the ordinal positions of the tokens. The number following a '^' after the name of the token defines its level, a sort of prioritization. Tokens covered completely by a token of a higher level are not part of the output and for ordinal position assignments. We use the possibility to supersede rules. In our example we define a hierarchy <b>SENT</b> (end of sentence) &lt; <b>ABBREV</b> (abbreviation) &lt; <b>URL</b> &lt; <b>EMAIL</b>. It means that a dot is an end of sentence marker if not part of an abbreviation, URL or email address. An abbreviation is not recognized as such if part of an URL. An URL is not an URL, if part of an email address, etc.
+	<br/>The declarations with an identifier followed by a '=' specify the patterns defined on tokens with an ordinal number of appearance as a position for proximity range specifications.
 	</p>
 	<pre>
 WORD ^1		:/\b\w+\b/;
@@ -115,23 +96,66 @@ EMAIL ^7	: /\b([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})\b/;
 CAPWORD ^1	: /\b\p{Lu}\p{Ll}*\b/;
 LOWORD ^1	: /\b\p{Ll}+\b/;
 
-Name		= sequence_imm( firstname=[0.75]CAPWORD, surname=CAPWORD | 2 );
-Name		= sequence_imm( firstname=[0.75]CAPWORD, surname=ABBREV | 2 );
+Name		= sequence_imm( firstname=CAPWORD, surname=CAPWORD | 2 );
+Name		= sequence_imm( firstname=CAPWORD, surname=ABBREV | 2 );
 Name		= sequence_imm( Name, surname=CAPWORD | 10 );
 Contact		= sequence_struct( SENT, Name, email=EMAIL | 10 );
 	</pre>
 	<p id="description">
-	A "Name" is defined as a sequence of two words with capitalized first letter in a proximity distance of 2 (ordinal position distance, number of tokens)
-	In this example the variable assignment of firstname gets the weight 0.75 assigned. Weigths are currently not
-	interpreted or used by <i>StrusPattern</i>. They are there for the user if part or the interpretation of the result.
+	A "Name" is defined as a sequence of two words with capitalized first letter in a proximity distance of 2 (ordinal position distance).
 	<br/>
-	A "PersonMail" is defined as sequence of a name as we defined it and an email address in in a proximity
+	A "Contact" is defined as a sequence of a name as we defined it and an email address in a proximity
 	distance of maximum 10 tokens, without an end of sentence marker appearing in between a candidate match.
 	</p>
+
+	<h4>Apporximative matching with an edit distace</h4>
+	<p id="description">
+	You can also do approximative matching with strusPattern. If you specify a pattern with an operator '~' followed by a positive number after the regular
+	expression defining a token, all tokens within this edit distance of the expression are output as matching tokens. Example:
+	</p>
+	<pre>
+		John          : /[Jj]ohn/ ~1;
+		Samuel        : /[Ss]amuel/ ~1;
+		Kawelaschwili : /[Kk]awelaschwili/ ~2;
+	</pre>
+	<p id="description">
+	It is recommended to <i>carefully choose the edit distance</i>. The number of matches will explode with a value that is too high.
+	You also have to consider if approximative matching is really needed to solve your problem. The matching process will be <i>totally different</i>
+	with only one pattern defined with edit distance. Hyperscan, the library used for matching the tokens, is not capable of matching
+	edit distance in Unicode characters beyond Ascii. Well, it can run on the data, but matches the edit distance in bytes and not in
+	chatacters. This is no problem when seeking exact matches, but is most likely not what you want when matching Unicode text.
+	StrusPattern supports approximative matching of Unicode strings. 
+	It solves the problem by mapping all characters to an artificial one byte character set before matching (therefore loosing some information
+	and making the hyperscan regular expression matcher a guesser). The result candidates extracted are post-filtered with libtre processing
+	the original Unicode string.
+	The difference of character codes in sequences of natural languages in phonetic scripts seems to be discriminating enough for the solution 
+	to preform well. This has been shown in a real project with non trivial data.
+	</p>
+	<h4>Formatting pattern matcher results</h4>
+	<p id="description">
+	The result value of a pattern or a subexpression matched can be defined with by a format string in square brackets ('[' ']'). 
+	The following example patterns shows the handling of money amounts with currencies in patterns:
+	</p>
+	<pre>
+		AMOUNT^3        : /\b[0-9]{1,3}'[0-9]{3,3}'[0-9]{3,3}\b/;
+		AMOUNT^2        : /\b[0-9]{1,3}'[0-9]{3,3}\b/;
+		AMOUNT^1        : /\b[0-9]{1,3}\b/;
+		CURRENCY_CHF    : /\b[Ss]{0,1}[Ff][Rr][.]{0,1}\b/;
+		CURRENCY_EUR    : /\b[Ee][Uu][Rr][.]{0,1}\b/;
+		Currency        = CURRENCY_CHF <font color=green><b>["CHF"]</b></font>;
+		Currency        = CURRENCY_EUR <font color=green><b>["EUR"]</b></font>;
+		MoneyAmount     = sequence_imm( value=AMOUNT, currency=Currency) <font color=green><b>["{currency} {value}"]</b></font>;
+	</pre>
+	<p id="description">
+	The pattern format strings ["CHF"] and ["EUR"] refer to constants, where ["{currency} {value}"] substitutes two variables of the
+	subexpressions of the patterns. An input "3'645 Eur" would generate a value "EUR 3'645" in this example.
+	For lexems there are no format strings possible in the grammar.
+	</p>
+
 	<h4>Define the patterns in C++</h4>
 	<p id="description"><font color=red>No documentation available yet.</font></p>
 	<h4>Define the patterns in Python</h4>
-	<p id="description"><font color=red>Python bindings not available yet.</font></p>
+	<p id="description"><font color=red>No documentation available yet.</font></p>
 
 	<h3>Example input</h3>
 	<pre>
@@ -205,13 +229,13 @@ OK done
 	</pre>
 
 	<h2>Performance measurements on an Intel NUC (NUC6i3SYK)</h2>
-	<p id="description">The following runs show the behaviour of the <i>StrusPattern</i> pattern matching without tokenization. We just use random documents represented as <a href="http://mathworld.wolfram.com/ZipfDistribution.html">Zipf distributed</a> random numbers, assuming 30'000 different terms in the whole collection. Each document contains 1000 such terms.
+	<p id="description">The following runs show the behavior of the <i>StrusPattern</i> pattern matching without tokenization. We just use random documents represented as <a href="http://mathworld.wolfram.com/ZipfDistribution.html">Zipf distributed</a> random numbers, assuming 30'000 different terms in the whole collection. Each document contains 1000 such terms.
 	The patterns are sequences of two random terms (<i>Zipf distribution</i> applied here too) within a proximity range of 1 to 10 with smaller proximity being much more likely than larger proximity conditions.
 	We start 4 threads with the same pattern set with different input documents and test with 10 to 10'000'000 patterns evaluated.
 	<br/><br/>
-	This test does not help to estimate the performance of the system solving a real world problems. But it can help to estimate its behaviour when confronted with real world problems, if you look at the numbers in detail, like how many patterns were activated or how many patterns matched, etc.. Leaving the regular expression matching out in this test is not a problem since you can for sure assume, that the ultra fast <i>hyperscan</i> library from Intel will not be a bottleneck.
-	For real world problems, you also have to take into account, that patterns get more complicated, with subexpressions, more complex operators than a simple sequence and variables assigned for items, you want to be part of the result. The numbers here are just representing the numbers for a set of the simplest type of pattern possible. If you measure the performance for pattern nodes detecting sequences of terms or subexpressions within the same sentence sentence, you will roughly double the execution time. Same for nodes detecting the appearance of two features in whatever order compared with a simple sequence.
-	If you have more complex patterns, e.g. expression trees with many nodes, you have to count every node as unit and you have to take into account that every sub expression matched produces an event that gets part of the input processed.
+	This test does not help to estimate the performance of the system solving a real world problem. But it can help to estimate its behavior when confronted with real world problems, if you look at the numbers in detail, like how many patterns were activated or how many patterns matched, etc.. Leaving the regular expression matching out in this test is not a problem since you can for sure assume, that the ultra fast <i>hyperscan</i> library from Intel will not be a bottleneck.
+	For real world problems, you also have to take into account, that patterns get more complicated, with subexpressions, more complex operators than a simple sequence and variables assigned for items, you want to be part of the result. The numbers here are just representing the numbers for a set of the simplest type of pattern possible. If you measure the performance for pattern nodes detecting sequences of terms or subexpressions within the same sentence, you will roughly double the execution time. Same for nodes detecting the appearance of two features in whatever order compared with a simple sequence.
+	If you have more complex patterns, e.g. expression trees with many nodes, you have to count every node as a unit and you have to take into account that every subexpression matched produces an event that gets part of the input processed.
 	<br/><br/>
 	The tests were run on an <i>Intel NUC</i> (<a href="http://www.intel.com/content/www/us/en/nuc/nuc-kit-nuc6i3syk.html">NUC6i3SYK</a>), a system with <b>4 GB RAM</b> is enough for processing the test with <b>10'000'000</b> nodes.
 	<br/><br/>
@@ -289,14 +313,14 @@ statistiscs:
 <ol>
 <li>processed <b>N</b> patterns on 100 documents with total <b>X</b> matches in <b>T</b> milliseconds:
 <ul>
-<li><b>N</b>: Number of patterns, sequences of two tokens in a ordinal position distance of 1 to 10 (possibly with unspecified tokens appearing in between) defined</li>
+<li><b>N</b>: Number of patterns, sequences of two tokens in an ordinal position distance of 1 to 10 (possibly with unspecified tokens appearing in between) defined</li>
 <li><b>X</b>: Total number of matching token sequences in 100 documents</li>
 <li><b>T</b>: Execution time for processing all 100 documents</li>
 </ul>
-<li><b>nofAltKeyProgramsInstalled</b>: Tells how many optimized patterns with an alternative key event were triggered for execution by a key event during the whole processing of the 100 documents. A pattern is optimized, if an initial token, triggering the evaluation of the pattern, is statistically appearing too often. In this case a valable alternative token, if it exists, is chosen, and the initial token event is replayed for the pattern to match. The intention of this optimization is to reduce the number or hits and the following processing of rules that may not match. As example consider a rule like "The world", that is triggered with every appearance of "the". Triggering the rule with "world" is better in english text.</li>
+<li><b>nofAltKeyProgramsInstalled</b>: Tells how many optimized patterns with an alternative key event were triggered for execution by a key event during the whole processing of the 100 documents. A pattern is optimized, if an initial token, triggering the evaluation of the pattern, is statistically appearing too often. In this case, a valuable alternative token, if it exists, is chosen, and the initial token event is replayed for the pattern to match. The intention of this optimization is to reduce the number or hits and the following processing of rules that may not match. As an example consider a rule like "The world", that is triggered by every appearance of "the". Triggering the rule with "world" is better in English text.</li>
 <li><b>nofProgramsInstalled</b>: Tells how many patterns were triggered for execution by a key event during the whole processing of the 100 documents.</li>
 <li><b>nofTriggersAvgActive</b>: Tells how many patterns were active (waiting for events to complete the pattern match) in average for every input token processed.</li>
-<li><b>nofSignalsFired</b>: Tells how many signals were fired during the whole processing of the 100 documents. An active pattern listens for signals fired on a slot. The pattern matches on a completion condition on the slot.</li>
+<li><b>nofSignalsFired</b>: Tells how many signals were fired during the whole processing of the 100 documents. An active pattern listens for signals fired on a slot. The pattern matches a completion condition on the slot.</li>
 </ol>
 </p>
 <h4>Performance measurement plot</h4>
@@ -311,18 +335,18 @@ rule nodes evaluated.
 Patterns with the operator <b>within</b> or <b>within_struct</b> currently do not work correctly, if
 accepted sets of subexpressions are not disjunct. This is due to the greediness of the algorithm,
 that does not follow alternative paths or backtrack. To illustrate the problem, have a look at the
-pattern matching the elements "(A B)" and "A" in any order and the source "ABA". The current situation
+pattern matching the elements "AB" and "A" in any order and the source "ABA". The current situation
 is that the pattern matcher recognizes "A" as "A" and does not accept a signal for "AB" anymore at the
 same position for this pattern.
 <br/>
 There are straightforward solutions to this problem, but we did not find yet a good one.
 We are aware of this problem and we know that it cannot be neglected.
-Currently you have to formulate your 'within' rules as all possible permutations of sequences
-(2 patterns "((A B) A)" and "(A (A B))", if you have 'within' rules with non disjunct accepted sets.
+Currently, you have to formulate your 'within' rules as all possible permutations of sequences
+(2 patterns "((A B) A)" and "(A (A B))", if you have 'within' rules with non-disjunct accepted sets.
 Sequences do not have this problem.
 </p>
 <h4>Symbols and identifiers</h4>
-<p id="description">It does not make sense to implement every symbol or identifier as item in
+<p id="description">It does not make sense to implement every symbol or identifier as an item in
 the regular expression automaton. For representing ordinary words, we need the possibility
 to declare identifiers in our rule language. The <a href="http://patrickfrey.github.io/strusPattern/doc/doxygen/html/classstrus_1_1CharRegexMatchInstanceInterface.html">CharRegexMatchInstanceInterface</a>
 already has a method to declare such a symbol with the method <i>defineSymbol</i>. 
@@ -331,32 +355,32 @@ But this is one feature not tested yet and not available in our example language
 
 
 <h2>Testing</h2>
-<p id="description">We tested the token pattern matching of <i>StrusPattern</i> with random generated
-rules on random generated documents verified with an alternative implementation.
+<p id="description">We tested the token pattern matching of <i>StrusPattern</i> with randomly generated
+rules on randomly generated documents verified with an alternative implementation.
 The test program can be run manually
 <pre>
 cd tests/randomExpressionTreeMatch
 src/testRandomExpressionTreeMatch 100 100 100 100 ./
 </pre>
 And the differences can be inspected with a diff of the res.txt with the exp.txt file.
-Currently the tests fail because of small differences due to the problems with operators on subexpressions with 
-non disjuct sets of accepted input. We are working on the problem.
+Currently, the tests fail because of small differences due to the problems with operators on subexpressions with 
+non-disjunct sets of accepted input. We are working on the problem.
 </pre>
 </p>
 
 <h2>Caveats</h2>
 <p id="description"><i>StrusPattern</i> handles events immediately when they are seen.
-This can lead to anomalies, when formulating restrictions, e.g. with 'sequence_struct' or 'within_struct'
-in cases the structure delimiter gets the same ordinal position assigned than another token that is part of the
+This can lead to anomalies when formulating restrictions, e.g. with 'sequence_struct' or 'within_struct'
+in cases, the structure delimiter gets the same ordinal position assigned than another token that is part of the
 pattern. When the last element of a rule is detected without passing over a structure element, that is part of 
 the restriction condition, then the result is emitted, even if a restriction event with the same ordinal position,
-that should overrule the decision, happens thereafter. Another anomaly of this kind can happen, when the 
-restricting element of a rule occurrs with the same position, but before the key event triggering the pattern.
+that should overrule the decision, happens thereafter. Another anomaly of this kind can happen when the 
+restricting element of a rule occurs with the same position, but before the key event triggering the pattern.
 <br/>
-Practically we do not see too bad consequences of this behaviour, because structure delimiters usually get their
+Practically we do not see too bad consequences of this behavior because structure delimiters usually get their
 own ordinal position assigned. But it might be needed in the future to treat these cases differently.
 <br/>
-At the moment we just premention the expected behaviour.
+At the moment we just mention the expected behavior.
 </p>
 
 <h2>Resume</h2>
@@ -364,7 +388,7 @@ At the moment we just premention the expected behaviour.
 matching large sets of patterns. <br/>
 The implementation is maybe not optimal in numbers of reads and writes of memory and in 
 numbers of branching instructions, but it is software with a good flow. It has
-simple operations mainly operating on local (near, on chip) memory, able to use SIMD capabilities
+simple operations mainly operating on local (near, on-chip) memory, able to use SIMD capabilities
 of modern CPUs and it accesses new (far away) memory mainly for feeding the system.
 <br/>
 For users that do not need arbitrary programs to define patterns and for users, that can live with 

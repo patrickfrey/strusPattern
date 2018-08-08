@@ -13,6 +13,7 @@
 #include "strus/patternLexerInstanceInterface.hpp"
 #include "strus/patternLexerContextInterface.hpp"
 #include "strus/analyzer/patternLexem.hpp"
+#include "strus/base/local_ptr.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
@@ -50,16 +51,16 @@ struct SymbolDef
 
 struct ResultDef
 {
-	unsigned int id;
-	unsigned int ordpos;
-	unsigned int origpos;
-	unsigned int origsize;
+	int id;
+	int ordpos;
+	int origpos;
+	int origsize;
 };
 
 struct TestDef
 {
-	const PatternDef patterns[64];
-	const SymbolDef symbols[64];
+	PatternDef patterns[64];
+	SymbolDef symbols[64];
 	const char* src;
 	ResultDef result[128];
 };
@@ -87,7 +88,7 @@ static void compile( strus::PatternLexerInstanceInterface* ptinst, const Pattern
 static std::vector<strus::analyzer::PatternLexem>
 	match( strus::PatternLexerInstanceInterface* ptinst, const std::string& src)
 {
-	std::auto_ptr<strus::PatternLexerContextInterface> mt( ptinst->createContext());
+	strus::local_ptr<strus::PatternLexerContextInterface> mt( ptinst->createContext());
 	std::vector<strus::analyzer::PatternLexem> rt = mt->match( src.c_str(), src.size());
 
 #ifdef STRUS_LOWLEVEL_DEBUG
@@ -160,6 +161,42 @@ static const TestDef g_tests[32] =
 	},
 	{
 		{
+			{1,"abc ~1",0,1,true},
+			{0,0,0,0,false}
+		},
+		{
+			{0,0,0}
+		},
+		"aabc abc abbc bbb ac aaa ab",
+		{
+			{1,1,1,3},
+			{1,2,5,3},
+			{1,3,9,3},
+			{1,4,18,2},
+			{1,5,25,2},
+			{0,0,0,0}
+		}
+	},
+	{
+		{
+			{1,"a\xC3\xB6\xC3\xBC ~1",0,1,true}, //... "aöü"
+			{0,0,0,0,false}
+		},
+		{
+			{0,0,0}
+		},
+		"aa\xC3\xB6\xC3\xBC a\xC3\xB6\xC3\xBC a\xC3\xB6\xC3\xB6\xC3\xBC \xC3\xB6\xC3\xB6\xC3\xB6 a\xC3\xBC aaa a\xC3\xB6",
+		{
+			{1,1,1,5},
+			{1,2,7,5},
+			{1,3,13,5},
+			{1,4,28,3},
+			{1,5,36,3}, 
+			{0,0,0,0}
+		}
+	},
+	{
+		{
 			{0,0,0,0,false}
 		},
 		{
@@ -177,7 +214,7 @@ int main( int argc, const char** argv)
 {
 	try
 	{
-		g_errorBuffer = strus::createErrorBuffer_standard( 0, 1);
+		g_errorBuffer = strus::createErrorBuffer_standard( 0, 1, NULL/*debug trace interface*/);
 		if (!g_errorBuffer)
 		{
 			std::cerr << "construction of error buffer failed" << std::endl;
@@ -188,13 +225,13 @@ int main( int argc, const char** argv)
 			std::cerr << "too many arguments" << std::endl;
 			return 1;
 		}
-		std::auto_ptr<strus::PatternLexerInterface> pt( strus::createPatternLexer_stream( g_errorBuffer));
+		strus::local_ptr<strus::PatternLexerInterface> pt( strus::createPatternLexer_std( g_errorBuffer));
 		if (!pt.get()) throw std::runtime_error("failed to create regular expression term matcher");
 		std::size_t ti = 0;
 		for (; g_tests[ti].src; ++ti)
 		{
 			std::cerr << "executing test " << (ti+1) << std::endl;
-			std::auto_ptr<strus::PatternLexerInstanceInterface> ptinst( pt->createInstance());
+			strus::local_ptr<strus::PatternLexerInstanceInterface> ptinst( pt->createInstance());
 			if (!ptinst.get()) throw std::runtime_error("failed to create regular expression term matcher instance");
 
 			ptinst->defineOption( "DOTALL", 0);
@@ -204,6 +241,10 @@ int main( int argc, const char** argv)
 				throw std::runtime_error( "error building automaton for test");
 			}
 			std::vector<strus::analyzer::PatternLexem> result = match( ptinst.get(), g_tests[ti].src);
+			if (result.empty() && g_errorBuffer->hasError())
+			{
+				throw std::runtime_error( "error matching");
+			}
 			std::vector<strus::analyzer::PatternLexem>::const_iterator ri = result.begin(), re = result.end();
 			std::size_t ridx=0;
 			const ResultDef* expected = g_tests[ti].result;
@@ -212,7 +253,7 @@ int main( int argc, const char** argv)
 				const ResultDef& exp = expected[ridx];
 				if (exp.id != ri->id()) break;
 				if (exp.ordpos != ri->ordpos()) break;
-				if (exp.origpos != ri->origpos()) break;
+				if (exp.origpos != ri->origpos().ofs()) break;
 				if (exp.origsize != ri->origsize()) break;
 			}
 			if (ri != re || expected[ridx].origsize != 0)

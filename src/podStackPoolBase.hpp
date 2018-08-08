@@ -31,8 +31,8 @@ struct PodStackElement
 
 	PodStackElement( ELEMTYPE value_, SIZETYPE next_)
 		:value(value_),next(next_){}
-	PodStackElement( const PodStackElement& o)
-		:value(o.value),next(o.next){}
+	void assign( const PodStackElement& o)
+		{value=o.value;next=o.next;}
 };
 
 template <typename ELEMTYPE, typename SIZETYPE, unsigned int BASEADDR>
@@ -50,7 +50,7 @@ public:
 #ifdef STRUS_LOWLEVEL_DEBUG
 		if (stk != 0 && !Parent::exists( stk-1))
 		{
-			throw strus::runtime_error(_TXT( "illegal list access (push)"));
+			throw std::runtime_error( _TXT( "illegal list access (push)"));
 		}
 #endif
 		PodStackElement<ELEMTYPE,SIZETYPE> listelem( elem, stk);
@@ -67,7 +67,7 @@ public:
 #ifdef STRUS_LOWLEVEL_DEBUG
 		if (!Parent::exists( stk-1))
 		{
-			throw strus::runtime_error(_TXT( "illegal list access (remove)"));
+			throw strus::runtime_error( _TXT( "illegal list access (%s)"), "remove");
 		}
 #ifdef STRUS_LOWLEVEL_DEBUG_CHECK_CIRCULAR
 		checkCircular( stk);
@@ -88,7 +88,7 @@ public:
 #ifdef STRUS_LOWLEVEL_DEBUG
 		if (!Parent::exists( stk-1))
 		{
-			throw strus::runtime_error(_TXT( "illegal list access (pop)"));
+			throw strus::runtime_error( _TXT( "illegal list access (%s)"), "pop");
 		}
 #endif
 		elem = (*this)[ stk-1].value;
@@ -106,7 +106,7 @@ public:
 #ifdef STRUS_LOWLEVEL_DEBUG
 		if (!Parent::exists( stk-1))
 		{
-			throw strus::runtime_error(_TXT( "illegal list access (set)"));
+			throw strus::runtime_error( _TXT( "illegal list access (%s)"), "set");
 		}
 #endif
 		(*this)[ stk-1].value = elem;
@@ -118,7 +118,7 @@ public:
 #ifdef STRUS_LOWLEVEL_DEBUG
 		if (!Parent::exists( stk-1))
 		{
-			throw strus::runtime_error(_TXT( "illegal list access (next)"));
+			throw strus::runtime_error( _TXT( "illegal list access (%s)"), "next");
 		}
 #endif
 		elem = (*this)[ stk-1].value;
@@ -131,7 +131,7 @@ public:
 #ifdef STRUS_LOWLEVEL_DEBUG
 		if (!Parent::exists( stk-1))
 		{
-			throw strus::runtime_error(_TXT( "illegal list access (nextptr)"));
+			throw strus::runtime_error( _TXT( "illegal list access (%s)"), "nextptr");
 		}
 #endif
 		const ELEMTYPE* rt = &(*this)[ stk-1].value;
@@ -163,7 +163,7 @@ private:
 #ifdef STRUS_LOWLEVEL_DEBUG
 		if (!Parent::exists( si-1))
 		{
-			throw strus::runtime_error(_TXT( "illegal list access (checkCircular)"));
+			throw strus::runtime_error( _TXT( "illegal list access (%s)"), "checkCircular");
 		}
 #endif
 			si = (*this)[ si-1].next;
@@ -171,7 +171,7 @@ private:
 		}
 		if (ii != ie && si != 0)
 		{
-			throw strus::runtime_error(_TXT( "internal: circular list"));
+			throw std::runtime_error( _TXT( "internal: circular list"));
 		}
 	}
 };
