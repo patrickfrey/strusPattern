@@ -91,7 +91,7 @@ private:
 	PatternMatcherData( const PatternMatcherData&) = delete;
 	void operator=( const PatternMatcherData&) = delete;
 #else
-	PatternMatcherData( const PatternMatcherData&){}
+	PatternMatcherData( const PatternMatcherData&) :variableMap(0){}
 	void operator=( const PatternMatcherData&){}
 #endif
 };
