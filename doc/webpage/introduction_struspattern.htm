@@ -131,6 +131,15 @@ Contact		= sequence_struct( SENT, Name, email=EMAIL | 10 );
 	The difference of character codes in sequences of natural languages in phonetic scripts seems to be discriminating enough for the solution 
 	to preform well. This has been shown in a real project with non trivial data.
 	</p>
+	<h4>Exported rules vs. private rules</h4>
+	<p id="description">
+	All results of rules are appearing in the output by default. You can specify a rule to be private with a leading '.' in front of the name.
+	Example:
+	<pre>
+		.Year		= sequence_imm( WORD "in", WORD "the", WORD "year", year=NUMBER) ["{year}"];
+		Event		= sequence_imm( when=Year, WORD "something", WORD "happened" ) ["{when}"];
+	</pre>
+	</p>
 	<h4>Formatting pattern matcher results</h4>
 	<p id="description">
 	The result value of a pattern or a subexpression matched can be defined with by a format string in square brackets ('[' ']'). 
