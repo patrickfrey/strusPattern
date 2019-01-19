@@ -32,7 +32,6 @@ build_dep_project() {
 				-DCMAKE_CXX_FLAGS='-g -Wno-error=format-nonliteral -Wno-error=format-security' -G Xcode $prj_cmakeflags \
 				..
 			xcodebuild -configuration Release -target ALL_BUILD
-			xcodebuild -configuration Release -target RUN_TESTS
 			sudo xcodebuild -configuration Release -target install
 			cd ..
 			;;
