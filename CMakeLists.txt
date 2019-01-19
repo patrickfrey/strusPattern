@@ -62,8 +62,10 @@ add_subdirectory( 3rdParty )
 add_subdirectory( src )
 add_subdirectory( tests )
 
-file(COPY ${CMAKE_CURRENT_BINARY_DIR}/3rdParty/hyperscan/libhs.pc  DESTINATION  ${CMAKE_BINARY_DIR}/ )
+if( DEFINED HYPERSCAN_PKGCONFIG )
+file( COPY  "${HYPERSCAN_PKGCONFIG}"  DESTINATION  ${CMAKE_BINARY_DIR}/ )
 # ... PF:HACK For hyperscan as submodule with out of source build
+endif( DEFINED HYPERSCAN_PKGCONFIG )
 
 if(NOT STRUS_ALL)
 include( cmake/report_build_settings.cmake )
