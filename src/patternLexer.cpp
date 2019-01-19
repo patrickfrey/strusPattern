@@ -23,8 +23,8 @@
 #include "errorUtils.hpp"
 #include "internationalization.hpp"
 #include "hyperscanErrorCode.hpp"
-#include "hs_compile.h"
-#include "hs.h"
+#include "hs/hs_compile.h"
+#include "hs/hs.h"
 #include <vector>
 #include <string>
 #include <cstring>

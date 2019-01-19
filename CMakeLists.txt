@@ -47,8 +47,6 @@ configure_file( "${PROJECT_SOURCE_DIR}/src/internationalization.cpp.in"  "${CMAK
 enable_testing()
 
 # Path declarations:
-set( HYPERSCAN_INCLUDE_DIRS      "${CMAKE_CURRENT_BINARY_DIR}/3rdParty/hyperscan/src"  "${PROJECT_SOURCE_DIR}/3rdParty/hyperscan/src" )
-set( HYPERSCAN_LIBRARY_DIRS      "${CMAKE_CURRENT_BINARY_DIR}/3rdParty/hyperscan/lib" )
 set( TEXTWOLF_INCLUDE_DIRS         "${PROJECT_SOURCE_DIR}/3rdParty/textwolf/include" )
 set( CNODETRIE_INCLUDE_DIRS       "${PROJECT_SOURCE_DIR}/3rdParty/compactNodeTrie/include" )
 set( CNODETRIE_LIBRARY_DIRS        "${CMAKE_CURRENT_BINARY_DIR}/3rdParty/compactNodeTrie/src" )

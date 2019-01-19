@@ -11,7 +11,7 @@
 #include "strus/analyzerModule.hpp"
 #include "internationalization.hpp"
 #include "errorUtils.hpp"
-#include "hs.h"
+#include "hs/hs.h"
 
 static const strus::PatternLexerConstructor lexer =
 {
