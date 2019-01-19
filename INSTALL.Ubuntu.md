@@ -12,6 +12,15 @@ Install packages with 'apt-get'/aptitude.
 	boost-all >= 1.57
 	snappy-dev leveldb-dev libuv-dev
 	libtre-dev ragel
+	hyperscan >= 4.7
+
+# Install hyperscan from sources
+	git clone https://github.com/intel/hyperscan.git
+	mkdir hyperscan/build
+	cd hyperscan/build
+	cmake ..
+	make
+	make install
 
 # Strus prerequisite packages to build and install before
 	strusBase strus strusAnalyzer strusTrace strusModule

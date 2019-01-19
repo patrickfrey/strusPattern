@@ -27,11 +27,11 @@ include_directories(
 
 link_directories(
 	"${Boost_LIBRARY_DIRS}"
+	${HYPERSCAN_LIBRARY_DIRS}
 	"${CMAKE_CURRENT_BINARY_DIR}/../3rdParty/compactNodeTrie/src"
 	"${CMAKE_CURRENT_BINARY_DIR}/../3rdParty/hyperscan/lib"
 	"${strusbase_LIBRARY_DIRS}"
 )
-
 
 # -------------------------------------------
 # STRUS TRACE LIBRARIES
@@ -39,7 +39,7 @@ link_directories(
 add_cppcheck( strus_pattern ${source_files} libstrus_pattern.cpp )
 
 add_library( local_rulematch STATIC ${source_files} )
-target_link_libraries( local_rulematch strus_base strus_pattern_resultformat compactnodetrie_static hs ${Boost_LIBRARIES} ${TRE_LIBRARIES} ${Intl_LIBRARIES} )
+target_link_libraries( local_rulematch strus_base strus_pattern_resultformat compactnodetrie_static  ${HYPERSCAN_LIBRARIES} ${Boost_LIBRARIES} ${TRE_LIBRARIES} ${Intl_LIBRARIES} )
 set_property( TARGET local_rulematch PROPERTY POSITION_INDEPENDENT_CODE TRUE )
 
 add_library( strus_pattern SHARED libstrus_pattern.cpp )

@@ -15,6 +15,8 @@ brew install gettext
 brew link --force gettext
 echo 'export PATH="/usr/local/opt/gettext/bin:$PATH"' >> ~/.bash_profile
 
+Build and install hyperscan from source.
+
 Build strusPattern with:
 
 cmake -G Xcode -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release .

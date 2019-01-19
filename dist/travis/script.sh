@@ -90,6 +90,14 @@ setup_env() {
 # set up environment
 setup_env
 
+# install hyperscan
+git clone https://github.com/intel/hyperscan.git
+mkdir hyperscan/build
+cd hyperscan/build
+cmake ..
+make
+make install
+
 # build pre-requisites
 DEPS="strusBase strus strusAnalyzer strusTrace strusModule"
 

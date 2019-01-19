@@ -3,6 +3,7 @@ FreeBSD 10.2 on x86_64, i686
 
 Install packages with 'pkg install':
 - cmake, boost-libs, gettext, ragel, tre, python3
+Build and install hyperscan from source.
 
 Build using the clang/clang++ toolchain:
 
