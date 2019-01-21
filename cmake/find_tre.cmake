@@ -11,6 +11,7 @@ find_package_handle_standard_args ( TRE DEFAULT_MSG TRE_LIBRARIES TRE_INCLUDE_DI
 if ( TRE_FOUND )
   MESSAGE( STATUS "Tre includes: ${TRE_INCLUDE_DIRS}" )
   MESSAGE( STATUS "Tre libraries: ${TRE_LIBRARIES}" )
+  get_filename_component( TRE_LIBRARY_DIRS ${TRE_LIBRARIES} DIRECTORY)
 else ( TRE_FOUND )
   message( STATUS "Tre library not found" )
 endif ( TRE_FOUND )
