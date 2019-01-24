@@ -16,9 +16,11 @@ Install packages with 'apt-get'/aptitude.
 
 # Install hyperscan from sources
 	git clone https://github.com/intel/hyperscan.git
-	mkdir hyperscan/build
-	cd hyperscan/build
-	cmake ..
+	cd hyperscan
+	git checkout tags/v4.7.0
+	mkdir build
+	cd build
+	cmake -DBUILD_SHARED_LIBS=1 ..
 	make
 	make install
 
