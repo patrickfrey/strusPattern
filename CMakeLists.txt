@@ -6,7 +6,7 @@ include(cmake/install_prefix.cmake)
 # Project globals:
 project( StrusPattern )
 set( STRUS_MAJOR_VERSION 0 )
-set( STRUS_MINOR_VERSION 16 )
+set( STRUS_MINOR_VERSION 17 )
 set( STRUS_PATCH_VERSION 0 )
 set( STRUS_VERSION ${STRUS_MAJOR_VERSION}.${STRUS_MINOR_VERSION}.${STRUS_PATCH_VERSION} )
 set( CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" )
