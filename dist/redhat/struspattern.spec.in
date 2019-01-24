@@ -398,7 +398,17 @@ make test
 %{_includedir}/strus/lib/*.hpp
 
 %changelog
+* Thu Jan 24 2019 Patrick Frey <patrickpfrey@yahoo.com> 0.17.0-0.1
+- implement interface changes in analyzer pattern matcher interface
+- implement debug trace support
+- implement formatted result output
+- added pattern lexer option BYTECHAR that forces to use a map to a virtual one byte character set as it is done implicitely for making edit distance matching unicode capable. The option fixes an issue of the hyperscan library that seems to have problem with \b word boundaries in combination with UTF-8. See strusUtilities/issues/70.
+
 * Fri May 11 2018 Patrick Frey <patrickpfrey@yahoo.com> 0.16.0-0.1
+- change handling of gettext to avoid warning: return a const char*
+- adapted changes in strus analyzer: introspection interface
+- renaming of pattern matcher constructor function in library
+- make use of new debug interface in strus base
 
 * Thu Mar 15 2018 Patrick Frey <patrickpfrey@yahoo.com> 0.15.7-0.1
 - added make target cppcheck for static code analysis

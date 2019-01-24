@@ -8,7 +8,7 @@
 #ifndef _STRUS_LEVELDB_ERRORCODES_HPP_INCLUDED
 #define _STRUS_LEVELDB_ERRORCODES_HPP_INCLUDED
 #include "strus/errorCodes.hpp"
-#include "hs_common.h"
+#include "hs/hs_common.h"
 
 static strus::ErrorCode hyperscanErrorCode( hs_error_t hs_error)
 {

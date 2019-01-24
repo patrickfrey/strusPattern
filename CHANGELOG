@@ -1,3 +1,10 @@
+strusPattern (0.17.0)
+  * implement interface changes in analyzer pattern matcher interface
+  * implement debug trace support
+  * implement formatted result output
+  * added pattern lexer option BYTECHAR that forces to use a map to a virtual one byte character set as it is done implicitely for making edit distance matching unicode capable. The option fixes an issue of the hyperscan library that seems to have problem with \b word boundaries in combination with UTF-8. See strusUtilities/issues/70.
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Thu, 24 Jan 2019 07:30:00 +0100
+
 strusPattern (0.16.0)
   * change handling of gettext to avoid warning: return a const char*
   * adapted changes in strus analyzer: introspection interface

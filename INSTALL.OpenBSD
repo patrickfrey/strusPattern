@@ -6,6 +6,8 @@ Use 'lang/gcc/4.9' from ports (package 'gcc' and 'g++', the base gcc is too old)
 Install 'gcc' 'g++' 'cmake', 'gmake', 'boost', 'gettext', 'gettext-tools', 'ragel' and 'leveldb' as
 packages or from the ports collection.
 
+Build and install hyperscan from source.
+
 Build strusPattern with:
 
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release -DLIB_INSTALL_DIR=lib \

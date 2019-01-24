@@ -1,6 +1,3 @@
 [submodule "3rdParty/textwolf"]
 	path = 3rdParty/textwolf
 	url = https://github.com/patrickfrey/textwolf
-[submodule "3rdParty/hyperscan"]
-	path = 3rdParty/hyperscan
-	url = https://github.com/01org/hyperscan
