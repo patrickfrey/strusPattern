@@ -7,6 +7,7 @@
  */
 #include "testUtils.hpp"
 #include "strus/analyzer/patternMatcherResultItem.hpp"
+#include "strus/base/math.hpp"
 #include <iostream>
 #include <sstream>
 #include <limits>
@@ -43,7 +44,7 @@ ZipfDistribution::ZipfDistribution( std::size_t size, double S)
 	{
 		if (S > std::numeric_limits<double>::epsilon())
 		{
-			m_ar.push_back( m_ar[ ii-1] + 1.0 / pow((double)(ii+1), S));
+			m_ar.push_back( m_ar[ ii-1] + 1.0 / strus::Math::pow((double)(ii+1), S));
 		}
 		else
 		{
