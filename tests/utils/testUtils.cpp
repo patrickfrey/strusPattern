@@ -16,7 +16,6 @@
 #include <cstring>
 #include <stdexcept>
 #include <new>
-#include <cmath>
 
 #define RANDINT(MIN,MAX) ((std::rand()%(MAX-MIN))+MIN)
 
