@@ -261,7 +261,7 @@ public:
 		}
 	}
 
-	void defineSymbol( uint32_t symbolid, unsigned int patternid, const std::string& name)
+	void defineSymbol( uint32_t symbolid, unsigned int patternid, const std::string& name_)
 	{
 		if (patternid > MaxPatternId)
 		{
@@ -282,17 +282,17 @@ public:
 			symtabref = yi->second;
 		}
 		PatternSymbolTable& pst = m_symtabmap[ symtabref-1];
-		uint32_t symidx = pst.symtab->getOrCreate( name);
+		uint32_t symidx = pst.symtab->getOrCreate( name_);
 		if (symidx != pst.idmap.size()+1)
 		{
 			if (symidx == 0) throw strus::runtime_error( "%s", m_errorhnd->fetchError());
-			throw strus::runtime_error(_TXT("symbol defined twice: '%s'"), name.c_str());
+			throw strus::runtime_error(_TXT("symbol defined twice: '%s'"), name_.c_str());
 		}
-		if (m_debugtrace) m_debugtrace->event( "symbol", "patternid=%d symid=%d name='%s'", (int)patternid, (int)symbolid, name.c_str());
+		if (m_debugtrace) m_debugtrace->event( "symbol", "patternid=%d symid=%d name='%s'", (int)patternid, (int)symbolid, name_.c_str());
 		pst.idmap.push_back( symbolid);
 	}
 
-	unsigned int getSymbol( unsigned int patternid, const std::string& name) const
+	unsigned int getSymbol( unsigned int patternid, const std::string& name_) const
 	{
 		uint8_t symtabref;
 		IdSymTabMap::const_iterator yi = m_idsymtabmap.find( patternid);
@@ -304,7 +304,7 @@ public:
 		{
 			symtabref = yi->second;
 			const PatternSymbolTable& pst = m_symtabmap[ symtabref-1];
-			uint32_t symidx = pst.symtab->get( name);
+			uint32_t symidx = pst.symtab->get( name_);
 			return symidx?pst.idmap[ symidx-1]:0;
 		}
 	}
@@ -968,14 +968,14 @@ public:
 
 	virtual ~PatternLexerInstance(){}
 
-	virtual void defineLexemName( unsigned int id, const std::string& name)
+	virtual void defineLexemName( unsigned int id, const std::string& name_)
 	{
 		try
 		{
 			if (m_idnamemap.find( id) != m_idnamemap.end()) throw std::runtime_error( _TXT("duplicate definition"));
 			m_idnamemap[ id] = m_idnamestrings.size()+1;
 			m_idnamestrings.push_back( '\0');
-			m_idnamestrings.append( name);
+			m_idnamestrings.append( name_);
 		}
 		CATCH_ERROR_MAP( _TXT("failed to assign lexem name to lexem or symbol identifier: %s"), *m_errorhnd);
 	}
@@ -1005,7 +1005,7 @@ public:
 		CATCH_ERROR_MAP( _TXT("failed to define term match regular expression pattern: %s"), *m_errorhnd);
 	}
 
-	virtual void defineSymbol( unsigned int symbolid, unsigned int patternid, const std::string& name)
+	virtual void defineSymbol( unsigned int symbolid, unsigned int patternid, const std::string& name_)
 	{
 		try
 		{
@@ -1013,52 +1013,52 @@ public:
 			{
 				throw std::runtime_error( _TXT("called define pattern after calling 'compile'"));
 			}
-			m_data.patternTable.defineSymbol( symbolid, patternid, name);
+			m_data.patternTable.defineSymbol( symbolid, patternid, name_);
 		}
 		CATCH_ERROR_MAP( _TXT("failed to define regular expression pattern symbol: %s"), *m_errorhnd);
 	}
 	virtual unsigned int getSymbol(
 			unsigned int patternid,
-			const std::string& name) const
+			const std::string& name_) const
 	{
 		try
 		{
-			return m_data.patternTable.getSymbol( patternid, name);
+			return m_data.patternTable.getSymbol( patternid, name_);
 		}
 		CATCH_ERROR_MAP_RETURN( _TXT("failed to retrieve regular expression pattern symbol: %s"), *m_errorhnd, 0);
 	}
 
-	virtual void defineOption( const std::string& name, double)
+	virtual void defineOption( const std::string& name_, double)
 	{
 		try
 		{
-			if (strus::caseInsensitiveEquals( name, "CASELESS"))
+			if (strus::caseInsensitiveEquals( name_, "CASELESS"))
 			{
 				m_flags |= HS_FLAG_CASELESS;
 			}
-			else if (strus::caseInsensitiveEquals( name, "DOTALL"))
+			else if (strus::caseInsensitiveEquals( name_, "DOTALL"))
 			{
 				m_flags |= HS_FLAG_DOTALL;
 			}
-			else if (strus::caseInsensitiveEquals( name, "MULTILINE"))
+			else if (strus::caseInsensitiveEquals( name_, "MULTILINE"))
 			{
 				m_flags |= HS_FLAG_MULTILINE;
 			}
-			else if (strus::caseInsensitiveEquals( name, "ALLOWEMPTY"))
+			else if (strus::caseInsensitiveEquals( name_, "ALLOWEMPTY"))
 			{
 				m_flags |= HS_FLAG_ALLOWEMPTY;
 			}
-			else if (strus::caseInsensitiveEquals( name, "UCP"))
+			else if (strus::caseInsensitiveEquals( name_, "UCP"))
 			{
 				m_flags |= HS_FLAG_UCP;
 			}
-			else if (strus::caseInsensitiveEquals( name, "BYTECHAR"))
+			else if (strus::caseInsensitiveEquals( name_, "BYTECHAR"))
 			{
 				m_data.patternTable.forceOneByteCharMap();
 			}
 			else
 			{
-				throw strus::runtime_error(_TXT("unknown option '%s'"), name.c_str());
+				throw strus::runtime_error(_TXT("unknown option '%s'"), name_.c_str());
 			}
 			
 		}
@@ -1130,9 +1130,14 @@ public:
 		CATCH_ERROR_MAP_RETURN( _TXT("failed to create term match context: %s"), *m_errorhnd, 0);
 	}
 
-	virtual analyzer::FunctionView view() const
+	virtual const char* name() const
 	{
-		return analyzer::FunctionView();
+		return "std";
+	}
+
+	virtual StructView view() const
+	{
+		return StructView()("name",name());
 	}
 
 private:
@@ -1166,9 +1171,15 @@ PatternLexerInstanceInterface* PatternLexer::createInstance() const
 	CATCH_ERROR_MAP_RETURN( _TXT("failed to create term match instance: %s"), *m_errorhnd, 0);
 }
 
-const char* PatternLexer::getDescription() const
+StructView PatternLexer::view() const
 {
-	return _TXT( "pattern lexer based the Intel hyperscan library");
+	try
+	{
+		return StructView()
+			("name", name())
+			("description", _TXT( "Pattern lexer based the Intel hyperscan library"));
+	}
+	CATCH_ERROR_MAP_RETURN( _TXT("introspection failed: %s"), *m_errorhnd, 0);
 }
 
 

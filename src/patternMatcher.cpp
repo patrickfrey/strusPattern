@@ -49,15 +49,15 @@ public:
 		:SymbolTable(errorhnd){}
 	virtual ~VariableMap(){}
 
-	virtual const char* getVariable( const std::string& name) const
+	virtual const char* getVariable( const std::string& name_) const
 	{
-		int symid = SymbolTable::get( name);
+		int symid = SymbolTable::get( name_);
 		if (!symid) return NULL;
 		return SymbolTable::key( symid);
 	}
-	const char* getOrCreateVariable( const std::string& name)
+	const char* getOrCreateVariable( const std::string& name_)
 	{
-		int symid = SymbolTable::getOrCreate( name);
+		int symid = SymbolTable::getOrCreate( name_);
 		if (!symid) return NULL;
 		return SymbolTable::key( symid);
 	}
@@ -506,23 +506,23 @@ public:
 		CATCH_ERROR_MAP( _TXT("failed to push expression on the pattern match expression stack: %s"), *m_errorhnd);
 	}
 
-	virtual void pushPattern( const std::string& name)
+	virtual void pushPattern( const std::string& name_)
 	{
 		try
 		{
-			DEBUG_EVENT2( "pattern", "name=%s stack=%u", name.c_str(), (unsigned int)m_stack.size())
-			uint32_t eventid = eventHandle( ReferenceEvent, m_data.patternMap.getOrCreate( name));
+			DEBUG_EVENT2( "pattern", "name=%s stack=%u", name_.c_str(), (unsigned int)m_stack.size())
+			uint32_t eventid = eventHandle( ReferenceEvent, m_data.patternMap.getOrCreate( name_));
 			if (eventid == 0) throw std::runtime_error( _TXT("failed to define pattern symbol"));
 			m_stack.push_back( StackElement( eventid));
 		}
 		CATCH_ERROR_MAP( _TXT("failed to push pattern reference on the pattern match expression stack: %s"), *m_errorhnd);
 	}
 
-	virtual void attachVariable( const std::string& name)
+	virtual void attachVariable( const std::string& name_)
 	{
 		try
 		{
-			DEBUG_EVENT1( "variable", "name=%s", name.c_str())
+			DEBUG_EVENT1( "variable", "name=%s", name_.c_str())
 			if (m_stack.empty())
 			{
 				throw std::runtime_error( _TXT( "illegal operation attach variable when no node on the stack"));
@@ -532,7 +532,7 @@ public:
 			{
 				throw std::runtime_error( _TXT( "more than one variable assignment to a node"));
 			}
-			elem.variable = m_data.variableMap.getOrCreate( name);
+			elem.variable = m_data.variableMap.getOrCreate( name_);
 			if (elem.variable == 0)
 			{
 				throw std::runtime_error( _TXT("failed to define variable symbol"));
@@ -541,7 +541,7 @@ public:
 		CATCH_ERROR_MAP( _TXT("failed to attach variable to top element of the pattern match expression stack: %s"), *m_errorhnd);
 	}
 
-	virtual void definePattern( const std::string& name, const std::string& formatstring, bool visible)
+	virtual void definePattern( const std::string& name_, const std::string& formatstring, bool visible)
 	{
 		try
 		{
@@ -550,7 +550,7 @@ public:
 				throw std::runtime_error( _TXT("illegal operation close pattern when no node on the stack"));
 			}
 			StackElement& elem = m_stack.back();
-			uint32_t resultHandle = m_data.patternMap.getOrCreate( name);
+			uint32_t resultHandle = m_data.patternMap.getOrCreate( name_);
 			if (resultHandle == 0)
 			{
 				throw std::runtime_error( _TXT("failed to define result symbol"));
@@ -577,7 +577,7 @@ public:
 				throw std::runtime_error( _TXT("variable assignments only allowed to subexpressions of pattern"));
 			}
 			m_data.programTable.defineProgramResult( program, resultEvent, visible?resultHandle:0, formatHandle);
-			DEBUG_EVENT4( "pattern", "name=%s format='%s' visible=%s stack=%u", name.c_str(), formatstring.c_str(), visible?"true":"false", (unsigned int)m_stack.size())
+			DEBUG_EVENT4( "pattern", "name=%s format='%s' visible=%s stack=%u", name_.c_str(), formatstring.c_str(), visible?"true":"false", (unsigned int)m_stack.size())
 		}
 		CATCH_ERROR_MAP( _TXT("failed to close pattern definition on the pattern match expression stack: %s"), *m_errorhnd);
 	}
@@ -610,33 +610,33 @@ public:
 		out << std::endl;
 	}
 
-	virtual void defineOption( const std::string& name, double value)
+	virtual void defineOption( const std::string& name_, double value)
 	{
 		try
 		{
-			if (strus::caseInsensitiveEquals( name, "stopwordOccurrenceFactor"))
+			if (strus::caseInsensitiveEquals( name_, "stopwordOccurrenceFactor"))
 			{
 				m_popt.stopwordOccurrenceFactor = value;
 			}
-			else if (strus::caseInsensitiveEquals( name, "weightFactor"))
+			else if (strus::caseInsensitiveEquals( name_, "weightFactor"))
 			{
 				m_popt.weightFactor = value;
 			}
-			else if (strus::caseInsensitiveEquals( name, "maxRange"))
+			else if (strus::caseInsensitiveEquals( name_, "maxRange"))
 			{
 				m_popt.maxRange = (unsigned int)(value + std::numeric_limits<double>::epsilon());
 			}
-			else if (strus::caseInsensitiveEquals( name, "maxResultSize"))
+			else if (strus::caseInsensitiveEquals( name_, "maxResultSize"))
 			{
 				m_data.maxResultSize = (unsigned int)(value + std::numeric_limits<double>::epsilon());
 			}
-			else if (strus::caseInsensitiveEquals( name, "exclusive"))
+			else if (strus::caseInsensitiveEquals( name_, "exclusive"))
 			{
 				m_data.exclusive = true;
 			}
 			else
 			{
-				throw strus::runtime_error(_TXT("unknown token pattern match option: '%s'"), name.c_str());
+				throw strus::runtime_error(_TXT("unknown token pattern match option: '%s'"), name_.c_str());
 			}
 		}
 		CATCH_ERROR_MAP( _TXT("failed to define pattern matching automaton option: %s"), *m_errorhnd);
@@ -669,9 +669,13 @@ public:
 		CATCH_ERROR_MAP_RETURN( _TXT("failed to compile (optimize) pattern matching automaton: %s"), *m_errorhnd, false);
 	}
 
-	virtual analyzer::FunctionView view() const
+	virtual const char* name() const
 	{
-		return analyzer::FunctionView();
+		return "std";
+	}
+	virtual StructView view() const
+	{
+		return StructView()("name",name());
 	}
 
 private:
@@ -719,9 +723,10 @@ PatternMatcherInstanceInterface* PatternMatcher::createInstance() const
 	CATCH_ERROR_MAP_RETURN( _TXT("failed to create pattern match instance: %s"), *m_errorhnd, 0);
 }
 
-const char* PatternMatcher::getDescription() const
+StructView PatternMatcher::view() const
 {
-	return _TXT( "pattern matcher based on an event driven automaton");
+	return StructView()("name",name())("description",_TXT( "Pattern matcher based on an event driven automaton"));
 }
+
 
 

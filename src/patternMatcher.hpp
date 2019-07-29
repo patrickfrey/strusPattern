@@ -10,6 +10,7 @@
 #ifndef _STRUS_PATTERN_MATCHER_IMPLEMENTATION_HPP_INCLUDED
 #define _STRUS_PATTERN_MATCHER_IMPLEMENTATION_HPP_INCLUDED
 #include "strus/patternMatcherInterface.hpp"
+#include "strus/structView.hpp"
 
 namespace strus
 {
@@ -30,7 +31,8 @@ public:
 	virtual std::vector<std::string> getCompileOptionNames() const;
 	virtual PatternMatcherInstanceInterface* createInstance() const;
 
-	virtual const char* getDescription() const;
+	virtual const char* name() const	{return "std";}
+	virtual StructView view() const;
 
 private:
 	ErrorBufferInterface* m_errorhnd;

@@ -30,7 +30,8 @@ public:
 	virtual std::vector<std::string> getCompileOptionNames() const;
 	virtual PatternLexerInstanceInterface* createInstance() const;
 
-	virtual const char* getDescription() const;
+	virtual const char* name() const	{return "std";}
+	virtual StructView view() const;
 
 private:
 	ErrorBufferInterface* m_errorhnd;
