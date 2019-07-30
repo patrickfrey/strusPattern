@@ -26,6 +26,7 @@
 #include <vector>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include <algorithm>
 
 #define STRUS_DBGTRACE_COMPONENT_NAME "pattern"
