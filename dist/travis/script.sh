@@ -129,7 +129,7 @@ setup_env
 # install hyperscan
 git clone https://github.com/intel/hyperscan.git
 cd hyperscan
-git checkout tags/v4.7.0
+git checkout tags/v5.2.0
 build_dep_project "-DBUILD_SHARED_LIBS=1"
 cd ..
 

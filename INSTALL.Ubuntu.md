@@ -12,12 +12,12 @@ Install packages with 'apt-get'/aptitude.
 	boost-all >= 1.57
 	snappy-dev leveldb-dev libuv-dev
 	libtre-dev ragel
-	hyperscan >= 4.7
+	hyperscan >= 5.2
 
 # Install hyperscan from sources
 	git clone https://github.com/intel/hyperscan.git
 	cd hyperscan
-	git checkout tags/v4.7.0
+	git checkout tags/v5.2.0
 	mkdir build
 	cd build
 	cmake -DBUILD_SHARED_LIBS=1 ..
