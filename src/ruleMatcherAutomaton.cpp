@@ -84,7 +84,7 @@ void EventTriggerTable::TriggerInd::expand( uint32_t newallocsize)
 {
 	if (m_size > newallocsize)
 	{
-		throw std::logic_error( "illegal call of EventTriggerTable::TriggerInd::expand");
+		throw std::runtime_error( "illegal call of EventTriggerTable::TriggerInd::expand");
 	}
 	uint32_t* war = (uint32_t*)strus::aligned_malloc( newallocsize * sizeof(uint32_t), EventArrayMemoryAlignment);
 	if (!war) throw std::bad_alloc();

@@ -164,7 +164,7 @@ private:
 	{
 		if (m_size > newallocsize)
 		{
-			throw std::logic_error( "illegal call of PodStructArrayBase::expand");
+			throw std::runtime_error( "illegal call of PodStructArrayBase::expand");
 		}
 		ELEMTYPE* ar_;
 		if (m_allocated)
