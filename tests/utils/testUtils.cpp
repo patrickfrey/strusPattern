@@ -95,8 +95,7 @@ Document utils::createRandomDocument( unsigned int no, unsigned int size, unsign
 	return rt;
 }
 
-typedef strus::PatternMatcherInstanceInterface::JoinOperation JoinOperation;
-JoinOperation utils::joinOperation( const char* joinopstr)
+strus::PatternMatcherInstanceInterface::JoinOperation utils::joinOperation( const char* joinopstr)
 {
 	static const char* ar[] = {"sequence","sequence_struct","within","within_struct","any",0};
 	std::size_t ai = 0;
@@ -104,7 +103,7 @@ JoinOperation utils::joinOperation( const char* joinopstr)
 	{
 		if (0 == std::strcmp( joinopstr, ar[ai]))
 		{
-			return (JoinOperation)ai;
+			return (strus::PatternMatcherInstanceInterface::JoinOperation)ai;
 		}
 	}
 	throw std::runtime_error( "unknown join operation");
@@ -138,7 +137,7 @@ void utils::printResults( std::ostream& out, const std::vector<strus::SegmenterP
 			<< "]:";
 		std::vector<strus::analyzer::PatternMatcherResultItem>::const_iterator
 			ei = ri->items().begin(), ee = ri->items().end();
-	
+
 		for (; ei != ee; ++ei)
 		{
 			start_origsegsrcpos = segmentposmap.empty()?ei->origpos().seg():segmentposmap[ ei->origpos().seg()];
